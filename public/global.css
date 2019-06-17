@@ -1,0 +1,27 @@
+@font-face {
+	font-family: Icons;
+	src: url(FreeMono.woff) format('woff');
+}	
+
+html {
+  background:#180C24;
+  color: white;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+a {
+	color: lightgreen;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:visited {
+	color: lightseagreen;
+}
+
