@@ -26,13 +26,13 @@ class Ticker {
   }
 
   act() {
-    let remove: number[];
+    game.scent = game.scent.filter(tile => {
+      tile.scent = Math.max(tile.scent - 0.05, 0.01);
+      return tile.scent > 0.01;
+    });
+
     for (let mob of game.mobs) {
-      remove = [];
-      mob.scent = mob.scent.filter(tile => {
-        tile.scent = Math.max(tile.scent - 0.05, 0.01);
-        return tile.scent > 0.01;
-      });
+      mob.actFixedInterval()
     }
   }
 }
@@ -69,8 +69,14 @@ export default class Game {
   mobs: Mob[] = [];
   rooms: Room[];
   hateBg: [number, number, number];
-  playerRaging:boolean = false
+  seeingRed:boolean = false
   emptyTile = new Tile("♠");
+  flowersCollected = 0
+  scent: Tile[] = [];
+  won = false
+
+  mobStatus: Mob[] = [];
+  flowerStatus: Tile[] = [];
 
   at(at: number[]) {
     return this.grid[at[0]][at[1]];
@@ -87,16 +93,20 @@ export default class Game {
     return this.grid[at[0]][at[1]];
   }
 
-  constructor(w = 100, h = 100, options: { 
-    displaySize?: number[],
-    seed?:number
-  } = {}) {
+  constructor(public options: { 
+    displaySize?: number[]
+    size?: number[]
+    seed?: number
+    mobs?: number
+  } = {}) {    
+
     game = this;
 
-    RNG.setSeed(options.seed || 1);
+    RNG.setSeed(options.seed || Math.random());
 
     this.player = new Mob();
-    this.size = [w, h];
+    this.size = options.size || [80, 80];
+    options.mobs = options.mobs || 16
 
     this.displaySize = options.displaySize || [60, 60];
 
@@ -117,7 +127,7 @@ export default class Game {
     scheduler.add(new Ticker(), true);
     for (let mob of this.mobs) {
       scheduler.add(mob, true);
-    }
+    }    
     this.engine = new Engine(scheduler);
     this.engine.start();
 
@@ -132,10 +142,10 @@ export default class Game {
     this.grid = new Array(w).fill(null).map(_ => []);
     
     let map = new Digger(w, h, {
-      dugPercentage: 0.3,
+      dugPercentage: 0.25,
       corridorLength: [2, 6],
-      roomWidth: [3, 9],
-      roomHeight: [3, 5]
+      roomWidth: [3, 6],
+      roomHeight: [3, 6]
     });
 
     map.create((x, y, what) => {
@@ -153,16 +163,17 @@ export default class Game {
 
     let roses = 4;
 
-    let monsters = 20;
-
     for (let i = 3; i < 3 + roses; i++) {
       let room = roomsRandom[i];
-      this.at(room.getCenter()).symbol = "⚘";
+      let c = room.getCenter()
+      this.flowerStatus.push(this.at(c))
+      this.at(c).symbol = "⚘";
     }
 
-    for (let i = 3 + roses; i < 3 + roses + monsters; i++) {
+    for (let i = 3 + roses; i < 3 + roses + this.options.mobs; i++) {
       let room = roomsRandom[i];
       let monster = new Mob();
+      this.mobStatus.push(monster);
       monster.at = room.getCenter();
     }
   }
@@ -204,7 +215,7 @@ export default class Game {
         "_".repeat((this.player.hate / this.displaySize[1]) * 100)
     );
 
-    this.hateBg = Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
+    this.hateBg = this.seeingRed?[255,0,0]:Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
 
     //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
 
@@ -241,13 +252,12 @@ export default class Game {
         );
       }
 
-
     for (let mob of game.mobs) {
       let tile = game.at(mob.at);
       if (tile.visible) {
         let mobDisplayAt = add2d(mob.at, delta);
         let c = "white"
-        if(this.player == mob && this.playerRaging)
+        if(this.player == mob && this.seeingRed)
           c = "red"
         this.d.draw(
           mobDisplayAt[0],
@@ -258,5 +268,26 @@ export default class Game {
         );
       }
     }
+
+    let statusLine = "use NUMPAD "
+  
+    statusLine += "%c{gray}avoid? " + this.mobStatus.map(m => (m.dead?"%c{red}*":"%c{white}☺") ).join('')
+    statusLine += " %c{gray}collect " + this.flowerStatus.map(t => t.symbol=="⚘"?"%c{gray}⚘":"%c{red}⚘").join('')
+    
+    if(this.won){
+      statusLine += " %c{red}GAME COMPLETE"
+    }
+
+    else if(this.allFlowersCollected()){
+      statusLine += " %c{gray}visit %c{red}☨"
+    }
+
+    this.d.drawText(0, this.displaySize[1]-1, statusLine)
+
+  }
+
+  allFlowersCollected(){
+    //return true;
+    return this.flowersCollected == this.flowerStatus.length
   }
 }

@@ -1,13 +1,27 @@
 import { DIRS, FOV, RNG, Scheduler, Engine, Path } from "rot-js/lib/index";
 import { game, distance, Tile } from "./Game";
 import Game from "./Game";
+import keyboard, { Keyboard } from './Keyboard'
+
+console.log(keyboard)
+
+let keyMap = {};
+keyMap[38] = 0;
+keyMap[33] = 1;
+keyMap[39] = 2;
+keyMap[34] = 3;
+keyMap[40] = 4;
+keyMap[35] = 5;
+keyMap[37] = 6;
+keyMap[36] = 7;
+keyMap[12] = -1;
 
 export default class Mob {
   at: number[];
   sees: number[][] = [];
   path: number[][] = [];
-  scent: Tile[] = [];
-  hate: number = 1;
+  hate: number = 0;
+  dead: boolean = false
 
   constructor() {
     game.mobs.push(this);
@@ -23,7 +37,13 @@ export default class Mob {
   act() {
     if (this == game.player) {
       game.engine.lock();
-      window.addEventListener("keydown", this);
+      if(game.seeingRed){
+        this.playerAct(null)
+        //game.engine.unlock()
+        window.setTimeout(() => game.engine.unlock(), 50) 
+      } else {
+        keyboard.once(this.keyDown.bind(this))
+      }
     } else {
       if (this.path && this.path.length > 0) {
         this.goTo(this.path.shift());
@@ -70,12 +90,22 @@ export default class Mob {
     this.at = newAt.slice(0, 2);
     this.tile().mob = this;
 
-    if (this != game.player) {
+    if (this == game.player) {
+      if(this.tile().symbol == "⚘"){
+        this.tile().symbol = " "
+        game.flowersCollected ++
+      }
+      if(this.tile().symbol == "☨" && game.allFlowersCollected()){
+        game.won = true
+      }
+    } else {
       this.leaveScent();
     }
   }
 
   die() {
+    this.dead = true
+
     game.mobs = game.mobs.filter(m => m != this);
     this.tile().mob = null;
     game.engine._scheduler.remove(this);
@@ -93,33 +123,13 @@ export default class Mob {
     let tile = game.at(this.at);
     tile.mob = this;
     if (tile.scent <= 0.01) {
-      this.scent.push(tile);
+      game.scent.push(tile);
     }
     tile.scent = 1;
   }
 
-  handleEvent(e) {
-    var keyMap = {};
-    keyMap[38] = 0;
-    keyMap[33] = 1;
-    keyMap[39] = 2;
-    keyMap[34] = 3;
-    keyMap[40] = 4;
-    keyMap[35] = 5;
-    keyMap[37] = 6;
-    keyMap[36] = 7;
-    keyMap[12] = -1;
-
-    var code = e.keyCode;
-
-    if (!(code in keyMap)) {
-      return;
-    }
-
-    if (RNG.getUniform() < 0.3)
-      game.playerRaging = this.hate / 100 > RNG.getUniform();
-
-    if (game.playerRaging) {
+  playerAct(code:string|null){
+    if (!code) {
       let nearestD = 1000;
       let nearestMob = null;
       for (let m of game.mobs) {
@@ -144,7 +154,12 @@ export default class Mob {
         );
         this.goTo(this.path[1]);
       }
-    } else {
+    } else {  
+  
+      if (!(code in keyMap)) {
+        return;
+      }
+    
       let kmc = keyMap[code];
       var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
       let newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
@@ -156,8 +171,16 @@ export default class Mob {
 
     this.lookAround();
 
-    window.removeEventListener("keydown", this);
+    if (RNG.getUniform() < 0.3 || game.player.hate == 100)
+      game.seeingRed = this.hate / 100 > RNG.getUniform();
+
     game.draw();
+
+  }
+
+  keyDown(keyCode) {
+    this.playerAct(keyCode);
+    //keyboard.unsub(this.keyDownBound)
     game.engine.unlock();
   }
 
@@ -183,7 +206,7 @@ export default class Mob {
 
     this.sees = [];
 
-    let dHate = game.playerRaging?-0.3:-0.15;
+    let dHate = game.seeingRed?-0.5:-0.3;
     let seesFlower = false;
 
     fov.compute(this.at[0], this.at[1], 20, (x, y, r, vis) => {
@@ -191,7 +214,7 @@ export default class Mob {
       let tile = game.at([x, y]);
       if (tile.symbol == "⚘" && r <= 10) seesFlower = true;
       if (tile.mob && tile.mob != game.player) {
-        dHate += 15 / (r + 5);
+        dHate += 10 / (r + 5);
       }
       tile.visible = (vis * (20 - r)) / 20;
       tile.seen = 1;
@@ -210,5 +233,8 @@ export default class Mob {
     }
 
     this.enrage(dHate);
+  }
+
+  actFixedInterval(){
   }
 }

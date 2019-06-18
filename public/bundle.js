@@ -3377,12 +3377,74 @@ void main() {
 
     const Color = color;
 
+    var Keyboard = /** @class */ (function () {
+        function Keyboard() {
+            this.interval = 100;
+            this.pressed = {};
+            this.subs = [];
+            window.addEventListener("keydown", this);
+            window.addEventListener("keyup", this);
+        }
+        Keyboard.prototype.handleEvent = function (e) {
+            var _this = this;
+            var code = e.keyCode;
+            if (e.type == "keydown") {
+                if (!(code in this.pressed)) {
+                    this.click(e.keyCode);
+                    this.pressed[code] = window.setInterval(function () { return _this.click(e.keyCode); }, this.interval);
+                }
+            }
+            if (e.type == "keyup") {
+                window.clearInterval(this.pressed[code]);
+                delete this.pressed[code];
+            }
+        };
+        Keyboard.prototype.click = function (keyCode) {
+            for (var _i = 0, _a = this.subs; _i < _a.length; _i++) {
+                var s = _a[_i];
+                s(keyCode);
+            }
+        };
+        Keyboard.prototype.sub = function (handler) {
+            this.subs.push(handler);
+        };
+        Keyboard.prototype.unsub = function (handler) {
+            this.subs = this.subs.filter(function (s) {
+                return s != handler;
+            });
+        };
+        Keyboard.prototype.once = function (handler) {
+            var _this = this;
+            var f = function (keyCode) {
+                _this.unsub(f);
+                handler(keyCode);
+            };
+            this.sub(f);
+        };
+        Keyboard.prototype.isPressed = function (keyCode) {
+            return keyCode in this.pressed;
+        };
+        return Keyboard;
+    }());
+    var keyboard = new Keyboard();
+
+    console.log(keyboard);
+    var keyMap = {};
+    keyMap[38] = 0;
+    keyMap[33] = 1;
+    keyMap[39] = 2;
+    keyMap[34] = 3;
+    keyMap[40] = 4;
+    keyMap[35] = 5;
+    keyMap[37] = 6;
+    keyMap[36] = 7;
+    keyMap[12] = -1;
     var Mob = /** @class */ (function () {
         function Mob() {
             this.sees = [];
             this.path = [];
-            this.scent = [];
-            this.hate = 1;
+            this.hate = 0;
+            this.dead = false;
             game.mobs.push(this);
         }
         Mob.prototype.getSpeed = function () {
@@ -3395,7 +3457,14 @@ void main() {
             var _this = this;
             if (this == game.player) {
                 game.engine.lock();
-                window.addEventListener("keydown", this);
+                if (game.seeingRed) {
+                    this.playerAct(null);
+                    //game.engine.unlock()
+                    window.setTimeout(function () { return game.engine.unlock(); }, 50);
+                }
+                else {
+                    keyboard.once(this.keyDown.bind(this));
+                }
             }
             else {
                 if (this.path && this.path.length > 0) {
@@ -3438,12 +3507,22 @@ void main() {
                 tile.mob = null;
             this.at = newAt.slice(0, 2);
             this.tile().mob = this;
-            if (this != game.player) {
+            if (this == game.player) {
+                if (this.tile().symbol == "⚘") {
+                    this.tile().symbol = " ";
+                    game.flowersCollected++;
+                }
+                if (this.tile().symbol == "☨" && game.allFlowersCollected()) {
+                    game.won = true;
+                }
+            }
+            else {
                 this.leaveScent();
             }
         };
         Mob.prototype.die = function () {
             var _this = this;
+            this.dead = true;
             game.mobs = game.mobs.filter(function (m) { return m != _this; });
             this.tile().mob = null;
             game.engine._scheduler.remove(this);
@@ -3458,29 +3537,13 @@ void main() {
             var tile = game.at(this.at);
             tile.mob = this;
             if (tile.scent <= 0.01) {
-                this.scent.push(tile);
+                game.scent.push(tile);
             }
             tile.scent = 1;
         };
-        Mob.prototype.handleEvent = function (e) {
+        Mob.prototype.playerAct = function (code) {
             var _this = this;
-            var keyMap = {};
-            keyMap[38] = 0;
-            keyMap[33] = 1;
-            keyMap[39] = 2;
-            keyMap[34] = 3;
-            keyMap[40] = 4;
-            keyMap[35] = 5;
-            keyMap[37] = 6;
-            keyMap[36] = 7;
-            keyMap[12] = -1;
-            var code = e.keyCode;
-            if (!(code in keyMap)) {
-                return;
-            }
-            if (RNG$1.getUniform() < 0.3)
-                game.playerRaging = this.hate / 100 > RNG$1.getUniform();
-            if (game.playerRaging) {
+            if (!code) {
                 var nearestD = 1000;
                 var nearestMob = null;
                 for (var _i = 0, _a = game.mobs; _i < _a.length; _i++) {
@@ -3503,6 +3566,9 @@ void main() {
                 }
             }
             else {
+                if (!(code in keyMap)) {
+                    return;
+                }
                 var kmc = keyMap[code];
                 var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
                 var newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
@@ -3512,8 +3578,13 @@ void main() {
                 this.goTo(newAt);
             }
             this.lookAround();
-            window.removeEventListener("keydown", this);
+            if (RNG$1.getUniform() < 0.3 || game.player.hate == 100)
+                game.seeingRed = this.hate / 100 > RNG$1.getUniform();
             game.draw();
+        };
+        Mob.prototype.keyDown = function (keyCode) {
+            this.playerAct(keyCode);
+            //keyboard.unsub(this.keyDownBound)
             game.engine.unlock();
         };
         Mob.prototype.enrage = function (dHate) {
@@ -3534,7 +3605,7 @@ void main() {
                 }
             var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return game.safeAt([x, y]).cost < 1000; });
             this.sees = [];
-            var dHate = game.playerRaging ? -0.3 : -0.15;
+            var dHate = game.seeingRed ? -0.5 : -0.3;
             var seesFlower = false;
             fov.compute(this.at[0], this.at[1], 20, function (x, y, r, vis) {
                 _this.sees.push([x, y]);
@@ -3542,7 +3613,7 @@ void main() {
                 if (tile.symbol == "⚘" && r <= 10)
                     seesFlower = true;
                 if (tile.mob && tile.mob != game.player) {
-                    dHate += 15 / (r + 5);
+                    dHate += 10 / (r + 5);
                 }
                 tile.visible = (vis * (20 - r)) / 20;
                 tile.seen = 1;
@@ -3559,6 +3630,8 @@ void main() {
                 }
             }
             this.enrage(dHate);
+        };
+        Mob.prototype.actFixedInterval = function () {
         };
         return Mob;
     }());
@@ -3577,12 +3650,13 @@ void main() {
             return 100;
         };
         Ticker.prototype.act = function () {
+            game.scent = game.scent.filter(function (tile) {
+                tile.scent = Math.max(tile.scent - 0.05, 0.01);
+                return tile.scent > 0.01;
+            });
             for (var _i = 0, _a = game.mobs; _i < _a.length; _i++) {
                 var mob = _a[_i];
-                mob.scent = mob.scent.filter(function (tile) {
-                    tile.scent = Math.max(tile.scent - 0.05, 0.01);
-                    return tile.scent > 0.01;
-                });
+                mob.actFixedInterval();
             }
         };
         return Ticker;
@@ -3601,17 +3675,22 @@ void main() {
         return [a[0] + b[0], a[1] + b[1]];
     }
     var Game = /** @class */ (function () {
-        function Game(w, h, options) {
-            if (w === void 0) { w = 100; }
-            if (h === void 0) { h = 100; }
+        function Game(options) {
             if (options === void 0) { options = {}; }
+            this.options = options;
             this.mobs = [];
-            this.playerRaging = false;
+            this.seeingRed = false;
             this.emptyTile = new Tile$1("♠");
+            this.flowersCollected = 0;
+            this.scent = [];
+            this.won = false;
+            this.mobStatus = [];
+            this.flowerStatus = [];
             game = this;
-            RNG$1.setSeed(options.seed || 1);
+            RNG$1.setSeed(options.seed || Math.random());
             this.player = new Mob();
-            this.size = [w, h];
+            this.size = options.size || [80, 80];
+            options.mobs = options.mobs || 16;
             this.displaySize = options.displaySize || [60, 60];
             var d = (this.d = new Display({
                 width: this.displaySize[0],
@@ -3652,10 +3731,10 @@ void main() {
             var h = this.size[1];
             this.grid = new Array(w).fill(null).map(function (_) { return []; });
             var map = new Digger(w, h, {
-                dugPercentage: 0.3,
+                dugPercentage: 0.25,
                 corridorLength: [2, 6],
-                roomWidth: [3, 9],
-                roomHeight: [3, 5]
+                roomWidth: [3, 6],
+                roomHeight: [3, 6]
             });
             map.create(function (x, y, what) {
                 var symbol = what ? ((x + y) % 2 ? "♠" : "♣") : " ";
@@ -3666,14 +3745,16 @@ void main() {
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
             this.player.at = roomsRandom[1].getCenter();
             var roses = 4;
-            var monsters = 20;
             for (var i = 3; i < 3 + roses; i++) {
                 var room = roomsRandom[i];
-                this.at(room.getCenter()).symbol = "⚘";
+                var c = room.getCenter();
+                this.flowerStatus.push(this.at(c));
+                this.at(c).symbol = "⚘";
             }
-            for (var i = 3 + roses; i < 3 + roses + monsters; i++) {
+            for (var i = 3 + roses; i < 3 + roses + this.options.mobs; i++) {
                 var room = roomsRandom[i];
                 var monster = new Mob();
+                this.mobStatus.push(monster);
                 monster.at = room.getCenter();
             }
         };
@@ -3709,7 +3790,7 @@ void main() {
             this.d.drawText(0, 0, "_".repeat(this.displaySize[1]));
             this.d.drawText(0, 0, "%b{red}%c{red}" +
                 "_".repeat((this.player.hate / this.displaySize[1]) * 100));
-            this.hateBg = Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
+            this.hateBg = this.seeingRed ? [255, 0, 0] : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
             //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
             var half = [
                 Math.floor(this.displaySize[0] / 2),
@@ -3734,11 +3815,25 @@ void main() {
                 if (tile.visible) {
                     var mobDisplayAt = add2d(mob.at, delta);
                     var c = "white";
-                    if (this.player == mob && this.playerRaging)
+                    if (this.player == mob && this.seeingRed)
                         c = "red";
                     this.d.draw(mobDisplayAt[0], mobDisplayAt[1], this.player == mob ? "☻" : "☺", c, this.bg(mob.at));
                 }
             }
+            var statusLine = "use NUMPAD ";
+            statusLine += "%c{gray}avoid? " + this.mobStatus.map(function (m) { return (m.dead ? "%c{red}*" : "%c{white}☺"); }).join('');
+            statusLine += " %c{gray}collect " + this.flowerStatus.map(function (t) { return t.symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"; }).join('');
+            if (this.won) {
+                statusLine += " %c{red}GAME COMPLETE";
+            }
+            else if (this.allFlowersCollected()) {
+                statusLine += " %c{gray}visit %c{red}☨";
+            }
+            this.d.drawText(0, this.displaySize[1] - 1, statusLine);
+        };
+        Game.prototype.allFlowersCollected = function () {
+            //return true;
+            return this.flowersCollected == this.flowerStatus.length;
         };
         return Game;
     }());
@@ -3770,7 +3865,7 @@ void main() {
     			t = space();
     			div = element("div");
     			div.id = "game";
-    			add_location(div, file, 29, 0, 528);
+    			add_location(div, file, 29, 0, 518);
     		},
 
     		l: function claim(nodes) {
@@ -3813,7 +3908,7 @@ void main() {
       console.log(conf);
 
       icons.load().then(() => {
-        new Game(100, 100, conf);  
+        new Game(conf);  
       });
 
     	return {};

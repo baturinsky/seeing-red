@@ -19,7 +19,7 @@
   console.log(conf)
 
   icons.load().then(() => {
-    new Game(100, 100, conf)  
+    new Game(conf)  
   })  
 
 </script>>

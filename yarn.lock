@@ -1904,6 +1904,11 @@ tslib@^1.10.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
   integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
 
+typescript-pubsub@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/typescript-pubsub/-/typescript-pubsub-0.0.3.tgz#f565754d3843d2ad67853b8039ca42bd5d2e3bbb"
+  integrity sha1-9WV1TThD0q1nhTuAOcpCvV0uO7s=
+
 typescript@^3.5.1:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.2.tgz#a09e1dc69bc9551cadf17dba10ee42cf55e5d56c"
