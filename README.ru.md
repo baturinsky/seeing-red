@@ -5,7 +5,7 @@
 Исходники - https://github.com/baturinsky/seeing-red
 Играть - https://baturinsky.github.io/seeing-red/index.html?seed=12&mobs=12&flowers=4&size=[70,70]&empty=0.35
 
-![screenshot](https://github.com/baturinsky/seeing-red/screenshot.png)
+![screenshot](https://raw.githubusercontent.com/baturinsky/seeing-red/master/screenshot.png)
 
 Не собирался учавствовать в джеме, но вдруг вспомнилась идея, которая хорошо подходит к теме, и к тому же которую можно довольно быстро реализовать.
 
