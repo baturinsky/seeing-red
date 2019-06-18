@@ -98,6 +98,7 @@ export default class Game {
       seed?: number;
       mobs?: number;
       flowers?: number;
+      emptiness?: number
     } = {}
   ) {
     game = this;
@@ -105,8 +106,9 @@ export default class Game {
     RNG.setSeed(options.seed || Math.random());
 
     this.player = new Mob();
-    this.size = options.size || [80, 80];
-    options.mobs = options.mobs * 1 || 16;
+    this.size = options.size || [60, 60];
+    options.emptiness = options.emptiness*1 || 0.35
+    options.mobs = options.mobs * 1 || 10;
     options.flowers = options.flowers * 1 || 4;
 
     this.displaySize = options.displaySize || [60, 60];
@@ -143,7 +145,7 @@ export default class Game {
     this.grid = new Array(w).fill(null).map(_ => []);
 
     let map = new Digger(w, h, {
-      dugPercentage: 0.25,
+      dugPercentage: this.options.emptiness,
       corridorLength: [2, 6],
       roomWidth: [3, 6],
       roomHeight: [3, 6]
@@ -258,7 +260,8 @@ export default class Game {
       if (tile.visible) {
         let mobDisplayAt = add2d(mob.at, delta);
         let c = "white";
-        if (this.player == mob && this.seeingRed) c = "red";
+        if (this.player == mob && this.seeingRed) 
+          c = "red";
         this.d.draw(
           mobDisplayAt[0],
           mobDisplayAt[1],
