@@ -13,4 +13,5 @@ You control ...something... that has a split personality. One part hates people 
 Other part is under you control - and it's your choice to follow your urges or fight them.
 
 Controls: number keys to move
+
 Goal: collect 4 ⚘flowers, then put them on ☨grave. Avoid ☺ (or not).
