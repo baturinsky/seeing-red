@@ -33,12 +33,6 @@ var app = (function (exports) {
     function element(name) {
         return document.createElement(name);
     }
-    function text(data) {
-        return document.createTextNode(data);
-    }
-    function space() {
-        return text(' ');
-    }
     function children(element) {
         return Array.from(element.childNodes);
     }
@@ -3690,7 +3684,8 @@ void main() {
             RNG$1.setSeed(options.seed || Math.random());
             this.player = new Mob();
             this.size = options.size || [80, 80];
-            options.mobs = options.mobs || 16;
+            options.mobs = options.mobs * 1 || 16;
+            options.flowers = options.flowers * 1 || 4;
             this.displaySize = options.displaySize || [60, 60];
             var d = (this.d = new Display({
                 width: this.displaySize[0],
@@ -3744,14 +3739,13 @@ void main() {
             var roomsRandom = RNG$1.shuffle(rooms);
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
             this.player.at = roomsRandom[1].getCenter();
-            var roses = 4;
-            for (var i = 3; i < 3 + roses; i++) {
+            for (var i = 3; i < 3 + this.options.flowers; i++) {
                 var room = roomsRandom[i];
                 var c = room.getCenter();
                 this.flowerStatus.push(this.at(c));
                 this.at(c).symbol = "⚘";
             }
-            for (var i = 3 + roses; i < 3 + roses + this.options.mobs; i++) {
+            for (var i = 3 + this.options.flowers; i < 3 + this.options.flowers + this.options.mobs; i++) {
                 var room = roomsRandom[i];
                 var monster = new Mob();
                 this.mobStatus.push(monster);
@@ -3777,11 +3771,7 @@ void main() {
                 scent -= (100 - this.player.rage) * 0.003
                 scent = Math.max(0, scent)*/
                 if (this.player.hate * 0.3 + 10 > d) {
-                    bg = Color.add(bg, [
-                        128 * scent,
-                        0,
-                        0
-                    ]);
+                    bg = Color.add(bg, [128 * scent, 0, 0]);
                 }
             }
             return Color.toRGB(bg);
@@ -3790,7 +3780,9 @@ void main() {
             this.d.drawText(0, 0, "_".repeat(this.displaySize[1]));
             this.d.drawText(0, 0, "%b{red}%c{red}" +
                 "_".repeat((this.player.hate / this.displaySize[1]) * 100));
-            this.hateBg = this.seeingRed ? [255, 0, 0] : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
+            this.hateBg = this.seeingRed
+                ? [255, 0, 0]
+                : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
             //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
             var half = [
                 Math.floor(this.displaySize[0] / 2),
@@ -3820,14 +3812,23 @@ void main() {
                     this.d.draw(mobDisplayAt[0], mobDisplayAt[1], this.player == mob ? "☻" : "☺", c, this.bg(mob.at));
                 }
             }
+            this.d.drawText(0, this.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + "_".repeat(this.displaySize[0]));
             var statusLine = "use NUMPAD ";
-            statusLine += "%c{gray}avoid? " + this.mobStatus.map(function (m) { return (m.dead ? "%c{red}*" : "%c{white}☺"); }).join('');
-            statusLine += " %c{gray}collect " + this.flowerStatus.map(function (t) { return t.symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"; }).join('');
+            statusLine +=
+                "%c{gray}avoid? " +
+                    this.mobStatus.map(function (m) { return (m.dead ? "%c{red}*" : "%c{white}☺"); }).join("");
             if (this.won) {
                 statusLine += " %c{red}GAME COMPLETE";
             }
             else if (this.allFlowersCollected()) {
                 statusLine += " %c{gray}visit %c{red}☨";
+            }
+            else {
+                statusLine +=
+                    " %c{gray}collect " +
+                        this.flowerStatus
+                            .map(function (t) { return (t.symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"); })
+                            .join("");
             }
             this.d.drawText(0, this.displaySize[1] - 1, statusLine);
         };
@@ -3858,14 +3859,13 @@ void main() {
     const file = "src\\App.svelte";
 
     function create_fragment(ctx) {
-    	var t, div;
+    	var div;
 
     	return {
     		c: function create() {
-    			t = space();
     			div = element("div");
     			div.id = "game";
-    			add_location(div, file, 29, 0, 518);
+    			add_location(div, file, 29, 0, 529);
     		},
 
     		l: function claim(nodes) {
@@ -3873,7 +3873,6 @@ void main() {
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, t, anchor);
     			insert(target, div, anchor);
     		},
 
@@ -3883,7 +3882,6 @@ void main() {
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(t);
     				detach(div);
     			}
     		}
@@ -3903,7 +3901,7 @@ void main() {
       let match;
       
       while(match = regex.exec(url)) {
-          conf[match[1]] = match[2];  }  
+          conf[match[1]] = JSON.parse(match[2]);  }  
       
       console.log(conf);
 

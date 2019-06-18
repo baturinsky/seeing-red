@@ -13,7 +13,7 @@
   let match;
   
   while(match = regex.exec(url)) {
-      conf[match[1]] = match[2];
+      conf[match[1]] = JSON.parse(match[2]);
   }  
   
   console.log(conf)
@@ -22,7 +22,7 @@
     new Game(conf)  
   })  
 
-</script>>
+</script>
 
 <style>
 </style>
