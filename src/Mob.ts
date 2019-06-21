@@ -1,55 +1,77 @@
-import { DIRS, FOV, RNG, Scheduler, Engine, Path } from "rot-js/lib/index";
-import { game, distance, Tile } from "./Game";
-import Game from "./Game";
-import keyboard, { Keyboard } from './Keyboard'
-
-console.log(keyboard)
+import { DIRS, FOV, RNG, Path } from "rot-js/lib/index";
+import { game, distance } from "./Game";
 
 let keyMap = {};
-keyMap[38] = 0;
-keyMap[33] = 1;
-keyMap[39] = 2;
-keyMap[34] = 3;
-keyMap[40] = 4;
-keyMap[35] = 5;
-keyMap[37] = 6;
-keyMap[36] = 7;
-keyMap[12] = -1;
+keyMap["Numpad8"] = 0;
+keyMap["Numpad9"] = 1;
+keyMap["Numpad6"] = 2;
+keyMap["Numpad3"] = 3;
+keyMap["Numpad2"] = 4;
+keyMap["Numpad1"] = 5;
+keyMap["Numpad4"] = 6;
+keyMap["Numpad7"] = 7;
+keyMap["Numpad5"] = -1;
 
 export default class Mob {
   at: number[];
   sees: number[][] = [];
   path: number[][] = [];
   hate: number = 0;
-  dead: boolean = false
+  alive: boolean = true;
+  concentration = 0;
+
+  serialise() {
+    return { 
+      hate: this.hate, 
+      alive: this.alive, 
+      concentration: this.concentration,
+      at: this.at,
+      path: this.path,
+      isPlayer: game.player == this
+    }
+  }
+
+  deserialise(s:any) {
+    this.hate = s.hate
+    this.alive = s.alive
+    this.concentration = s.concentration
+    this.at = s.at
+    this.path = s.path
+    if(s.isPlayer)
+      game.player = this
+    return this
+  }
+
 
   constructor() {
-    game.mobs.push(this);
+    game.mobs.push(this)
   }
 
   getSpeed() {
+    let speed = 100
     if (this == game.player) {
-      return 120 + this.hate;
-    }
-    return 100;
+      speed = 120 + this.hate;
+    }    
+    return speed;
   }
 
-  act() {
-    if (this == game.player) {
-      game.engine.lock();
-      if(game.seeingRed){
-        this.playerAct(null)
-        //game.engine.unlock()
-        window.setTimeout(() => game.engine.unlock(), 50) 
+  act() {    
+
+    if (this == game.player) {      
+      
+      if (game.seeingRed) {
+        this.playerAct("rampage");
+        game.engine.lock();
+        window.setTimeout(() => game.engine.unlock(), 50);
       } else {
-        keyboard.once(this.keyDown.bind(this))
+        game.waitForInput()
       }
     } else {
       if (this.path && this.path.length > 0) {
         this.goTo(this.path.shift());
       } else {
         this.path = [];
-        let goal = RNG.getItem(game.rooms).getCenter();
+        let goal = RNG.getItem(game.landmarks);
         let pathfinder = new Path.AStar(
           goal[0],
           goal[1],
@@ -91,12 +113,12 @@ export default class Mob {
     this.tile().mob = this;
 
     if (this == game.player) {
-      if(this.tile().symbol == "⚘"){
-        this.tile().symbol = " "
-        game.flowersCollected ++
+      if (this.tile().symbol == "⚘") {
+        this.tile().symbol = " ";
+        game.flowersCollected++;
       }
-      if(this.tile().symbol == "☨" && game.allFlowersCollected()){
-        game.won = true
+      if (this.tile().symbol == "☨" && game.allFlowersCollected()) {
+        game.won = true;
       }
     } else {
       this.leaveScent();
@@ -104,11 +126,10 @@ export default class Mob {
   }
 
   die() {
-    this.dead = true
+    this.alive = false;
 
-    game.mobs = game.mobs.filter(m => m != this);
     this.tile().mob = null;
-    game.engine._scheduler.remove(this);
+    game.scheduler.remove(this);
 
     var fov = new FOV.PreciseShadowcasting(
       (x, y) => game.safeAt([x, y]).cost < 1000
@@ -128,18 +149,24 @@ export default class Mob {
     tile.scent = 1;
   }
 
-  playerAct(code:string|null){
-    if (!code) {
-      let nearestD = 1000;
-      let nearestMob = null;
-      for (let m of game.mobs) {
-        if (m == game.player) continue;
-        let d = distance(m.at, game.player.at);
-        if (d < nearestD) {
-          nearestD = d;
-          nearestMob = m;
-        }
+  findNearestMob() {
+    let nearestD = 1000;
+    let nearestMob = null;
+    for (let m of game.mobs) {
+      if (m == game.player || !m.alive) continue;
+      let d = distance(m.at, game.player.at);
+      if (d < nearestD) {
+        nearestD = d;
+        nearestMob = m;
       }
+    }
+    return nearestMob;
+  }
+
+  playerAct(code: string | null): boolean {
+    if (code == "rampage") {
+
+      let nearestMob = this.findNearestMob();
 
       if (nearestMob) {
         let pathfinder = new Path.AStar(
@@ -152,39 +179,46 @@ export default class Mob {
         pathfinder.compute(this.at[0], this.at[1], (x, y) =>
           this.path.push([x, y])
         );
-        this.goTo(this.path[1]);
+
+        if (this.path[1]) 
+          this.goTo(this.path[1]);
       }
-    } else {  
-  
+
+      this.lookAround()
+
+      return true;
+    } else {
       if (!(code in keyMap)) {
-        return;
+        return false;
       }
-    
+
       let kmc = keyMap[code];
+
+      if (kmc == -1) {
+        this.stay();
+      } else {
+        this.concentration = 0;
+      }
+
       var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
       let newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
       if (game.at(newAt).cost > 1000) {
-        return;
+        return true;
       }
       this.goTo(newAt);
     }
 
     this.lookAround();
-
-    if (RNG.getUniform() < 0.3 || game.player.hate == 100)
-      game.seeingRed = this.hate / 100 > RNG.getUniform();
-
-    game.draw();
-
+    
+    return true;
   }
 
-  keyDown(keyCode) {
-    this.playerAct(keyCode);
-    //keyboard.unsub(this.keyDownBound)
-    game.engine.unlock();
+  stay() {
+    this.concentration++;
+    this.changeHateBy(-0.5);
   }
 
-  enrage(dHate: number) {
+  changeHateBy(dHate: number) {
     this.hate = Math.min(Math.max(0, this.hate + dHate), 100);
   }
 
@@ -206,7 +240,7 @@ export default class Mob {
 
     this.sees = [];
 
-    let dHate = game.seeingRed?-0.5:-0.3;
+    let dHate = game.seeingRed ? -0.5 : -0.3;
     let seesFlower = false;
 
     fov.compute(this.at[0], this.at[1], 20, (x, y, r, vis) => {
@@ -232,9 +266,13 @@ export default class Mob {
       }
     }
 
-    this.enrage(dHate);
+    this.changeHateBy(dHate);
+
+    if (RNG.getUniform() < 0.3 || game.player.hate == 100 || game.player.hate == 0)
+      game.seeingRed = this.hate / 100 > RNG.getUniform();
+
+    game.draw();
   }
 
-  actFixedInterval(){
-  }
+  actFixedInterval() {}
 }

@@ -1,0 +1,8 @@
+
+Mouse Support
+Standing still bonuses
+Exits, NPCs using them
+NPC fear
+Guards
+Text Log
+Saving?

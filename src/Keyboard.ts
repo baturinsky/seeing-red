@@ -1,10 +1,10 @@
-type Handler = (keyCode: number) => void
+type Handler = (keyCode: string) => void
 
 export class Keyboard {
 
   interval = 100
   pressed: { [key: string]: number } = {};
-  subs: ((keyCode: number) => void)[] = []
+  subs: ((keyCode: string) => void)[] = []
 
   constructor() {
     window.addEventListener("keydown", this);
@@ -12,11 +12,11 @@ export class Keyboard {
   }
 
   handleEvent(e:KeyboardEvent) {
-    let code = e.keyCode
+    let code = e.code
     if(e.type == "keydown"){
       if(!(code in this.pressed)){
-        this.click(e.keyCode)
-        this.pressed[code] = window.setInterval(() => this.click(e.keyCode), this.interval)
+        this.click(e.code)
+        this.pressed[code] = window.setInterval(() => this.click(e.code), this.interval)
       }
     }
     if(e.type == "keyup"){
@@ -25,9 +25,9 @@ export class Keyboard {
     }
   }
 
-  click(keyCode:number){
+  click(code:string){
     for(let s of this.subs){
-      s(keyCode)
+      s(code)
     }
   }
 
@@ -42,9 +42,9 @@ export class Keyboard {
   }
 
   once(handler: Handler){
-    let f = (keyCode:number) => {
+    let f = (code:string) => {
       this.unsub(f)
-      handler(keyCode)
+      handler(code)
     }
     this.sub(f)
   }

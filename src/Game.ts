@@ -3,14 +3,15 @@ import {
   RNG,
   DIRS,
   FOV,
-  Scheduler,
+  Scheduler as Schedulers,
   Engine,
   Path,
   Color
-} from "rot-js/lib/index";
+} from "rot-js";
 import Digger from "rot-js/lib/map/digger";
-import { Room } from "rot-js/lib/map/features";
 import Mob from "./Mob";
+import keyboard from "./Keyboard";
+import Scheduler from "rot-js/lib/scheduler/scheduler";
 export let game: Game;
 
 let screenBg = Color.fromString("#180C24") as [number, number, number];
@@ -26,6 +27,8 @@ class Ticker {
   }
 
   act() {
+    game.time++;
+
     game.scent = game.scent.filter(tile => {
       tile.scent = Math.max(tile.scent - 0.05, 0.01);
       return tile.scent > 0.01;
@@ -38,7 +41,6 @@ class Ticker {
 }
 
 export class Tile {
-  at: [number, number];
   cost: number;
   seen: number = 0;
   visible: number = 0;
@@ -47,6 +49,22 @@ export class Tile {
   constructor(public symbol: string) {
     this.cost = ["♠", "♣"].includes(symbol) ? 1e6 : 1;
   }
+
+  serialise() {
+    let s:any = {};
+    Object.assign(s, this)
+    delete s.mob;
+    return s;
+  }
+
+  deserialise(s:any) {
+    Object.assign(this, s)
+    if(this.scent > 0.01){
+      game.scent.push(this)
+    }
+    return this;
+  }
+
 }
 
 function add2d(a: number[], b: number[]) {
@@ -57,24 +75,54 @@ function sub2d(a: number[], b: number[]) {
   return [a[0] - b[0], a[1] - b[1]];
 }
 
-export default class Game {
-  grid: Tile[][];
+export class Game {
   player: Mob;
   d: Display;
   engine: Engine;
-  size: number[];
-  displaySize: number[];
-  mobs: Mob[] = [];
-  rooms: Room[];
-  hateBg: [number, number, number];
-  seeingRed: boolean = false;
   emptyTile = new Tile("♠");
-  flowersCollected = 0;
+  hateBg: [number, number, number];
   scent: Tile[] = [];
-  won = false;
+  scheduler:Scheduler
 
-  mobStatus: Mob[] = [];
-  flowerStatus: Tile[] = [];
+  landmarks: number[][];
+  grid: Tile[][];
+
+  mobs: Mob[] = [];
+  seeingRed: boolean = false;
+  won = false;
+  time = 0;
+
+  flowersCollected = 0;
+  flowers: number[][] = [];
+
+  serialise() {
+    return {
+      options : this.options,
+      seeingRed: this.seeingRed,
+      flowersCollected: this.flowersCollected,
+      time: this.time,
+      won: this.won,
+      landmarks: this.landmarks,
+      flowers: this.flowers,
+      grid: this.grid.map(line => line.map(t => t.serialise())),
+      mobs: this.mobs.map(m => m.serialise())
+    }
+  }
+
+  deserialise(s:any){
+    this.options = s.options
+    this.seeingRed = s.seeingRed
+    this.flowersCollected = s.flowersCollected
+    this.time = s.time
+    this.won = s.won
+    this.landmarks = s.landmarks
+    this.flowers = s.flowers
+    this.scent = []
+    this.grid = s.grid.map(line => line.map(t => new Tile(t.symbol).deserialise(t)))
+    this.mobs = s.mobs.map(m=> new Mob().deserialise(m))    
+    this.schedule()
+    this.draw()
+  }
 
   at(at: number[]) {
     return this.grid[at[0]][at[1]];
@@ -84,8 +132,8 @@ export default class Game {
     if (
       at[0] < 0 ||
       at[1] < 0 ||
-      at[0] >= this.size[0] ||
-      at[1] >= this.size[1]
+      at[0] >= this.options.size[0] ||
+      at[1] >= this.options.size[1]
     )
       return this.emptyTile;
     return this.grid[at[0]][at[1]];
@@ -98,24 +146,27 @@ export default class Game {
       seed?: number;
       mobs?: number;
       flowers?: number;
-      emptiness?: number
+      emptiness?: number;
     } = {}
   ) {
     game = this;
+    
+    console.log(this);
+    (window as any).gameState = this;
 
     RNG.setSeed(options.seed || Math.random());
 
     this.player = new Mob();
-    this.size = options.size || [60, 60];
-    options.emptiness = options.emptiness*1 || 0.35
+    options.size = options.size || [60, 60];
+    options.emptiness = options.emptiness * 1 || 0.35;
     options.mobs = options.mobs * 1 || 10;
     options.flowers = options.flowers * 1 || 4;
 
-    this.displaySize = options.displaySize || [60, 60];
+    options.displaySize = options.displaySize || [60, 60];
 
     let d = (this.d = new Display({
-      width: this.displaySize[0],
-      height: this.displaySize[1],
+      width: options.displaySize[0],
+      height: options.displaySize[1],
       fontSize: 20,
       spacing: 0.6,
       forceSquareRatio: true,
@@ -126,22 +177,45 @@ export default class Game {
 
     this.generateMap();
 
-    let scheduler = new Scheduler.Speed();
-    scheduler.add(new Ticker(), true);
-    for (let mob of this.mobs) {
-      scheduler.add(mob, true);
-    }
-    this.engine = new Engine(scheduler);
+    this.scheduler = new Schedulers.Speed();
+    this.engine = new Engine(this.scheduler);
+    this.schedule();
     this.engine.start();
+    
+    this.player.lookAround();    
+    
+    window.addEventListener("keypress", e => this.keypress(e));
+  }
 
-    this.player.lookAround();
+  keypress(e: KeyboardEvent) {
+    if (e.code.substr(0, 5) == "Digit") {
+      let slot = e.code.substr(5);
+      if (e.shiftKey) {
+        localStorage.setItem(slot, JSON.stringify(this.serialise()))
+        console.log("Save to " + slot)
+      } else {
+        let save = localStorage.getItem(slot)
+        if(save){
+          console.log("Load from " + slot)
+          this.deserialise(JSON.parse(save))
+        } else {
+          console.log("No save in " + slot)
+        }
+      }
+    }
+  }
 
-    this.draw();
+  schedule(){
+    this.scheduler.clear()
+    this.scheduler.add(new Ticker(), true);
+    for (let mob of this.mobs) {
+      this.scheduler.add(mob, true);
+    }
   }
 
   generateMap() {
-    let w = this.size[0];
-    let h = this.size[1];
+    let w = this.options.size[0];
+    let h = this.options.size[1];
     this.grid = new Array(w).fill(null).map(_ => []);
 
     let map = new Digger(w, h, {
@@ -156,7 +230,9 @@ export default class Game {
       this.grid[x][y] = new Tile(symbol);
     });
 
-    let rooms = (this.rooms = map.getRooms());
+    let rooms = map.getRooms();
+
+    this.landmarks = rooms.map(r => r.getCenter());
 
     let roomsRandom = RNG.shuffle(rooms);
 
@@ -167,7 +243,7 @@ export default class Game {
     for (let i = 3; i < 3 + this.options.flowers; i++) {
       let room = roomsRandom[i];
       let c = room.getCenter();
-      this.flowerStatus.push(this.at(c));
+      this.flowers.push(c);
       this.at(c).symbol = "⚘";
     }
 
@@ -178,42 +254,46 @@ export default class Game {
     ) {
       let room = roomsRandom[i];
       let monster = new Mob();
-      this.mobStatus.push(monster);
       monster.at = room.getCenter();
     }
   }
 
-  bg(at: number[]) {
+  tileBg(at: number[]) {
     let tile = this.safeAt(at);
     let bg: [number, number, number] = [0, 0, 0];
+    let d = distance(at, this.player.at);
+    let inScentRadius =
+      Math.max(
+        Math.min(this.player.concentration, 10),
+        this.player.hate * 0.1
+      ) +
+        7 >
+      d;
+
+    if (!tile.seen && (!inScentRadius || tile.scent == 0)) {
+      return Color.toRGB(this.hateBg);
+    }
+
     if (tile.visible) {
       let b = 48 * tile.visible;
-      bg = Color.add(bg, [b, b, b]);
-    } else {
-      if (!tile.seen && tile.scent == 0) {
-        bg = this.hateBg;
-      }
+      bg = [b, b, b];
     }
+
     if (tile.scent > 0) {
-      let scent = tile.scent;
-      let d = distance(at, this.player.at);
-      /*scent -= distance(at, this.player.at) / 100
-      scent -= (100 - this.player.rage) * 0.003
-      scent = Math.max(0, scent)*/
-      if (this.player.hate * 0.3 + 10 > d) {
-        bg = Color.add(bg, [128 * scent, 0, 0]);
-      }
+      bg = Color.add(bg, [128 * (inScentRadius ? tile.scent : 0), 0, 0]);
+      tile.seen = 1;
     }
+
     return Color.toRGB(bg);
   }
 
   draw() {
-    this.d.drawText(0, 0, "_".repeat(this.displaySize[1]));
+    this.d.drawText(0, 0, "_".repeat(this.options.displaySize[1]));
     this.d.drawText(
       0,
       0,
       "%b{red}%c{red}" +
-        "_".repeat((this.player.hate / this.displaySize[1]) * 100)
+        "_".repeat((this.player.hate / this.options.displaySize[1]) * 100)
     );
 
     this.hateBg = this.seeingRed
@@ -223,8 +303,8 @@ export default class Game {
     //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
 
     let half = [
-      Math.floor(this.displaySize[0] / 2),
-      Math.floor(this.displaySize[1] / 2)
+      Math.floor(this.options.displaySize[0] / 2),
+      Math.floor(this.options.displaySize[1] / 2)
     ];
     let delta = [0, 0];
     for (let i of [0, 1]) {
@@ -251,34 +331,38 @@ export default class Game {
           displayAt[1],
           c,
           ["♠", "♣", "."].includes(c) ? null : "red",
-          this.bg([x, y])
+          this.tileBg([x, y])
         );
       }
 
     for (let mob of game.mobs) {
+      if (!mob.alive) continue;
       let tile = game.at(mob.at);
       if (tile.visible) {
         let mobDisplayAt = add2d(mob.at, delta);
         let c = "white";
-        if (this.player == mob && this.seeingRed) 
-          c = "red";
+        if (this.player == mob && this.seeingRed) c = "red";
         this.d.draw(
           mobDisplayAt[0],
           mobDisplayAt[1],
           this.player == mob ? "☻" : "☺",
           c,
-          this.bg(mob.at)
+          this.tileBg(mob.at)
         );
       }
     }
 
-    this.d.drawText(0, this.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + "_".repeat(this.displaySize[0]));
+    this.d.drawText(
+      0,
+      this.options.displaySize[1] - 1,
+      "%b{#180C24}%c{#180C24}" + "_".repeat(this.options.displaySize[0])
+    );
 
     let statusLine = "use NUMPAD ";
 
     statusLine +=
       "%c{gray}avoid? " +
-      this.mobStatus.map(m => (m.dead ? "%c{red}*" : "%c{white}☺")).join("");
+      this.mobs.map(m => (m.alive ? "%c{white}☺" : "%c{red}*")).join("");
 
     if (this.won) {
       statusLine += " %c{red}GAME COMPLETE";
@@ -287,16 +371,27 @@ export default class Game {
     } else {
       statusLine +=
         " %c{gray}collect " +
-        this.flowerStatus
-          .map(t => (t.symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"))
+        this.flowers
+          .map(t => (this.at(t).symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"))
           .join("");
     }
 
-    this.d.drawText(0, this.displaySize[1] - 1, statusLine);
+    this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
+  }
+
+  waitForInput(){
+    game.engine.lock();
+    keyboard.once(this.onKeyboard.bind(this));
+  }
+
+  onKeyboard(code) {    
+    if (this.player.playerAct(code)) 
+      game.engine.unlock();
+    else
+      keyboard.once(this.onKeyboard.bind(this));
   }
 
   allFlowersCollected() {
-    //return true;
-    return this.flowersCollected == this.flowerStatus.length;
+    return this.flowersCollected == this.flowers.length;
   }
 }

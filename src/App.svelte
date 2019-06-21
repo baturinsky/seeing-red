@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-  import Game from './Game';
+  import { Game } from './Game';
   import FontFaceObserver from 'fontfaceobserver'
 
   let icons = new FontFaceObserver('Icons');
