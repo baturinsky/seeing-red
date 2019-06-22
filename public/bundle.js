@@ -3384,7 +3384,6 @@ void main() {
     var Mob = /** @class */ (function () {
         function Mob() {
             this.sees = [];
-            this.path = [];
             this.hate = 0;
             this.alive = true;
             this.concentration = 0;
@@ -3418,10 +3417,9 @@ void main() {
             return speed;
         };
         Mob.prototype.act = function () {
-            var _this = this;
             if (this == game.player) {
-                if (game.seeingRed) {
-                    this.playerAct("rampage");
+                if (game.seeingRed || this.path) {
+                    this.playerAct(game.seeingRed ? "rampage" : "path");
                     game.engine.lock();
                     window.setTimeout(function () { return game.engine.unlock(); }, 50);
                 }
@@ -3436,11 +3434,7 @@ void main() {
                 else {
                     this.path = [];
                     var goal = RNG$1.getItem(game.landmarks);
-                    var pathfinder = new Path$1.AStar(goal[0], goal[1], function (x, y) { return game.at([x, y]).cost < 1000; }, { topology: 4 });
-                    pathfinder.compute(this.at[0], this.at[1], function (x, y) {
-                        return _this.path.push([x, y]);
-                    });
-                    this.path.shift();
+                    this.path = this.findPathTo(goal);
                 }
             }
         };
@@ -3503,35 +3497,53 @@ void main() {
             tile.scent = 1;
         };
         Mob.prototype.findNearestMob = function () {
-            var nearestD = 1000;
-            var nearestMob = null;
-            for (var _i = 0, _a = game.mobs; _i < _a.length; _i++) {
-                var m = _a[_i];
-                if (m == game.player || !m.alive)
-                    continue;
-                var d = distance(m.at, game.player.at);
-                if (d < nearestD) {
-                    nearestD = d;
-                    nearestMob = m;
-                }
-            }
-            return nearestMob;
+            var nearestMob = game.mobs
+                .map(function (m) { return ({ mob: m, d: (m == game.player || !m.alive) ? 1e6 : distance(m.at, game.player.at) }); })
+                .reduce(function (prev, cur) { return (cur.d < prev.d ? cur : prev); }, {
+                mob: null,
+                d: 1e6
+            });
+            return nearestMob.mob;
+        };
+        Mob.prototype.findPathTo = function (at) {
+            var pathfinder = new Path$1.AStar(at[0], at[1], function (x, y) { return game.at([x, y]).cost < 1000; }, { topology: 8 });
+            var path = [];
+            pathfinder.compute(this.at[0], this.at[1], function (x, y) {
+                return path.push([x, y]);
+            });
+            if (path)
+                path.shift();
+            return path;
         };
         Mob.prototype.playerAct = function (code) {
-            var _this = this;
             if (code == "rampage") {
+                this.path = null;
                 var nearestMob = this.findNearestMob();
                 if (nearestMob) {
-                    var pathfinder = new Path$1.AStar(nearestMob.at[0], nearestMob.at[1], function (x, y) { return game.at([x, y]).cost < 1000; }, { topology: 4 });
-                    this.path = [];
-                    pathfinder.compute(this.at[0], this.at[1], function (x, y) {
-                        return _this.path.push([x, y]);
-                    });
-                    if (this.path[1])
-                        this.goTo(this.path[1]);
+                    var path = this.findPathTo(nearestMob.at);
+                    if (path[0])
+                        this.goTo(path[0]);
                 }
                 this.lookAround();
                 return true;
+            }
+            else if (code == "path") {
+                if (this.path.length == 0)
+                    this.path = null;
+                if (this.path) {
+                    this.goTo(this.path.shift());
+                    this.lookAround();
+                    for (var _i = 0, _a = this.sees; _i < _a.length; _i++) {
+                        var t = _a[_i];
+                        var m = game.at(t).mob;
+                        if (m && m != this)
+                            this.path = null;
+                    }
+                    return true;
+                }
+                else {
+                    return false;
+                }
             }
             else {
                 if (!(code in keyMap)) {
@@ -3601,7 +3613,9 @@ void main() {
                 }
             }
             this.changeHateBy(dHate);
-            if (RNG$1.getUniform() < 0.3 || game.player.hate == 100 || game.player.hate == 0)
+            if (RNG$1.getUniform() < 0.3 ||
+                game.player.hate == 100 ||
+                game.player.hate == 0)
                 game.seeingRed = this.hate / 100 > RNG$1.getUniform();
             game.draw();
         };
@@ -3655,6 +3669,9 @@ void main() {
         };
         Keyboard.prototype.isPressed = function (keyCode) {
             return keyCode in this.pressed;
+        };
+        Keyboard.prototype.clear = function () {
+            this.subs = [];
         };
         return Keyboard;
     }());
@@ -3712,6 +3729,9 @@ void main() {
     function add2d(a, b) {
         return [a[0] + b[0], a[1] + b[1]];
     }
+    function sub2d(a, b) {
+        return [a[0] - b[0], a[1] - b[1]];
+    }
     var Game = /** @class */ (function () {
         function Game(options) {
             var _this = this;
@@ -3719,6 +3739,7 @@ void main() {
             this.options = options;
             this.emptyTile = new Tile$1("♠");
             this.scent = [];
+            this.mouseOver = [0, 0];
             this.mobs = [];
             this.seeingRed = false;
             this.won = false;
@@ -3748,10 +3769,14 @@ void main() {
             this.generateMap();
             this.scheduler = new Schedulers.Speed();
             this.engine = new Engine(this.scheduler);
-            this.schedule();
+            this.initMobs();
             this.engine.start();
             this.player.lookAround();
             window.addEventListener("keypress", function (e) { return _this.keypress(e); });
+            window.addEventListener("mousedown", function (e) { return _this.click(e); });
+            window.addEventListener("touchend", function (e) { return _this.click(e); });
+            window.addEventListener("mousemove", function (e) { return _this.mousemove(e); });
+            keyboard.sub(this.onKeyboard.bind(this));
         }
         Game.prototype.serialise = function () {
             return {
@@ -3762,6 +3787,7 @@ void main() {
                 won: this.won,
                 landmarks: this.landmarks,
                 flowers: this.flowers,
+                exits: this.exits,
                 grid: this.grid.map(function (line) { return line.map(function (t) { return t.serialise(); }); }),
                 mobs: this.mobs.map(function (m) { return m.serialise(); })
             };
@@ -3774,10 +3800,14 @@ void main() {
             this.won = s.won;
             this.landmarks = s.landmarks;
             this.flowers = s.flowers;
+            this.exits = s.exits;
             this.scent = [];
-            this.grid = s.grid.map(function (line) { return line.map(function (t) { return new Tile$1(t.symbol).deserialise(t); }); });
+            this.grid = s.grid.map(function (line) {
+                return line.map(function (t) { return new Tile$1(t.symbol).deserialise(t); });
+            });
+            this.findFreeTiles();
             this.mobs = s.mobs.map(function (m) { return new Mob().deserialise(m); });
-            this.schedule();
+            this.initMobs();
             this.draw();
         };
         Game.prototype.at = function (at) {
@@ -3810,13 +3840,34 @@ void main() {
                 }
             }
         };
-        Game.prototype.schedule = function () {
+        Game.prototype.drawAtDisplay = function (displayAt, bg) {
+            var delta = this.deltaAndHalf().delta;
+            var at = sub2d(displayAt, delta);
+            var tile = this.safeAt(at);
+            this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), bg || this.tileBg(at));
+        };
+        Game.prototype.mousemove = function (e) {
+            this.drawAtDisplay(this.mouseOver);
+            this.mouseOver = this.d.eventToPosition(e);
+            this.drawAtDisplay(this.mouseOver, "#400");
+        };
+        Game.prototype.initMobs = function () {
             this.scheduler.clear();
             this.scheduler.add(new Ticker(), true);
             for (var _i = 0, _a = this.mobs; _i < _a.length; _i++) {
                 var mob = _a[_i];
                 this.scheduler.add(mob, true);
+                this.at(mob.at).mob = mob;
             }
+        };
+        Game.prototype.findFreeTiles = function () {
+            var _this = this;
+            this.freeTiles = [];
+            this.eachTile(function (at, t) {
+                if (t.cost < 1000)
+                    _this.freeTiles.push(at);
+            });
+            return this.freeTiles;
         };
         Game.prototype.generateMap = function () {
             var _this = this;
@@ -3833,9 +3884,35 @@ void main() {
                 var symbol = what ? ((x + y) % 2 ? "♠" : "♣") : " ";
                 _this.grid[x][y] = new Tile$1(symbol);
             });
+            this.findFreeTiles();
             var rooms = map.getRooms();
             this.landmarks = rooms.map(function (r) { return r.getCenter(); });
             var roomsRandom = RNG$1.shuffle(rooms);
+            /*
+            let roomsByX = rooms.sort(r => r.getCenter()[0]);
+        
+            this.exits = [
+              [roomsByX[0].getLeft() - 1, roomsByX[0].getCenter()[1]],
+              [
+                roomsByX[roomsByX.length - 1].getRight() + 1,
+                roomsByX[roomsByX.length - 1].getCenter()[1]
+              ]
+            ];*/
+            this.exits = [[1e6, 0], [-1e6, 0]];
+            for (var _i = 0, _a = this.freeTiles; _i < _a.length; _i++) {
+                var at = _a[_i];
+                var t = this.at(at);
+                if (t.symbol == " ") {
+                    if (at[0] < this.exits[0][0]) {
+                        this.exits[0] = at;
+                    }
+                    if (at[0] >= this.exits[1][0])
+                        this.exits[1] = at;
+                }
+            }
+            console.log(this.exits);
+            this.at(this.exits[0]).symbol = "<";
+            this.at(this.exits[1]).symbol = ">";
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
             this.player.at = roomsRandom[1].getCenter();
             for (var i = 3; i < 3 + this.options.flowers; i++) {
@@ -3870,6 +3947,26 @@ void main() {
             }
             return Color.toRGB(bg);
         };
+        Game.prototype.tileFg = function (tile) {
+            if (tile.mob && tile.visible)
+                return (this.player == tile.mob && this.seeingRed) ? "red" : "white";
+            else
+                return ["♠", "♣", "."].includes(tile.symbol) ? null : "red";
+        };
+        Game.prototype.tileSym = function (tile) {
+            if (tile.mob && tile.visible) {
+                return this.player == tile.mob ? "☻" : "☺";
+            }
+            else {
+                return tile.visible || tile.seen ? tile.symbol : " ";
+            }
+        };
+        Game.prototype.deltaAndHalf = function () {
+            var _this = this;
+            var half = [0, 1].map(function (axis) { return Math.floor(_this.options.displaySize[axis] / 2); });
+            var delta = [0, 1].map(function (axis) { return -_this.player.at[axis] + half[axis]; });
+            return { delta: delta, half: half };
+        };
         Game.prototype.draw = function () {
             var _this = this;
             this.d.drawText(0, 0, "_".repeat(this.options.displaySize[1]));
@@ -3878,35 +3975,12 @@ void main() {
             this.hateBg = this.seeingRed
                 ? [255, 0, 0]
                 : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
-            //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
-            var half = [
-                Math.floor(this.options.displaySize[0] / 2),
-                Math.floor(this.options.displaySize[1] / 2)
-            ];
-            var delta = [0, 0];
-            for (var _i = 0, _a = [0, 1]; _i < _a.length; _i++) {
-                var i = _a[_i];
-                delta[i] = -this.player.at[i] + half[i];
-            }
-            for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0]; x++)
+            var _a = this.deltaAndHalf(), delta = _a.delta, half = _a.half;
+            for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0]; x++) {
                 for (var y = this.player.at[1] - half[1] + 1; y < this.player.at[1] + half[1] - 1; y++) {
-                    var tile = this.safeAt([x, y]);
-                    var c = tile.visible || tile.seen ? tile.symbol : " ";
                     var displayAt = add2d([x, y], delta);
-                    var bg = tile.seen ? "#222" : "black";
-                    this.d.draw(displayAt[0], displayAt[1], c, ["♠", "♣", "."].includes(c) ? null : "red", this.tileBg([x, y]));
-                }
-            for (var _b = 0, _c = game.mobs; _b < _c.length; _b++) {
-                var mob = _c[_b];
-                if (!mob.alive)
-                    continue;
-                var tile = game.at(mob.at);
-                if (tile.visible) {
-                    var mobDisplayAt = add2d(mob.at, delta);
-                    var c = "white";
-                    if (this.player == mob && this.seeingRed)
-                        c = "red";
-                    this.d.draw(mobDisplayAt[0], mobDisplayAt[1], this.player == mob ? "☻" : "☺", c, this.tileBg(mob.at));
+                    var tile = this.safeAt([x, y]);
+                    this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), this.tileBg([x, y]));
                 }
             }
             this.d.drawText(0, this.options.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + "_".repeat(this.options.displaySize[0]));
@@ -3931,16 +4005,42 @@ void main() {
         };
         Game.prototype.waitForInput = function () {
             game.engine.lock();
-            keyboard.once(this.onKeyboard.bind(this));
         };
         Game.prototype.onKeyboard = function (code) {
             if (this.player.playerAct(code))
                 game.engine.unlock();
-            else
-                keyboard.once(this.onKeyboard.bind(this));
+        };
+        Game.prototype.click = function (e) {
+            if (this.seeingRed)
+                return;
+            var delta = this.deltaAndHalf().delta;
+            var to = sub2d(this.mouseOver, delta);
+            var tile = this.at(to);
+            if (!tile)
+                return;
+            if (tile.cost > 1000) {
+                var nearest = this.freeTiles.
+                    map(function (at) { return ({ at: at, d: distance(at, to) }); }).
+                    reduce(function (prev, cur) { return cur.d < prev.d ? cur : prev; }, { at: [0, 0], d: 1e6 });
+                if (distance(to, this.player.at) < nearest.d) {
+                    return;
+                }
+                to = nearest.at;
+                console.log(to);
+            }
+            game.player.path = game.player.findPathTo(to);
+            if (this.player.playerAct("path"))
+                game.engine.unlock();
         };
         Game.prototype.allFlowersCollected = function () {
             return this.flowersCollected == this.flowers.length;
+        };
+        Game.prototype.eachTile = function (hook) {
+            var _a = this.options.size, w = _a[0], h = _a[1];
+            for (var x = 0; x < w; x++)
+                for (var y = 0; y < w; y++)
+                    if (hook([x, y], this.grid[x][y]))
+                        return;
         };
         return Game;
     }());

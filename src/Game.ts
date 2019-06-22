@@ -51,27 +51,26 @@ export class Tile {
   }
 
   serialise() {
-    let s:any = {};
-    Object.assign(s, this)
+    let s: any = {};
+    Object.assign(s, this);
     delete s.mob;
     return s;
   }
 
-  deserialise(s:any) {
-    Object.assign(this, s)
-    if(this.scent > 0.01){
-      game.scent.push(this)
+  deserialise(s: any) {
+    Object.assign(this, s);
+    if (this.scent > 0.01) {
+      game.scent.push(this);
     }
     return this;
   }
-
 }
 
-function add2d(a: number[], b: number[]) {
+function add2d(a: number[], b: number[]):[number, number] {
   return [a[0] + b[0], a[1] + b[1]];
 }
 
-function sub2d(a: number[], b: number[]) {
+function sub2d(a: number[], b: number[]):[number, number] {
   return [a[0] - b[0], a[1] - b[1]];
 }
 
@@ -82,10 +81,13 @@ export class Game {
   emptyTile = new Tile("♠");
   hateBg: [number, number, number];
   scent: Tile[] = [];
-  scheduler:Scheduler
+  scheduler: Scheduler;
+  mouseOver: number[] = [0,0];
+  freeTiles: number[][];
 
   landmarks: number[][];
   grid: Tile[][];
+  exits: number[][];
 
   mobs: Mob[] = [];
   seeingRed: boolean = false;
@@ -97,31 +99,36 @@ export class Game {
 
   serialise() {
     return {
-      options : this.options,
+      options: this.options,
       seeingRed: this.seeingRed,
       flowersCollected: this.flowersCollected,
       time: this.time,
       won: this.won,
       landmarks: this.landmarks,
       flowers: this.flowers,
+      exits: this.exits,
       grid: this.grid.map(line => line.map(t => t.serialise())),
       mobs: this.mobs.map(m => m.serialise())
-    }
+    };
   }
 
-  deserialise(s:any){
-    this.options = s.options
-    this.seeingRed = s.seeingRed
-    this.flowersCollected = s.flowersCollected
-    this.time = s.time
-    this.won = s.won
-    this.landmarks = s.landmarks
-    this.flowers = s.flowers
-    this.scent = []
-    this.grid = s.grid.map(line => line.map(t => new Tile(t.symbol).deserialise(t)))
-    this.mobs = s.mobs.map(m=> new Mob().deserialise(m))    
-    this.schedule()
-    this.draw()
+  deserialise(s: any) {
+    this.options = s.options;
+    this.seeingRed = s.seeingRed;
+    this.flowersCollected = s.flowersCollected;
+    this.time = s.time;
+    this.won = s.won;
+    this.landmarks = s.landmarks;
+    this.flowers = s.flowers;
+    this.exits = s.exits;
+    this.scent = [];
+    this.grid = s.grid.map(line =>
+      line.map(t => new Tile(t.symbol).deserialise(t))
+    );
+    this.findFreeTiles()
+    this.mobs = s.mobs.map(m => new Mob().deserialise(m));
+    this.initMobs();
+    this.draw();
   }
 
   at(at: number[]) {
@@ -150,7 +157,7 @@ export class Game {
     } = {}
   ) {
     game = this;
-    
+
     console.log(this);
     (window as any).gameState = this;
 
@@ -179,38 +186,66 @@ export class Game {
 
     this.scheduler = new Schedulers.Speed();
     this.engine = new Engine(this.scheduler);
-    this.schedule();
+    this.initMobs();
     this.engine.start();
-    
-    this.player.lookAround();    
-    
+
+    this.player.lookAround();
+
     window.addEventListener("keypress", e => this.keypress(e));
+    window.addEventListener("mousedown", e => this.click(e));
+    window.addEventListener("touchend", e => this.click(e));
+    window.addEventListener("mousemove", e => this.mousemove(e));
+
+    keyboard.sub(this.onKeyboard.bind(this));
   }
 
   keypress(e: KeyboardEvent) {
     if (e.code.substr(0, 5) == "Digit") {
       let slot = e.code.substr(5);
       if (e.shiftKey) {
-        localStorage.setItem(slot, JSON.stringify(this.serialise()))
-        console.log("Save to " + slot)
+        localStorage.setItem(slot, JSON.stringify(this.serialise()));
+        console.log("Save to " + slot);
       } else {
-        let save = localStorage.getItem(slot)
-        if(save){
-          console.log("Load from " + slot)
-          this.deserialise(JSON.parse(save))
+        let save = localStorage.getItem(slot);
+        if (save) {
+          console.log("Load from " + slot);
+          this.deserialise(JSON.parse(save));
         } else {
-          console.log("No save in " + slot)
+          console.log("No save in " + slot);
         }
       }
     }
   }
 
-  schedule(){
-    this.scheduler.clear()
+  drawAtDisplay(displayAt:number[], bg?:string){
+    let {delta} = this.deltaAndHalf();
+    
+    let at = sub2d(displayAt, delta);    
+    let tile = this.safeAt(at);    
+    this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), bg || this.tileBg(at));
+  }
+
+  mousemove(e: MouseEvent) {
+    this.drawAtDisplay(this.mouseOver)
+    this.mouseOver = this.d.eventToPosition(e);
+    this.drawAtDisplay(this.mouseOver, "#400")
+  }
+
+  initMobs() {
+    this.scheduler.clear();
     this.scheduler.add(new Ticker(), true);
     for (let mob of this.mobs) {
       this.scheduler.add(mob, true);
+      this.at(mob.at).mob = mob;
     }
+  }
+
+  findFreeTiles(){
+    this.freeTiles = []
+    this.eachTile((at, t) => {
+      if(t.cost<1000) this.freeTiles.push(at)
+    })
+    return this.freeTiles
   }
 
   generateMap() {
@@ -230,11 +265,41 @@ export class Game {
       this.grid[x][y] = new Tile(symbol);
     });
 
+    this.findFreeTiles()
+
     let rooms = map.getRooms();
 
     this.landmarks = rooms.map(r => r.getCenter());
 
     let roomsRandom = RNG.shuffle(rooms);
+
+    /*
+    let roomsByX = rooms.sort(r => r.getCenter()[0]);
+
+    this.exits = [
+      [roomsByX[0].getLeft() - 1, roomsByX[0].getCenter()[1]],
+      [
+        roomsByX[roomsByX.length - 1].getRight() + 1,
+        roomsByX[roomsByX.length - 1].getCenter()[1]
+      ]
+    ];*/
+
+    this.exits = [[1e6,0], [-1e6,0]]
+    for(let at of this.freeTiles){
+      let t = this.at(at)
+      if(t.symbol == " "){
+        if(at[0] < this.exits[0][0]){
+          this.exits[0] = at
+        }
+        if(at[0] >= this.exits[1][0])
+          this.exits[1] = at
+      }
+    }
+
+    console.log(this.exits)
+    
+    this.at(this.exits[0]).symbol = "<";
+    this.at(this.exits[1]).symbol = ">";
 
     this.at(roomsRandom[0].getCenter()).symbol = "☨";
 
@@ -259,6 +324,7 @@ export class Game {
   }
 
   tileBg(at: number[]) {
+
     let tile = this.safeAt(at);
     let bg: [number, number, number] = [0, 0, 0];
     let d = distance(at, this.player.at);
@@ -287,6 +353,28 @@ export class Game {
     return Color.toRGB(bg);
   }
 
+  tileFg(tile:Tile){
+    if (tile.mob && tile.visible)
+      return (this.player == tile.mob && this.seeingRed)? "red" : "white";
+    else
+      return ["♠", "♣", "."].includes(tile.symbol) ? null : "red";  
+  }
+
+  tileSym(tile:Tile){
+    if (tile.mob && tile.visible) {
+      return this.player == tile.mob ? "☻" : "☺";
+    } else {    
+      return tile.visible || tile.seen ? tile.symbol : " ";
+    }
+  
+  }
+
+  deltaAndHalf(){
+    const half = [0,1].map(axis => Math.floor(this.options.displaySize[axis] / 2))
+    const delta = [0,1].map(axis => -this.player.at[axis] + half[axis])
+    return {delta, half}
+  }
+
   draw() {
     this.d.drawText(0, 0, "_".repeat(this.options.displaySize[1]));
     this.d.drawText(
@@ -300,55 +388,22 @@ export class Game {
       ? [255, 0, 0]
       : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
 
-    //this.d.drawText(0,  0, Math.round(this.player.rage).toString())
-
-    let half = [
-      Math.floor(this.options.displaySize[0] / 2),
-      Math.floor(this.options.displaySize[1] / 2)
-    ];
-    let delta = [0, 0];
-    for (let i of [0, 1]) {
-      delta[i] = -this.player.at[i] + half[i];
-    }
+      
+    const {delta, half} = this.deltaAndHalf()
 
     for (
       let x = this.player.at[0] - half[0];
       x < this.player.at[0] + half[0];
       x++
-    )
+    ) {
       for (
         let y = this.player.at[1] - half[1] + 1;
         y < this.player.at[1] + half[1] - 1;
         y++
       ) {
-        let tile = this.safeAt([x, y]);
-        let c = tile.visible || tile.seen ? tile.symbol : " ";
-
         let displayAt = add2d([x, y], delta);
-        let bg = tile.seen ? "#222" : "black";
-        this.d.draw(
-          displayAt[0],
-          displayAt[1],
-          c,
-          ["♠", "♣", "."].includes(c) ? null : "red",
-          this.tileBg([x, y])
-        );
-      }
-
-    for (let mob of game.mobs) {
-      if (!mob.alive) continue;
-      let tile = game.at(mob.at);
-      if (tile.visible) {
-        let mobDisplayAt = add2d(mob.at, delta);
-        let c = "white";
-        if (this.player == mob && this.seeingRed) c = "red";
-        this.d.draw(
-          mobDisplayAt[0],
-          mobDisplayAt[1],
-          this.player == mob ? "☻" : "☺",
-          c,
-          this.tileBg(mob.at)
-        );
+        let tile = this.safeAt([x, y]);
+        this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), this.tileBg([x, y]));
       }
     }
 
@@ -379,19 +434,53 @@ export class Game {
     this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
   }
 
-  waitForInput(){
+  waitForInput() {
     game.engine.lock();
-    keyboard.once(this.onKeyboard.bind(this));
   }
 
-  onKeyboard(code) {    
-    if (this.player.playerAct(code)) 
+  onKeyboard(code) {
+    if (this.player.playerAct(code)) game.engine.unlock();
+  }
+
+  click(e: MouseEvent | TouchEvent) {
+    if(this.seeingRed)
+      return;
+
+    let {delta} = this.deltaAndHalf();    
+    let to = sub2d(this.mouseOver, delta);    
+
+    let tile = this.at(to)
+    if(!tile)
+      return
+
+    if(tile.cost>1000){
+      let nearest = this.freeTiles.
+        map(at => ({at:at as [number,number], d:distance(at, to)}) ).
+        reduce((prev, cur) => cur.d < prev.d?cur:prev, {at:[0,0], d:1e6});
+      
+      if(distance(to, this.player.at) < nearest.d){
+        return
+      }
+
+      to = nearest.at
+      console.log(to)
+    }
+
+    game.player.path = game.player.findPathTo(to)
+
+    if(this.player.playerAct("path"))
       game.engine.unlock();
-    else
-      keyboard.once(this.onKeyboard.bind(this));
   }
 
   allFlowersCollected() {
     return this.flowersCollected == this.flowers.length;
+  }
+
+  eachTile(hook:(at:number[], tile:Tile) => boolean|void){
+    let [w, h] = this.options.size
+    for(let x=0; x<w; x++)
+      for(let y=0; y<w; y++)
+        if(hook([x,y],this.grid[x][y]))
+          return;
   }
 }

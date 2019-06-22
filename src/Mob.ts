@@ -15,56 +15,52 @@ keyMap["Numpad5"] = -1;
 export default class Mob {
   at: number[];
   sees: number[][] = [];
-  path: number[][] = [];
+  path: number[][];
   hate: number = 0;
   alive: boolean = true;
   concentration = 0;
 
   serialise() {
-    return { 
-      hate: this.hate, 
-      alive: this.alive, 
+    return {
+      hate: this.hate,
+      alive: this.alive,
       concentration: this.concentration,
       at: this.at,
       path: this.path,
       isPlayer: game.player == this
-    }
+    };
   }
 
-  deserialise(s:any) {
-    this.hate = s.hate
-    this.alive = s.alive
-    this.concentration = s.concentration
-    this.at = s.at
-    this.path = s.path
-    if(s.isPlayer)
-      game.player = this
-    return this
+  deserialise(s: any) {
+    this.hate = s.hate;
+    this.alive = s.alive;
+    this.concentration = s.concentration;
+    this.at = s.at;
+    this.path = s.path;
+    if (s.isPlayer) game.player = this;
+    return this;
   }
-
 
   constructor() {
-    game.mobs.push(this)
+    game.mobs.push(this);
   }
 
   getSpeed() {
-    let speed = 100
+    let speed = 100;
     if (this == game.player) {
       speed = 120 + this.hate;
-    }    
+    }
     return speed;
   }
 
-  act() {    
-
-    if (this == game.player) {      
-      
-      if (game.seeingRed) {
-        this.playerAct("rampage");
+  act() {
+    if (this == game.player) {
+      if (game.seeingRed || this.path) {
+        this.playerAct(game.seeingRed?"rampage":"path");
         game.engine.lock();
         window.setTimeout(() => game.engine.unlock(), 50);
       } else {
-        game.waitForInput()
+        game.waitForInput();
       }
     } else {
       if (this.path && this.path.length > 0) {
@@ -72,16 +68,7 @@ export default class Mob {
       } else {
         this.path = [];
         let goal = RNG.getItem(game.landmarks);
-        let pathfinder = new Path.AStar(
-          goal[0],
-          goal[1],
-          (x, y) => game.at([x, y]).cost < 1000,
-          { topology: 4 }
-        );
-        pathfinder.compute(this.at[0], this.at[1], (x, y) =>
-          this.path.push([x, y])
-        );
-        this.path.shift();
+        this.path = this.findPathTo(goal)
       }
     }
   }
@@ -150,44 +137,65 @@ export default class Mob {
   }
 
   findNearestMob() {
-    let nearestD = 1000;
-    let nearestMob = null;
-    for (let m of game.mobs) {
-      if (m == game.player || !m.alive) continue;
-      let d = distance(m.at, game.player.at);
-      if (d < nearestD) {
-        nearestD = d;
-        nearestMob = m;
-      }
-    }
-    return nearestMob;
+    let nearestMob = game.mobs
+      .map(m => ({ mob: m, d: (m==game.player || !m.alive)?1e6 : distance(m.at, game.player.at) }))
+      .reduce((prev, cur) => (cur.d < prev.d ? cur : prev), {
+        mob: null,
+        d: 1e6
+      });
+
+    return nearestMob.mob;
+  }
+
+  findPathTo(at:number[]){
+    let pathfinder = new Path.AStar(
+      at[0],
+      at[1],
+      (x, y) => game.at([x, y]).cost < 1000,
+      { topology: 8 }
+    );
+    let path = [];
+    pathfinder.compute(this.at[0], this.at[1], (x, y) =>
+      path.push([x, y])
+    );
+    if(path)
+      path.shift()
+    return path
   }
 
   playerAct(code: string | null): boolean {
     if (code == "rampage") {
-
+      this.path = null
       let nearestMob = this.findNearestMob();
 
       if (nearestMob) {
-        let pathfinder = new Path.AStar(
-          nearestMob.at[0],
-          nearestMob.at[1],
-          (x, y) => game.at([x, y]).cost < 1000,
-          { topology: 4 }
-        );
-        this.path = [];
-        pathfinder.compute(this.at[0], this.at[1], (x, y) =>
-          this.path.push([x, y])
-        );
-
-        if (this.path[1]) 
-          this.goTo(this.path[1]);
+        let path = this.findPathTo(nearestMob.at)
+        if (path[0])
+          this.goTo(path[0]);
       }
 
-      this.lookAround()
-
+      this.lookAround();
       return true;
+
+    } else if(code == "path") {
+      if(this.path.length == 0)
+        this.path = null;
+      
+      if(this.path){
+        this.goTo(this.path.shift())
+        this.lookAround();
+        for(let t of this.sees){
+          let m = game.at(t).mob
+          if(m && m!=this)
+            this.path = null
+        }
+        return true;
+      } else {
+        return false;
+      }
+
     } else {
+
       if (!(code in keyMap)) {
         return false;
       }
@@ -209,7 +217,7 @@ export default class Mob {
     }
 
     this.lookAround();
-    
+
     return true;
   }
 
@@ -268,7 +276,11 @@ export default class Mob {
 
     this.changeHateBy(dHate);
 
-    if (RNG.getUniform() < 0.3 || game.player.hate == 100 || game.player.hate == 0)
+    if (
+      RNG.getUniform() < 0.3 ||
+      game.player.hate == 100 ||
+      game.player.hate == 0
+    )
       game.seeingRed = this.hate / 100 > RNG.getUniform();
 
     game.draw();

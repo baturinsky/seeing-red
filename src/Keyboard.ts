@@ -52,6 +52,10 @@ export class Keyboard {
   isPressed(keyCode:number): boolean{
     return keyCode in this.pressed
   }
+
+  clear(){
+    this.subs = []
+  }
 }
 
 let keyboard = new Keyboard();
