@@ -29,6 +29,7 @@
   "dependencies": {
     "@types/js-yaml": "^3.12.1",
     "bulma": "^0.7.5",
+    "easystarjs": "^0.4.3",
     "fontfaceobserver": "^2.1.0",
     "fuse.js": "^3.4.5",
     "js-yaml": "^3.13.1",

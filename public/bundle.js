@@ -24,14 +24,34 @@ var app = (function (exports) {
     function safe_not_equal(a, b) {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
     }
+
+    function append(target, node) {
+        target.appendChild(node);
+    }
     function insert(target, node, anchor) {
         target.insertBefore(node, anchor || null);
     }
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
     function element(name) {
         return document.createElement(name);
+    }
+    function text(data) {
+        return document.createTextNode(data);
+    }
+    function space() {
+        return text(' ');
+    }
+    function listen(node, event, handler, options) {
+        node.addEventListener(event, handler, options);
+        return () => node.removeEventListener(event, handler, options);
     }
     function children(element) {
         return Array.from(element.childNodes);
@@ -40,6 +60,14 @@ var app = (function (exports) {
     let current_component;
     function set_current_component(component) {
         current_component = component;
+    }
+    function get_current_component() {
+        if (!current_component)
+            throw new Error(`Function called outside component initialization`);
+        return current_component;
+    }
+    function onMount(fn) {
+        get_current_component().$$.on_mount.push(fn);
     }
 
     const dirty_components = [];
@@ -53,6 +81,9 @@ var app = (function (exports) {
             update_scheduled = true;
             resolved_promise.then(flush);
         }
+    }
+    function add_binding_callback(fn) {
+        binding_callbacks.push(fn);
     }
     function add_render_callback(fn) {
         render_callbacks.push(fn);
@@ -3127,206 +3158,6 @@ void main() {
     }
 
     /**
-     * @class Abstract pathfinder
-     * @param {int} toX Target X coord
-     * @param {int} toY Target Y coord
-     * @param {function} passableCallback Callback to determine map passability
-     * @param {object} [options]
-     * @param {int} [options.topology=8]
-     */
-    class Path {
-        constructor(toX, toY, passableCallback, options = {}) {
-            this._toX = toX;
-            this._toY = toY;
-            this._passableCallback = passableCallback;
-            this._options = Object.assign({
-                topology: 8
-            }, options);
-            this._dirs = DIRS[this._options.topology];
-            if (this._options.topology == 8) { /* reorder dirs for more aesthetic result (vertical/horizontal first) */
-                this._dirs = [
-                    this._dirs[0],
-                    this._dirs[2],
-                    this._dirs[4],
-                    this._dirs[6],
-                    this._dirs[1],
-                    this._dirs[3],
-                    this._dirs[5],
-                    this._dirs[7]
-                ];
-            }
-        }
-        _getNeighbors(cx, cy) {
-            let result = [];
-            for (let i = 0; i < this._dirs.length; i++) {
-                let dir = this._dirs[i];
-                let x = cx + dir[0];
-                let y = cy + dir[1];
-                if (!this._passableCallback(x, y)) {
-                    continue;
-                }
-                result.push([x, y]);
-            }
-            return result;
-        }
-    }
-
-    /**
-     * @class Simplified Dijkstra's algorithm: all edges have a value of 1
-     * @augments ROT.Path
-     * @see ROT.Path
-     */
-    class Dijkstra extends Path {
-        constructor(toX, toY, passableCallback, options) {
-            super(toX, toY, passableCallback, options);
-            this._computed = {};
-            this._todo = [];
-            this._add(toX, toY, null);
-        }
-        /**
-         * Compute a path from a given point
-         * @see ROT.Path#compute
-         */
-        compute(fromX, fromY, callback) {
-            let key = fromX + "," + fromY;
-            if (!(key in this._computed)) {
-                this._compute(fromX, fromY);
-            }
-            if (!(key in this._computed)) {
-                return;
-            }
-            let item = this._computed[key];
-            while (item) {
-                callback(item.x, item.y);
-                item = item.prev;
-            }
-        }
-        /**
-         * Compute a non-cached value
-         */
-        _compute(fromX, fromY) {
-            while (this._todo.length) {
-                let item = this._todo.shift();
-                if (item.x == fromX && item.y == fromY) {
-                    return;
-                }
-                let neighbors = this._getNeighbors(item.x, item.y);
-                for (let i = 0; i < neighbors.length; i++) {
-                    let neighbor = neighbors[i];
-                    let x = neighbor[0];
-                    let y = neighbor[1];
-                    let id = x + "," + y;
-                    if (id in this._computed) {
-                        continue;
-                    } /* already done */
-                    this._add(x, y, item);
-                }
-            }
-        }
-        _add(x, y, prev) {
-            let obj = {
-                x: x,
-                y: y,
-                prev: prev
-            };
-            this._computed[x + "," + y] = obj;
-            this._todo.push(obj);
-        }
-    }
-
-    /**
-     * @class Simplified A* algorithm: all edges have a value of 1
-     * @augments ROT.Path
-     * @see ROT.Path
-     */
-    class AStar extends Path {
-        constructor(toX, toY, passableCallback, options = {}) {
-            super(toX, toY, passableCallback, options);
-            this._todo = [];
-            this._done = {};
-        }
-        /**
-         * Compute a path from a given point
-         * @see ROT.Path#compute
-         */
-        compute(fromX, fromY, callback) {
-            this._todo = [];
-            this._done = {};
-            this._fromX = fromX;
-            this._fromY = fromY;
-            this._add(this._toX, this._toY, null);
-            while (this._todo.length) {
-                let item = this._todo.shift();
-                let id = item.x + "," + item.y;
-                if (id in this._done) {
-                    continue;
-                }
-                this._done[id] = item;
-                if (item.x == fromX && item.y == fromY) {
-                    break;
-                }
-                let neighbors = this._getNeighbors(item.x, item.y);
-                for (let i = 0; i < neighbors.length; i++) {
-                    let neighbor = neighbors[i];
-                    let x = neighbor[0];
-                    let y = neighbor[1];
-                    let id = x + "," + y;
-                    if (id in this._done) {
-                        continue;
-                    }
-                    this._add(x, y, item);
-                }
-            }
-            let item = this._done[fromX + "," + fromY];
-            if (!item) {
-                return;
-            }
-            while (item) {
-                callback(item.x, item.y);
-                item = item.prev;
-            }
-        }
-        _add(x, y, prev) {
-            let h = this._distance(x, y);
-            let obj = {
-                x: x,
-                y: y,
-                prev: prev,
-                g: (prev ? prev.g + 1 : 0),
-                h: h
-            };
-            /* insert into priority queue */
-            let f = obj.g + obj.h;
-            for (let i = 0; i < this._todo.length; i++) {
-                let item = this._todo[i];
-                let itemF = item.g + item.h;
-                if (f < itemF || (f == itemF && h < item.h)) {
-                    this._todo.splice(i, 0, obj);
-                    return;
-                }
-            }
-            this._todo.push(obj);
-        }
-        _distance(x, y) {
-            switch (this._options.topology) {
-                case 4:
-                    return (Math.abs(x - this._fromX) + Math.abs(y - this._fromY));
-                    break;
-                case 6:
-                    let dx = Math.abs(x - this._fromX);
-                    let dy = Math.abs(y - this._fromY);
-                    return dy + Math.max(0, (dx - dy) / 2);
-                    break;
-                case 8:
-                    return Math.max(Math.abs(x - this._fromX), Math.abs(y - this._fromY));
-                    break;
-            }
-        }
-    }
-
-    var Path$1 = { Dijkstra, AStar };
-
-    /**
      * @class Asynchronous main loop
      * @param {ROT.Scheduler} scheduler
      */
@@ -3381,26 +3212,41 @@ void main() {
     keyMap["Numpad4"] = 6;
     keyMap["Numpad7"] = 7;
     keyMap["Numpad5"] = -1;
+    keyMap["Space"] = -1;
     var Mob = /** @class */ (function () {
         function Mob() {
             this.sees = [];
             this.hate = 0;
+            this.fear = 0;
             this.alive = true;
             this.concentration = 0;
+            this.seesEnemies = false;
             game.mobs.push(this);
         }
+        Object.defineProperty(Mob.prototype, "isPlayer", {
+            get: function () {
+                return this == game.player;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Mob.prototype.serialise = function () {
             return {
                 hate: this.hate,
+                fear: this.fear,
                 alive: this.alive,
                 concentration: this.concentration,
                 at: this.at,
                 path: this.path,
-                isPlayer: game.player == this
+                isPlayer: this.isPlayer
             };
+        };
+        Mob.meansStop = function (code) {
+            return keyMap[code] == -1;
         };
         Mob.prototype.deserialise = function (s) {
             this.hate = s.hate;
+            this.fear = s.fear;
             this.alive = s.alive;
             this.concentration = s.concentration;
             this.at = s.at;
@@ -3411,31 +3257,18 @@ void main() {
         };
         Mob.prototype.getSpeed = function () {
             var speed = 100;
-            if (this == game.player) {
+            if (this.isPlayer) {
                 speed = 120 + this.hate;
             }
             return speed;
         };
         Mob.prototype.act = function () {
-            if (this == game.player) {
-                if (game.seeingRed || this.path) {
-                    this.playerAct(game.seeingRed ? "rampage" : "path");
-                    game.engine.lock();
-                    window.setTimeout(function () { return game.engine.unlock(); }, 50);
-                }
-                else {
-                    game.waitForInput();
-                }
+            if (this.isPlayer) {
+                game.engine.lock();
+                game.playerAct();
             }
             else {
-                if (this.path && this.path.length > 0) {
-                    this.goTo(this.path.shift());
-                }
-                else {
-                    this.path = [];
-                    var goal = RNG$1.getItem(game.landmarks);
-                    this.path = this.findPathTo(goal);
-                }
+                this.mobAct();
             }
         };
         Mob.prototype.tile = function () {
@@ -3445,9 +3278,9 @@ void main() {
             var tile = this.tile();
             var targetMob = game.at(newAt).mob;
             if (targetMob) {
-                if (targetMob == game.player)
+                if (targetMob.isPlayer)
                     return;
-                if (this == game.player) {
+                if (this.isPlayer) {
                     targetMob.die();
                     this.hate = 0;
                 }
@@ -3464,10 +3297,17 @@ void main() {
                 tile.mob = null;
             this.at = newAt.slice(0, 2);
             this.tile().mob = this;
-            if (this == game.player) {
+            if (this.isPlayer) {
                 if (this.tile().symbol == "⚘") {
                     this.tile().symbol = " ";
                     game.flowersCollected++;
+                    game.log("collected", game.flowersCollected + "/" + game.options.flowersNeeded);
+                    if (game.flowersCollected == game.options.flowersNeeded) {
+                        game.log("collected_all");
+                    }
+                    if (game.flowersCollected >= game.options.flowersNeeded && game.flowersCollected % 2 == 0) {
+                        game.log("collected_even");
+                    }
                 }
                 if (this.tile().symbol == "☨" && game.allFlowersCollected()) {
                     game.won = true;
@@ -3479,14 +3319,21 @@ void main() {
         };
         Mob.prototype.die = function () {
             this.alive = false;
+            game.log("death");
+            if (!this.isPlayer) {
+                game.killed++;
+            }
             this.tile().mob = null;
             game.scheduler.remove(this);
-            var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return game.safeAt([x, y]).cost < 1000; });
+            var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return !game.safeAt([x, y]).opaque; });
             fov.compute(this.at[0], this.at[1], 3, function (x, y, r, vis) {
                 var tile = game.at([x, y]);
-                if (tile.symbol == " ")
+                if (tile.symbol == " ") {
                     tile.symbol = "*";
+                    tile.cost += 2;
+                }
             });
+            game.pathfinder.setGrid();
         };
         Mob.prototype.leaveScent = function () {
             var tile = game.at(this.at);
@@ -3498,54 +3345,65 @@ void main() {
         };
         Mob.prototype.findNearestMob = function () {
             var nearestMob = game.mobs
-                .map(function (m) { return ({ mob: m, d: (m == game.player || !m.alive) ? 1e6 : distance(m.at, game.player.at) }); })
+                .map(function (m) { return ({
+                mob: m,
+                d: m.isPlayer || !m.alive ? 1e6 : distance(m.at, game.player.at)
+            }); })
                 .reduce(function (prev, cur) { return (cur.d < prev.d ? cur : prev); }, {
                 mob: null,
                 d: 1e6
             });
             return nearestMob.mob;
         };
-        Mob.prototype.findPathTo = function (at) {
-            var pathfinder = new Path$1.AStar(at[0], at[1], function (x, y) { return game.at([x, y]).cost < 1000; }, { topology: 8 });
-            var path = [];
-            pathfinder.compute(this.at[0], this.at[1], function (x, y) {
-                return path.push([x, y]);
-            });
+        Mob.prototype.findPathTo = function (to) {
+            var finder = this.isPlayer ? game.pathfinder : game.escapefinder;
+            var path = finder.find(this.at, to);
             if (path)
                 path.shift();
             return path;
         };
-        Mob.prototype.playerAct = function (code) {
-            if (code == "rampage") {
-                this.path = null;
+        Mob.prototype.seesOthers = function () {
+            for (var _i = 0, _a = this.sees; _i < _a.length; _i++) {
+                var at = _a[_i];
+                var tile = game.at(at);
+                if (tile.mob && tile.mob != this) {
+                    return tile.mob;
+                }
+            }
+            return null;
+        };
+        Mob.prototype.playerAct = function () {
+            if (game.seeingRed) {
+                this.stop();
                 var nearestMob = this.findNearestMob();
                 if (nearestMob) {
                     var path = this.findPathTo(nearestMob.at);
                     if (path[0])
                         this.goTo(path[0]);
                 }
-                this.lookAround();
-                return true;
             }
-            else if (code == "path") {
-                if (this.path.length == 0)
-                    this.path = null;
-                if (this.path) {
-                    this.goTo(this.path.shift());
-                    this.lookAround();
-                    for (var _i = 0, _a = this.sees; _i < _a.length; _i++) {
-                        var t = _a[_i];
-                        var m = game.at(t).mob;
-                        if (m && m != this)
-                            this.path = null;
+            else if (this.path) {
+                this.stopWhenMeetEnemies();
+                if (!this.hasPath())
+                    this.stop();
+                if (this.hasPath()) {
+                    if (this.path[0][0] == this.at[0] && this.path[0][1] == this.at[1]) {
+                        this.stay();
+                        /*if(this.hate == 0){
+                          this.path.shift()
+                        }*/
                     }
-                    return true;
+                    else {
+                        this.goTo(this.path.shift());
+                    }
                 }
                 else {
                     return false;
                 }
             }
             else {
+                var code = game.lastKey;
+                delete game.lastKey;
                 if (!(code in keyMap)) {
                     return false;
                 }
@@ -3559,19 +3417,52 @@ void main() {
                 var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
                 var newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
                 if (game.at(newAt).cost > 1000) {
-                    return true;
+                    return false;
                 }
                 this.goTo(newAt);
             }
             this.lookAround();
             return true;
         };
+        Mob.prototype.setPath = function (to) {
+            this.path = this.findPathTo(to);
+        };
+        Mob.prototype.mobAct = function () {
+            if (this.path && this.path.length > 0) {
+                if (this.tile().visible) {
+                    this.path = this.findPathTo(this.path.pop());
+                }
+                if (this.path && this.path.length > 0)
+                    this.goTo(this.path.shift());
+            }
+            else {
+                this.path = [];
+                var goal = RNG$1.getItem(game.landmarks);
+                this.path = this.findPathTo(goal);
+            }
+        };
         Mob.prototype.stay = function () {
             this.concentration++;
+            if (this.isPlayer && this.concentration > 5 && this.hate == 0)
+                game.alertOnce("calm");
             this.changeHateBy(-0.5);
         };
         Mob.prototype.changeHateBy = function (dHate) {
             this.hate = Math.min(Math.max(0, this.hate + dHate), 100);
+            if (this.hate >= 25) {
+                game.alertOnce("rage");
+            }
+            if (this.hate >= 50) {
+                game.alertOnce("rage_more");
+            }
+        };
+        Mob.prototype.stopWhenMeetEnemies = function () {
+            var seen = this.seesOthers();
+            if (seen && !this.seesEnemies && this.hasPath()) {
+                this.stop();
+                new Animation([seen.at[0], seen.at[1] - 1], 2, 500);
+            }
+            this.seesEnemies = seen ? true : false;
         };
         Mob.prototype.lookAround = function () {
             var _this = this;
@@ -3586,7 +3477,7 @@ void main() {
                     if (tile != game.emptyTile)
                         tile.seen = 1;
                 }
-            var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return game.safeAt([x, y]).cost < 1000; });
+            var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return !game.safeAt([x, y]).opaque; });
             this.sees = [];
             var dHate = game.seeingRed ? -0.5 : -0.3;
             var seesFlower = false;
@@ -3595,7 +3486,8 @@ void main() {
                 var tile = game.at([x, y]);
                 if (tile.symbol == "⚘" && r <= 10)
                     seesFlower = true;
-                if (tile.mob && tile.mob != game.player) {
+                if (tile.mob && !tile.mob.isPlayer) {
+                    game.alertOnce("mob_first");
                     dHate += 10 / (r + 5);
                 }
                 tile.visible = (vis * (20 - r)) / 20;
@@ -3603,44 +3495,1112 @@ void main() {
             });
             if (this.tile().scent > 0.1) {
                 dHate += this.tile().scent * 2;
+                game.alertOnce("smell_first");
             }
             if (seesFlower) {
                 if (dHate > 0) {
+                    game.alertOnce("flower_mob_first");
                     dHate *= 2;
                 }
                 else {
+                    game.alertOnce("flower_first");
                     dHate += -3;
                 }
             }
             this.changeHateBy(dHate);
+            var wasSeeingRed = game.seeingRed;
             if (RNG$1.getUniform() < 0.3 ||
                 game.player.hate == 100 ||
-                game.player.hate == 0)
-                game.seeingRed = this.hate / 100 > RNG$1.getUniform();
-            game.draw();
+                game.player.hate == 0) {
+                game.seeingRed = (this.hate - 50) / 50 > RNG$1.getUniform();
+                if (wasSeeingRed != game.seeingRed)
+                    game.log(game.seeingRed ? "seeing_red" : "seeing_red_end");
+            }
+            game.escapefinder.setGridFear();
+        };
+        Mob.prototype.hasPath = function () {
+            return this.path && this.path.length > 0;
+        };
+        Mob.prototype.stop = function () {
+            this.path = null;
         };
         Mob.prototype.actFixedInterval = function () { };
         return Mob;
     }());
+    /*
+        let pathfinder = new Path.AStar(
+          to[0],
+          to[1],
+          (x, y) => game.at([x, y]).cost < 1000,
+          { topology: 8 }
+        );
+        let path = [];
+        pathfinder.compute(this.at[0], this.at[1], (x, y) =>
+          path.push([x, y])
+        );*/
+    /*
+      
+        window.setTimeout(() => game.engine.unlock(), 50);
+      } else {
+        game.waitForInput();
+      }
+
+    */
+
+    /**
+     * Represents a single instance of EasyStar.
+     * A path that is in the queue to eventually be found.
+     */
+    var instance = function() {
+        this.pointsToAvoid = {};
+        this.startX;
+        this.callback;
+        this.startY;
+        this.endX;
+        this.endY;
+        this.nodeHash = {};
+        this.openList;
+    };
+
+    /**
+    * A simple Node that represents a single tile on the grid.
+    * @param {Object} parent The parent node.
+    * @param {Number} x The x position on the grid.
+    * @param {Number} y The y position on the grid.
+    * @param {Number} costSoFar How far this node is in moves*cost from the start.
+    * @param {Number} simpleDistanceToTarget Manhatten distance to the end point.
+    **/
+    var node = function(parent, x, y, costSoFar, simpleDistanceToTarget) {
+        this.parent = parent;
+        this.x = x;
+        this.y = y;
+        this.costSoFar = costSoFar;
+        this.simpleDistanceToTarget = simpleDistanceToTarget;
+
+        /**
+        * @return {Number} Best guess distance of a cost using this node.
+        **/
+        this.bestGuessDistance = function() {
+            return this.costSoFar + this.simpleDistanceToTarget;
+        };
+    };
+
+    var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+    function createCommonjsModule(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    var heap = createCommonjsModule(function (module, exports) {
+    // Generated by CoffeeScript 1.8.0
+    (function() {
+      var Heap, defaultCmp, floor, heapify, heappop, heappush, heappushpop, heapreplace, insort, min, nlargest, nsmallest, updateItem, _siftdown, _siftup;
+
+      floor = Math.floor, min = Math.min;
+
+
+      /*
+      Default comparison function to be used
+       */
+
+      defaultCmp = function(x, y) {
+        if (x < y) {
+          return -1;
+        }
+        if (x > y) {
+          return 1;
+        }
+        return 0;
+      };
+
+
+      /*
+      Insert item x in list a, and keep it sorted assuming a is sorted.
+      
+      If x is already in a, insert it to the right of the rightmost x.
+      
+      Optional args lo (default 0) and hi (default a.length) bound the slice
+      of a to be searched.
+       */
+
+      insort = function(a, x, lo, hi, cmp) {
+        var mid;
+        if (lo == null) {
+          lo = 0;
+        }
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        if (lo < 0) {
+          throw new Error('lo must be non-negative');
+        }
+        if (hi == null) {
+          hi = a.length;
+        }
+        while (lo < hi) {
+          mid = floor((lo + hi) / 2);
+          if (cmp(x, a[mid]) < 0) {
+            hi = mid;
+          } else {
+            lo = mid + 1;
+          }
+        }
+        return ([].splice.apply(a, [lo, lo - lo].concat(x)), x);
+      };
+
+
+      /*
+      Push item onto heap, maintaining the heap invariant.
+       */
+
+      heappush = function(array, item, cmp) {
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        array.push(item);
+        return _siftdown(array, 0, array.length - 1, cmp);
+      };
+
+
+      /*
+      Pop the smallest item off the heap, maintaining the heap invariant.
+       */
+
+      heappop = function(array, cmp) {
+        var lastelt, returnitem;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        lastelt = array.pop();
+        if (array.length) {
+          returnitem = array[0];
+          array[0] = lastelt;
+          _siftup(array, 0, cmp);
+        } else {
+          returnitem = lastelt;
+        }
+        return returnitem;
+      };
+
+
+      /*
+      Pop and return the current smallest value, and add the new item.
+      
+      This is more efficient than heappop() followed by heappush(), and can be
+      more appropriate when using a fixed size heap. Note that the value
+      returned may be larger than item! That constrains reasonable use of
+      this routine unless written as part of a conditional replacement:
+          if item > array[0]
+            item = heapreplace(array, item)
+       */
+
+      heapreplace = function(array, item, cmp) {
+        var returnitem;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        returnitem = array[0];
+        array[0] = item;
+        _siftup(array, 0, cmp);
+        return returnitem;
+      };
+
+
+      /*
+      Fast version of a heappush followed by a heappop.
+       */
+
+      heappushpop = function(array, item, cmp) {
+        var _ref;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        if (array.length && cmp(array[0], item) < 0) {
+          _ref = [array[0], item], item = _ref[0], array[0] = _ref[1];
+          _siftup(array, 0, cmp);
+        }
+        return item;
+      };
+
+
+      /*
+      Transform list into a heap, in-place, in O(array.length) time.
+       */
+
+      heapify = function(array, cmp) {
+        var i, _i, _len, _ref1, _results, _results1;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        _ref1 = (function() {
+          _results1 = [];
+          for (var _j = 0, _ref = floor(array.length / 2); 0 <= _ref ? _j < _ref : _j > _ref; 0 <= _ref ? _j++ : _j--){ _results1.push(_j); }
+          return _results1;
+        }).apply(this).reverse();
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          i = _ref1[_i];
+          _results.push(_siftup(array, i, cmp));
+        }
+        return _results;
+      };
+
+
+      /*
+      Update the position of the given item in the heap.
+      This function should be called every time the item is being modified.
+       */
+
+      updateItem = function(array, item, cmp) {
+        var pos;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        pos = array.indexOf(item);
+        if (pos === -1) {
+          return;
+        }
+        _siftdown(array, 0, pos, cmp);
+        return _siftup(array, pos, cmp);
+      };
+
+
+      /*
+      Find the n largest elements in a dataset.
+       */
+
+      nlargest = function(array, n, cmp) {
+        var elem, result, _i, _len, _ref;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        result = array.slice(0, n);
+        if (!result.length) {
+          return result;
+        }
+        heapify(result, cmp);
+        _ref = array.slice(n);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          elem = _ref[_i];
+          heappushpop(result, elem, cmp);
+        }
+        return result.sort(cmp).reverse();
+      };
+
+
+      /*
+      Find the n smallest elements in a dataset.
+       */
+
+      nsmallest = function(array, n, cmp) {
+        var elem, i, los, result, _i, _j, _len, _ref, _ref1, _results;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        if (n * 10 <= array.length) {
+          result = array.slice(0, n).sort(cmp);
+          if (!result.length) {
+            return result;
+          }
+          los = result[result.length - 1];
+          _ref = array.slice(n);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            elem = _ref[_i];
+            if (cmp(elem, los) < 0) {
+              insort(result, elem, 0, null, cmp);
+              result.pop();
+              los = result[result.length - 1];
+            }
+          }
+          return result;
+        }
+        heapify(array, cmp);
+        _results = [];
+        for (i = _j = 0, _ref1 = min(n, array.length); 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+          _results.push(heappop(array, cmp));
+        }
+        return _results;
+      };
+
+      _siftdown = function(array, startpos, pos, cmp) {
+        var newitem, parent, parentpos;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        newitem = array[pos];
+        while (pos > startpos) {
+          parentpos = (pos - 1) >> 1;
+          parent = array[parentpos];
+          if (cmp(newitem, parent) < 0) {
+            array[pos] = parent;
+            pos = parentpos;
+            continue;
+          }
+          break;
+        }
+        return array[pos] = newitem;
+      };
+
+      _siftup = function(array, pos, cmp) {
+        var childpos, endpos, newitem, rightpos, startpos;
+        if (cmp == null) {
+          cmp = defaultCmp;
+        }
+        endpos = array.length;
+        startpos = pos;
+        newitem = array[pos];
+        childpos = 2 * pos + 1;
+        while (childpos < endpos) {
+          rightpos = childpos + 1;
+          if (rightpos < endpos && !(cmp(array[childpos], array[rightpos]) < 0)) {
+            childpos = rightpos;
+          }
+          array[pos] = array[childpos];
+          pos = childpos;
+          childpos = 2 * pos + 1;
+        }
+        array[pos] = newitem;
+        return _siftdown(array, startpos, pos, cmp);
+      };
+
+      Heap = (function() {
+        Heap.push = heappush;
+
+        Heap.pop = heappop;
+
+        Heap.replace = heapreplace;
+
+        Heap.pushpop = heappushpop;
+
+        Heap.heapify = heapify;
+
+        Heap.updateItem = updateItem;
+
+        Heap.nlargest = nlargest;
+
+        Heap.nsmallest = nsmallest;
+
+        function Heap(cmp) {
+          this.cmp = cmp != null ? cmp : defaultCmp;
+          this.nodes = [];
+        }
+
+        Heap.prototype.push = function(x) {
+          return heappush(this.nodes, x, this.cmp);
+        };
+
+        Heap.prototype.pop = function() {
+          return heappop(this.nodes, this.cmp);
+        };
+
+        Heap.prototype.peek = function() {
+          return this.nodes[0];
+        };
+
+        Heap.prototype.contains = function(x) {
+          return this.nodes.indexOf(x) !== -1;
+        };
+
+        Heap.prototype.replace = function(x) {
+          return heapreplace(this.nodes, x, this.cmp);
+        };
+
+        Heap.prototype.pushpop = function(x) {
+          return heappushpop(this.nodes, x, this.cmp);
+        };
+
+        Heap.prototype.heapify = function() {
+          return heapify(this.nodes, this.cmp);
+        };
+
+        Heap.prototype.updateItem = function(x) {
+          return updateItem(this.nodes, x, this.cmp);
+        };
+
+        Heap.prototype.clear = function() {
+          return this.nodes = [];
+        };
+
+        Heap.prototype.empty = function() {
+          return this.nodes.length === 0;
+        };
+
+        Heap.prototype.size = function() {
+          return this.nodes.length;
+        };
+
+        Heap.prototype.clone = function() {
+          var heap;
+          heap = new Heap();
+          heap.nodes = this.nodes.slice(0);
+          return heap;
+        };
+
+        Heap.prototype.toArray = function() {
+          return this.nodes.slice(0);
+        };
+
+        Heap.prototype.insert = Heap.prototype.push;
+
+        Heap.prototype.top = Heap.prototype.peek;
+
+        Heap.prototype.front = Heap.prototype.peek;
+
+        Heap.prototype.has = Heap.prototype.contains;
+
+        Heap.prototype.copy = Heap.prototype.clone;
+
+        return Heap;
+
+      })();
+
+      (function(root, factory) {
+        {
+          return module.exports = factory();
+        }
+      })(this, function() {
+        return Heap;
+      });
+
+    }).call(commonjsGlobal);
+    });
+
+    var heap$1 = heap;
+
+    /**
+    *   EasyStar.js
+    *   github.com/prettymuchbryce/EasyStarJS
+    *   Licensed under the MIT license.
+    *
+    *   Implementation By Bryce Neal (@prettymuchbryce)
+    **/
+
+    var EasyStar = {};
+
+
+
+
+    const CLOSED_LIST = 0;
+    const OPEN_LIST = 1;
+
+    var easystar = EasyStar;
+
+    var nextInstanceId = 1;
+
+    EasyStar.js = function() {
+        var STRAIGHT_COST = 1.0;
+        var DIAGONAL_COST = 1.4;
+        var syncEnabled = false;
+        var pointsToAvoid = {};
+        var collisionGrid;
+        var costMap = {};
+        var pointsToCost = {};
+        var directionalConditions = {};
+        var allowCornerCutting = true;
+        var iterationsSoFar;
+        var instances = {};
+        var instanceQueue = [];
+        var iterationsPerCalculation = Number.MAX_VALUE;
+        var acceptableTiles;
+        var diagonalsEnabled = false;
+
+        /**
+        * Sets the collision grid that EasyStar uses.
+        *
+        * @param {Array|Number} tiles An array of numbers that represent
+        * which tiles in your grid should be considered
+        * acceptable, or "walkable".
+        **/
+        this.setAcceptableTiles = function(tiles) {
+            if (tiles instanceof Array) {
+                // Array
+                acceptableTiles = tiles;
+            } else if (!isNaN(parseFloat(tiles)) && isFinite(tiles)) {
+                // Number
+                acceptableTiles = [tiles];
+            }
+        };
+
+        /**
+        * Enables sync mode for this EasyStar instance..
+        * if you're into that sort of thing.
+        **/
+        this.enableSync = function() {
+            syncEnabled = true;
+        };
+
+        /**
+        * Disables sync mode for this EasyStar instance.
+        **/
+        this.disableSync = function() {
+            syncEnabled = false;
+        };
+
+        /**
+         * Enable diagonal pathfinding.
+         */
+        this.enableDiagonals = function() {
+            diagonalsEnabled = true;
+        };
+
+        /**
+         * Disable diagonal pathfinding.
+         */
+        this.disableDiagonals = function() {
+            diagonalsEnabled = false;
+        };
+
+        /**
+        * Sets the collision grid that EasyStar uses.
+        *
+        * @param {Array} grid The collision grid that this EasyStar instance will read from.
+        * This should be a 2D Array of Numbers.
+        **/
+        this.setGrid = function(grid) {
+            collisionGrid = grid;
+
+            //Setup cost map
+            for (var y = 0; y < collisionGrid.length; y++) {
+                for (var x = 0; x < collisionGrid[0].length; x++) {
+                    if (!costMap[collisionGrid[y][x]]) {
+                        costMap[collisionGrid[y][x]] = 1;
+                    }
+                }
+            }
+        };
+
+        /**
+        * Sets the tile cost for a particular tile type.
+        *
+        * @param {Number} The tile type to set the cost for.
+        * @param {Number} The multiplicative cost associated with the given tile.
+        **/
+        this.setTileCost = function(tileType, cost) {
+            costMap[tileType] = cost;
+        };
+
+        /**
+        * Sets the an additional cost for a particular point.
+        * Overrides the cost from setTileCost.
+        *
+        * @param {Number} x The x value of the point to cost.
+        * @param {Number} y The y value of the point to cost.
+        * @param {Number} The multiplicative cost associated with the given point.
+        **/
+        this.setAdditionalPointCost = function(x, y, cost) {
+            if (pointsToCost[y] === undefined) {
+                pointsToCost[y] = {};
+            }
+            pointsToCost[y][x] = cost;
+        };
+
+        /**
+        * Remove the additional cost for a particular point.
+        *
+        * @param {Number} x The x value of the point to stop costing.
+        * @param {Number} y The y value of the point to stop costing.
+        **/
+        this.removeAdditionalPointCost = function(x, y) {
+            if (pointsToCost[y] !== undefined) {
+                delete pointsToCost[y][x];
+            }
+        };
+
+        /**
+        * Remove all additional point costs.
+        **/
+        this.removeAllAdditionalPointCosts = function() {
+            pointsToCost = {};
+        };
+
+        /**
+        * Sets a directional condition on a tile
+        *
+        * @param {Number} x The x value of the point.
+        * @param {Number} y The y value of the point.
+        * @param {Array.<String>} allowedDirections A list of all the allowed directions that can access
+        * the tile.
+        **/
+        this.setDirectionalCondition = function(x, y, allowedDirections) {
+            if (directionalConditions[y] === undefined) {
+                directionalConditions[y] = {};
+            }
+            directionalConditions[y][x] = allowedDirections;
+        };
+
+        /**
+        * Remove all directional conditions
+        **/
+        this.removeAllDirectionalConditions = function() {
+            directionalConditions = {};
+        };
+
+        /**
+        * Sets the number of search iterations per calculation.
+        * A lower number provides a slower result, but more practical if you
+        * have a large tile-map and don't want to block your thread while
+        * finding a path.
+        *
+        * @param {Number} iterations The number of searches to prefrom per calculate() call.
+        **/
+        this.setIterationsPerCalculation = function(iterations) {
+            iterationsPerCalculation = iterations;
+        };
+
+        /**
+        * Avoid a particular point on the grid,
+        * regardless of whether or not it is an acceptable tile.
+        *
+        * @param {Number} x The x value of the point to avoid.
+        * @param {Number} y The y value of the point to avoid.
+        **/
+        this.avoidAdditionalPoint = function(x, y) {
+            if (pointsToAvoid[y] === undefined) {
+                pointsToAvoid[y] = {};
+            }
+            pointsToAvoid[y][x] = 1;
+        };
+
+        /**
+        * Stop avoiding a particular point on the grid.
+        *
+        * @param {Number} x The x value of the point to stop avoiding.
+        * @param {Number} y The y value of the point to stop avoiding.
+        **/
+        this.stopAvoidingAdditionalPoint = function(x, y) {
+            if (pointsToAvoid[y] !== undefined) {
+                delete pointsToAvoid[y][x];
+            }
+        };
+
+        /**
+        * Enables corner cutting in diagonal movement.
+        **/
+        this.enableCornerCutting = function() {
+            allowCornerCutting = true;
+        };
+
+        /**
+        * Disables corner cutting in diagonal movement.
+        **/
+        this.disableCornerCutting = function() {
+            allowCornerCutting = false;
+        };
+
+        /**
+        * Stop avoiding all additional points on the grid.
+        **/
+        this.stopAvoidingAllAdditionalPoints = function() {
+            pointsToAvoid = {};
+        };
+
+        /**
+        * Find a path.
+        *
+        * @param {Number} startX The X position of the starting point.
+        * @param {Number} startY The Y position of the starting point.
+        * @param {Number} endX The X position of the ending point.
+        * @param {Number} endY The Y position of the ending point.
+        * @param {Function} callback A function that is called when your path
+        * is found, or no path is found.
+        * @return {Number} A numeric, non-zero value which identifies the created instance. This value can be passed to cancelPath to cancel the path calculation.
+        *
+        **/
+        this.findPath = function(startX, startY, endX, endY, callback) {
+            // Wraps the callback for sync vs async logic
+            var callbackWrapper = function(result) {
+                if (syncEnabled) {
+                    callback(result);
+                } else {
+                    setTimeout(function() {
+                        callback(result);
+                    });
+                }
+            };
+
+            // No acceptable tiles were set
+            if (acceptableTiles === undefined) {
+                throw new Error("You can't set a path without first calling setAcceptableTiles() on EasyStar.");
+            }
+            // No grid was set
+            if (collisionGrid === undefined) {
+                throw new Error("You can't set a path without first calling setGrid() on EasyStar.");
+            }
+
+            // Start or endpoint outside of scope.
+            if (startX < 0 || startY < 0 || endX < 0 || endY < 0 ||
+            startX > collisionGrid[0].length-1 || startY > collisionGrid.length-1 ||
+            endX > collisionGrid[0].length-1 || endY > collisionGrid.length-1) {
+                throw new Error("Your start or end point is outside the scope of your grid.");
+            }
+
+            // Start and end are the same tile.
+            if (startX===endX && startY===endY) {
+                callbackWrapper([]);
+                return;
+            }
+
+            // End point is not an acceptable tile.
+            var endTile = collisionGrid[endY][endX];
+            var isAcceptable = false;
+            for (var i = 0; i < acceptableTiles.length; i++) {
+                if (endTile === acceptableTiles[i]) {
+                    isAcceptable = true;
+                    break;
+                }
+            }
+
+            if (isAcceptable === false) {
+                callbackWrapper(null);
+                return;
+            }
+
+            // Create the instance
+            var instance$1 = new instance();
+            instance$1.openList = new heap$1(function(nodeA, nodeB) {
+                return nodeA.bestGuessDistance() - nodeB.bestGuessDistance();
+            });
+            instance$1.isDoneCalculating = false;
+            instance$1.nodeHash = {};
+            instance$1.startX = startX;
+            instance$1.startY = startY;
+            instance$1.endX = endX;
+            instance$1.endY = endY;
+            instance$1.callback = callbackWrapper;
+
+            instance$1.openList.push(coordinateToNode(instance$1, instance$1.startX,
+                instance$1.startY, null, STRAIGHT_COST));
+
+            var instanceId = nextInstanceId ++;
+            instances[instanceId] = instance$1;
+            instanceQueue.push(instanceId);
+            return instanceId;
+        };
+
+        /**
+         * Cancel a path calculation.
+         *
+         * @param {Number} instanceId The instance ID of the path being calculated
+         * @return {Boolean} True if an instance was found and cancelled.
+         *
+         **/
+        this.cancelPath = function(instanceId) {
+            if (instanceId in instances) {
+                delete instances[instanceId];
+                // No need to remove it from instanceQueue
+                return true;
+            }
+            return false;
+        };
+
+        /**
+        * This method steps through the A* Algorithm in an attempt to
+        * find your path(s). It will search 4-8 tiles (depending on diagonals) for every calculation.
+        * You can change the number of calculations done in a call by using
+        * easystar.setIteratonsPerCalculation().
+        **/
+        this.calculate = function() {
+            if (instanceQueue.length === 0 || collisionGrid === undefined || acceptableTiles === undefined) {
+                return;
+            }
+            for (iterationsSoFar = 0; iterationsSoFar < iterationsPerCalculation; iterationsSoFar++) {
+                if (instanceQueue.length === 0) {
+                    return;
+                }
+
+                if (syncEnabled) {
+                    // If this is a sync instance, we want to make sure that it calculates synchronously.
+                    iterationsSoFar = 0;
+                }
+
+                var instanceId = instanceQueue[0];
+                var instance = instances[instanceId];
+                if (typeof instance == 'undefined') {
+                    // This instance was cancelled
+                    instanceQueue.shift();
+                    continue;
+                }
+
+                // Couldn't find a path.
+                if (instance.openList.size() === 0) {
+                    instance.callback(null);
+                    delete instances[instanceId];
+                    instanceQueue.shift();
+                    continue;
+                }
+
+                var searchNode = instance.openList.pop();
+
+                // Handles the case where we have found the destination
+                if (instance.endX === searchNode.x && instance.endY === searchNode.y) {
+                    var path = [];
+                    path.push({x: searchNode.x, y: searchNode.y});
+                    var parent = searchNode.parent;
+                    while (parent!=null) {
+                        path.push({x: parent.x, y:parent.y});
+                        parent = parent.parent;
+                    }
+                    path.reverse();
+                    var ip = path;
+                    instance.callback(ip);
+                    delete instances[instanceId];
+                    instanceQueue.shift();
+                    continue;
+                }
+
+                searchNode.list = CLOSED_LIST;
+
+                if (searchNode.y > 0) {
+                    checkAdjacentNode(instance, searchNode,
+                        0, -1, STRAIGHT_COST * getTileCost(searchNode.x, searchNode.y-1));
+                }
+                if (searchNode.x < collisionGrid[0].length-1) {
+                    checkAdjacentNode(instance, searchNode,
+                        1, 0, STRAIGHT_COST * getTileCost(searchNode.x+1, searchNode.y));
+                }
+                if (searchNode.y < collisionGrid.length-1) {
+                    checkAdjacentNode(instance, searchNode,
+                        0, 1, STRAIGHT_COST * getTileCost(searchNode.x, searchNode.y+1));
+                }
+                if (searchNode.x > 0) {
+                    checkAdjacentNode(instance, searchNode,
+                        -1, 0, STRAIGHT_COST * getTileCost(searchNode.x-1, searchNode.y));
+                }
+                if (diagonalsEnabled) {
+                    if (searchNode.x > 0 && searchNode.y > 0) {
+
+                        if (allowCornerCutting ||
+                            (isTileWalkable(collisionGrid, acceptableTiles, searchNode.x, searchNode.y-1, searchNode) &&
+                            isTileWalkable(collisionGrid, acceptableTiles, searchNode.x-1, searchNode.y, searchNode))) {
+
+                            checkAdjacentNode(instance, searchNode,
+                                -1, -1, DIAGONAL_COST * getTileCost(searchNode.x-1, searchNode.y-1));
+                        }
+                    }
+                    if (searchNode.x < collisionGrid[0].length-1 && searchNode.y < collisionGrid.length-1) {
+
+                        if (allowCornerCutting ||
+                            (isTileWalkable(collisionGrid, acceptableTiles, searchNode.x, searchNode.y+1, searchNode) &&
+                            isTileWalkable(collisionGrid, acceptableTiles, searchNode.x+1, searchNode.y, searchNode))) {
+
+                            checkAdjacentNode(instance, searchNode,
+                                1, 1, DIAGONAL_COST * getTileCost(searchNode.x+1, searchNode.y+1));
+                        }
+                    }
+                    if (searchNode.x < collisionGrid[0].length-1 && searchNode.y > 0) {
+
+                        if (allowCornerCutting ||
+                            (isTileWalkable(collisionGrid, acceptableTiles, searchNode.x, searchNode.y-1, searchNode) &&
+                            isTileWalkable(collisionGrid, acceptableTiles, searchNode.x+1, searchNode.y, searchNode))) {
+
+                            checkAdjacentNode(instance, searchNode,
+                                1, -1, DIAGONAL_COST * getTileCost(searchNode.x+1, searchNode.y-1));
+                        }
+                    }
+                    if (searchNode.x > 0 && searchNode.y < collisionGrid.length-1) {
+
+                        if (allowCornerCutting ||
+                            (isTileWalkable(collisionGrid, acceptableTiles, searchNode.x, searchNode.y+1, searchNode) &&
+                            isTileWalkable(collisionGrid, acceptableTiles, searchNode.x-1, searchNode.y, searchNode))) {
+
+                            checkAdjacentNode(instance, searchNode,
+                                -1, 1, DIAGONAL_COST * getTileCost(searchNode.x-1, searchNode.y+1));
+                        }
+                    }
+                }
+
+            }
+        };
+
+        // Private methods follow
+        var checkAdjacentNode = function(instance, searchNode, x, y, cost) {
+            var adjacentCoordinateX = searchNode.x+x;
+            var adjacentCoordinateY = searchNode.y+y;
+
+            if ((pointsToAvoid[adjacentCoordinateY] === undefined ||
+                 pointsToAvoid[adjacentCoordinateY][adjacentCoordinateX] === undefined) &&
+                isTileWalkable(collisionGrid, acceptableTiles, adjacentCoordinateX, adjacentCoordinateY, searchNode)) {
+                var node = coordinateToNode(instance, adjacentCoordinateX,
+                    adjacentCoordinateY, searchNode, cost);
+
+                if (node.list === undefined) {
+                    node.list = OPEN_LIST;
+                    instance.openList.push(node);
+                } else if (searchNode.costSoFar + cost < node.costSoFar) {
+                    node.costSoFar = searchNode.costSoFar + cost;
+                    node.parent = searchNode;
+                    instance.openList.updateItem(node);
+                }
+            }
+        };
+
+        // Helpers
+        var isTileWalkable = function(collisionGrid, acceptableTiles, x, y, sourceNode) {
+            var directionalCondition = directionalConditions[y] && directionalConditions[y][x];
+            if (directionalCondition) {
+                var direction = calculateDirection(sourceNode.x - x, sourceNode.y - y);
+                var directionIncluded = function () {
+                    for (var i = 0; i < directionalCondition.length; i++) {
+                        if (directionalCondition[i] === direction) return true
+                    }
+                    return false
+                };
+                if (!directionIncluded()) return false
+            }
+            for (var i = 0; i < acceptableTiles.length; i++) {
+                if (collisionGrid[y][x] === acceptableTiles[i]) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        /**
+         * -1, -1 | 0, -1  | 1, -1
+         * -1,  0 | SOURCE | 1,  0
+         * -1,  1 | 0,  1  | 1,  1
+         */
+        var calculateDirection = function (diffX, diffY) {
+            if (diffX === 0 && diffY === -1) return EasyStar.TOP
+            else if (diffX === 1 && diffY === -1) return EasyStar.TOP_RIGHT
+            else if (diffX === 1 && diffY === 0) return EasyStar.RIGHT
+            else if (diffX === 1 && diffY === 1) return EasyStar.BOTTOM_RIGHT
+            else if (diffX === 0 && diffY === 1) return EasyStar.BOTTOM
+            else if (diffX === -1 && diffY === 1) return EasyStar.BOTTOM_LEFT
+            else if (diffX === -1 && diffY === 0) return EasyStar.LEFT
+            else if (diffX === -1 && diffY === -1) return EasyStar.TOP_LEFT
+            throw new Error('These differences are not valid: ' + diffX + ', ' + diffY)
+        };
+
+        var getTileCost = function(x, y) {
+            return (pointsToCost[y] && pointsToCost[y][x]) || costMap[collisionGrid[y][x]]
+        };
+
+        var coordinateToNode = function(instance, x, y, parent, cost) {
+            if (instance.nodeHash[y] !== undefined) {
+                if (instance.nodeHash[y][x] !== undefined) {
+                    return instance.nodeHash[y][x];
+                }
+            } else {
+                instance.nodeHash[y] = {};
+            }
+            var simpleDistanceToTarget = getDistance(x, y, instance.endX, instance.endY);
+            if (parent!==null) {
+                var costSoFar = parent.costSoFar + cost;
+            } else {
+                costSoFar = 0;
+            }
+            var node$1 = new node(parent,x,y,costSoFar,simpleDistanceToTarget);
+            instance.nodeHash[y][x] = node$1;
+            return node$1;
+        };
+
+        var getDistance = function(x1,y1,x2,y2) {
+            if (diagonalsEnabled) {
+                // Octile distance
+                var dx = Math.abs(x1 - x2);
+                var dy = Math.abs(y1 - y2);
+                if (dx < dy) {
+                    return DIAGONAL_COST * dx + dy;
+                } else {
+                    return DIAGONAL_COST * dy + dx;
+                }
+            } else {
+                // Manhattan distance
+                var dx = Math.abs(x1 - x2);
+                var dy = Math.abs(y1 - y2);
+                return (dx + dy);
+            }
+        };
+    };
+
+    EasyStar.TOP = 'TOP';
+    EasyStar.TOP_RIGHT = 'TOP_RIGHT';
+    EasyStar.RIGHT = 'RIGHT';
+    EasyStar.BOTTOM_RIGHT = 'BOTTOM_RIGHT';
+    EasyStar.BOTTOM = 'BOTTOM';
+    EasyStar.BOTTOM_LEFT = 'BOTTOM_LEFT';
+    EasyStar.LEFT = 'LEFT';
+    EasyStar.TOP_LEFT = 'TOP_LEFT';
+
+    var lang = {
+        guide: "\nNUMPAD keys = move around\nclick - move to cursor or stop\nclick self - wait\nNum5, space - stop/wait\nShift + 1-9: save\n1-9: load\n",
+        me: "It's me. A regular everyday normal person.",
+        flower: "A flower. Seeing it grow makes me calm. I should pick it for her.",
+        flower_first: "One of those weird red flowers <span style='color:red'>⚘</span> she is fond of. I should pick some for her.",
+        flower_mob_first: "<span style='color:red'>How dares it to be near the flower!</span>",
+        collected: "Flower <span style='color:red'>⚘</span> collected {0}",
+        collected_all: "I have collected enough flowers. Still no signs of her. Maybe she is home already? I'll go check.",
+        collected_even: "There is a custom that you should not gift even number of flowers to a living person. Hope she is not superstitious.",
+        tree: "Thick forest.",
+        exit: "The path to the village.",
+        entrance: "The path back to the road.",
+        blood: "A pool of blood. Why is it here?",
+        blood_old: "Looks like a dried blood. Weird.",
+        blood_trail: "A trail of blood. Quite old.",
+        wall: "An old, but sturdy hut wall. She lives here.",
+        mob: "Monster",
+        mob_first: "I see one of the monsters <span style='color:red'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
+        smell: "A trail of smell.",
+        smell_first: "Those things smell <span style='background:red'>&nbsp;</span><span style='background:darkred'>&nbsp;</span> quite bad. I can feel the trail of their stench from quite a far away.",
+        calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
+        rage: "<span style='color:darkred'>Look and smell of those monsters raise a wave of rage in my heart.</span>",
+        rage_more: "<span style='color:red'>I'm furious. I feel like I can snap at any moment.</span>",
+        seeing_red: "<span style='color:red'>Waaargh!</span>",
+        seeing_red_end: "What has just happened?",
+        death: "<span style='color:red'>Splort.</span>",
+        not_here: "She is not here. Probably somewhere in the forest picking up herbs again. I should go look for her.",
+        mob_wary: "It stares at me blankly. Looks like it suspects something.",
+        mob_afraid: "It seems to be full of fear. It tries don't come near me.",
+        mob_fleeing: "It flees to the lair screaming.",
+        game_complete: "GAME COMPLETE",
+        read_letter: [
+            "Where is she? Wait, I have her letter. Maybe reading it will give some clues. I started reading:",
+            "I have decided to continue reading the letter:",
+            "Still can't find her. Maybe she is in ehe village? I'll continue with the letter:",
+            "I'll read the remaining letter part:"
+        ],
+        close_letter: [
+            "My sight has suddenly blurred, making seeing writing difficult. I should continue reading next time.",
+            "Is she trying to be a philosopher here? Not my cup of tea. I'll better continue looking for her.",
+            "It was painful to reading it. And impossible not to. I'll read the rest, just not now.",
+            "It was all. I stand for a while looking at the letter blankly.  If she'd only know... "
+        ],
+        letter: [
+            "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease - Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI performed surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarly ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies at least.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep searching, but only thing of note I have found so far is this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
+        ]
+    };
 
     var Keyboard = /** @class */ (function () {
-        function Keyboard() {
+        function Keyboard(element) {
             this.interval = 100;
             this.pressed = {};
             this.subs = [];
-            window.addEventListener("keydown", this);
-            window.addEventListener("keyup", this);
+            element.addEventListener("keydown", this);
+            element.addEventListener("keyup", this);
+            element.addEventListener("mousedown", this);
+            element.addEventListener("mouseup", this);
         }
         Keyboard.prototype.handleEvent = function (e) {
             var _this = this;
-            var code = e.code;
-            if (e.type == "keydown") {
+            var code;
+            var type;
+            if (e instanceof KeyboardEvent) {
+                code = e.code;
+                type = e.type == "keydown" ? "down" : "up";
+            }
+            else {
+                code = "Click" + e.button;
+                type = e.type == "mousedown" ? "down" : "up";
+            }
+            if (type == "down") {
                 if (!(code in this.pressed)) {
-                    this.click(e.code);
-                    this.pressed[code] = window.setInterval(function () { return _this.click(e.code); }, this.interval);
+                    this.click(code);
+                    this.pressed[code] = window.setInterval(function () { return _this.click(code); }, this.interval);
                 }
             }
-            if (e.type == "keyup") {
+            if (type == "up") {
                 window.clearInterval(this.pressed[code]);
                 delete this.pressed[code];
             }
@@ -3675,7 +4635,6 @@ void main() {
         };
         return Keyboard;
     }());
-    var keyboard = new Keyboard();
 
     var game;
     var screenBg = Color.fromString("#180C24");
@@ -3684,6 +4643,117 @@ void main() {
         var y = a[1] - b[1];
         return Math.sqrt(x * x + y * y);
     }
+    var Milestones = /** @class */ (function () {
+        function Milestones() {
+        }
+        Milestones.prototype.serialise = function () {
+            var s = {};
+            Object.assign(s, this);
+            return s;
+        };
+        Milestones.prototype.deserialise = function (s) {
+            Object.assign(this, s);
+            return this;
+        };
+        return Milestones;
+    }());
+    var Animation = /** @class */ (function () {
+        function Animation(at, mode, timer, interval) {
+            if (mode === void 0) { mode = 1; }
+            if (timer === void 0) { timer = 200; }
+            if (interval === void 0) { interval = 50; }
+            this.at = at;
+            this.mode = mode;
+            this.timer = timer;
+            this.interval = interval;
+            this.run();
+        }
+        Animation.prototype.run = function () {
+            var _this = this;
+            window.setTimeout(function () {
+                var on;
+                _this.timer -= _this.interval;
+                switch (_this.mode) {
+                    case 1:
+                        on = _this.timer % 250 < 150;
+                        game.drawAt(_this.at, null, function (_a) {
+                            var sym = _a[0], fg = _a[1], bg = _a[2];
+                            return [
+                                on ? sym : " ",
+                                fg,
+                                bg
+                            ];
+                        });
+                        break;
+                    case 2:
+                        on = _this.timer % 400 < 200;
+                        game.drawAt(_this.at, null, function (_a) {
+                            var sym = _a[0], fg = _a[1], bg = _a[2];
+                            return [
+                                "!",
+                                on ? "red" : "white",
+                                bg
+                            ];
+                        });
+                        break;
+                }
+                if (_this.timer > 0) {
+                    _this.run();
+                }
+                else {
+                    game.drawAt(_this.at);
+                }
+            }, this.interval);
+        };
+        return Animation;
+    }());
+    var Pathfinder = /** @class */ (function () {
+        function Pathfinder() {
+            this.es = new easystar.js();
+            this.es.setAcceptableTiles([1, 2, 3, 4, 5, 6]);
+            this.es.setTileCost(1, 1);
+            this.es.setTileCost(2, 2);
+            this.es.setTileCost(3, 4);
+            this.es.setTileCost(4, 8);
+            this.es.setTileCost(5, 16);
+            this.es.setTileCost(6, 32);
+            this.es.enableDiagonals();
+            this.es.enableCornerCutting();
+            this.es.enableSync();
+        }
+        Pathfinder.prototype.setGrid = function () {
+            var grid = game.grid.map(function (column) { return column.map(function (tile) { return tile.cost; }); });
+            this.es.setGrid(grid);
+        };
+        Pathfinder.prototype.setGridFear = function () {
+            var grid = game.grid.map(function (column) { return column.map(function (tile) { return tile.cost; }); });
+            var r = 16;
+            var limit = [[0, 0], [0, 0]];
+            for (var axis = 0; axis < 2; axis++) {
+                limit[axis] = [
+                    Math.max(0, game.player.at[axis] - r),
+                    Math.min(game.options.size[axis], game.player.at[axis] + r)
+                ];
+            }
+            for (var x = limit[0][0]; x < limit[0][1]; x++)
+                for (var y = limit[1][0]; y < limit[1][1]; y++) {
+                    if (grid[x][y] == 1) {
+                        var d = distance(game.player.at, [x, y]);
+                        grid[x][y] = Math.max(1, 7 - Math.floor(Math.sqrt(d)));
+                    }
+                }
+            this.es.setGrid(grid);
+        };
+        Pathfinder.prototype.find = function (from, to) {
+            var path;
+            this.es.findPath(from[1], from[0], to[1], to[0], function (p) {
+                path = p ? p.map(function (at) { return [at.y, at.x]; }) : [];
+            });
+            this.es.calculate();
+            return path;
+        };
+        return Pathfinder;
+    }());
     var Ticker = /** @class */ (function () {
         function Ticker() {
         }
@@ -3706,10 +4776,13 @@ void main() {
     var Tile$1 = /** @class */ (function () {
         function Tile(symbol) {
             this.symbol = symbol;
+            this.cost = 1;
+            this.opaque = false;
             this.seen = 0;
             this.visible = 0;
             this.scent = 0;
-            this.cost = ["♠", "♣"].includes(symbol) ? 1e6 : 1;
+            this.cost = symbol.match(Tile.impassible) ? 1e6 : 1;
+            this.opaque = symbol.match(Tile.impassible) ? true : false;
         }
         Tile.prototype.serialise = function () {
             var s = {};
@@ -3724,6 +4797,39 @@ void main() {
             }
             return this;
         };
+        Tile.prototype.tooltip = function (at) {
+            if (!this.seen && !this.scent)
+                return null;
+            if (this.mob) {
+                if (this.mob.isPlayer)
+                    return lang.me;
+                else
+                    return lang.mob;
+            }
+            switch (this.symbol) {
+                case "⚘":
+                    return lang.flower;
+                case "♠":
+                    return lang.tree;
+                case "<":
+                    return lang.exit;
+                case ">":
+                    return lang.entrance;
+                case "*":
+                    return lang.blood;
+                case "b":
+                    return lang.blood_old;
+                case "B":
+                    return lang.blood_trail;
+                case "#":
+                    return lang.wall;
+                case " ":
+                    if (this.scent > 0.1)
+                        return lang.smell;
+                    break;
+            }
+        };
+        Tile.impassible = /[♠#]/;
         return Tile;
     }());
     function add2d(a, b) {
@@ -3732,51 +4838,36 @@ void main() {
     function sub2d(a, b) {
         return [a[0] - b[0], a[1] - b[1]];
     }
+    function eq2d(a, b) {
+        return a[0] == b[0] && a[1] == b[1];
+    }
     var Game = /** @class */ (function () {
         function Game(options) {
-            var _this = this;
             if (options === void 0) { options = {}; }
             this.options = options;
             this.emptyTile = new Tile$1("♠");
             this.scent = [];
             this.mouseOver = [0, 0];
+            this.pathfinder = new Pathfinder();
+            this.escapefinder = new Pathfinder();
+            this.waitingForInput = true;
+            this.killed = 0;
+            this.milestones = new Milestones();
             this.mobs = [];
             this.seeingRed = false;
             this.won = false;
             this.time = 0;
+            this._log = [];
             this.flowersCollected = 0;
-            this.flowers = [];
             game = this;
-            console.log(this);
             window.gameState = this;
-            RNG$1.setSeed(options.seed || Math.random());
-            this.player = new Mob();
             options.size = options.size || [60, 60];
             options.emptiness = options.emptiness * 1 || 0.35;
-            options.mobs = options.mobs * 1 || 10;
-            options.flowers = options.flowers * 1 || 4;
-            options.displaySize = options.displaySize || [60, 60];
-            var d = (this.d = new Display({
-                width: options.displaySize[0],
-                height: options.displaySize[1],
-                fontSize: 20,
-                spacing: 0.6,
-                forceSquareRatio: true,
-                bg: "#180C24",
-                fontFamily: "Icons"
-            }));
-            document.getElementById("game").appendChild(d.getContainer());
-            this.generateMap();
-            this.scheduler = new Schedulers.Speed();
-            this.engine = new Engine(this.scheduler);
-            this.initMobs();
-            this.engine.start();
-            this.player.lookAround();
-            window.addEventListener("keypress", function (e) { return _this.keypress(e); });
-            window.addEventListener("mousedown", function (e) { return _this.click(e); });
-            window.addEventListener("touchend", function (e) { return _this.click(e); });
-            window.addEventListener("mousemove", function (e) { return _this.mousemove(e); });
-            keyboard.sub(this.onKeyboard.bind(this));
+            options.mobs = "mobs" in options ? options.mobs : 10;
+            options.flowers = options.flowers * 1 || 6;
+            options.flowersNeeded = options.flowersNeeded * 1 || options.flowers - 1;
+            options.displaySize = options.displaySize || [45, 45];
+            RNG$1.setSeed(options.seed || Math.random());
         }
         Game.prototype.serialise = function () {
             return {
@@ -3786,8 +4877,10 @@ void main() {
                 time: this.time,
                 won: this.won,
                 landmarks: this.landmarks,
-                flowers: this.flowers,
                 exits: this.exits,
+                killed: this.killed,
+                _log: this._log,
+                milestones: this.milestones.serialise(),
                 grid: this.grid.map(function (line) { return line.map(function (t) { return t.serialise(); }); }),
                 mobs: this.mobs.map(function (m) { return m.serialise(); })
             };
@@ -3799,15 +4892,19 @@ void main() {
             this.time = s.time;
             this.won = s.won;
             this.landmarks = s.landmarks;
-            this.flowers = s.flowers;
             this.exits = s.exits;
+            (this.killed = s.killed), (this._log = s._log);
             this.scent = [];
+            this.milestones = new Milestones().deserialise(s.milestones);
             this.grid = s.grid.map(function (line) {
                 return line.map(function (t) { return new Tile$1(t.symbol).deserialise(t); });
             });
             this.findFreeTiles();
             this.mobs = s.mobs.map(function (m) { return new Mob().deserialise(m); });
             this.initMobs();
+            this.pathfinder.setGrid();
+            this.escapefinder.setGridFear();
+            this.waitingForInput = true;
             this.draw();
         };
         Game.prototype.at = function (at) {
@@ -3821,21 +4918,62 @@ void main() {
                 return this.emptyTile;
             return this.grid[at[0]][at[1]];
         };
+        Game.prototype.start = function () {
+            var _this = this;
+            this.player = new Mob();
+            var d = (this.d = new Display({
+                width: this.options.displaySize[0],
+                height: this.options.displaySize[1],
+                fontSize: 32,
+                spacing: 0.6,
+                forceSquareRatio: true,
+                bg: "#180C24",
+                fontFamily: "Icons"
+            }));
+            document.getElementById("game").appendChild(d.getContainer());
+            this.generateMap();
+            this.scheduler = new Schedulers.Speed();
+            this.engine = new Engine(this.scheduler);
+            this.initMobs();
+            this.engine.start();
+            this.player.lookAround();
+            window.addEventListener("keypress", function (e) { return _this.keypress(e); });
+            d.getContainer().addEventListener("mousedown", function (e) { return _this.onClick(e); });
+            d.getContainer().addEventListener("touchend", function (e) { return _this.onClick(e); });
+            d.getContainer().addEventListener("mousemove", function (e) { return _this.mousemove(e); });
+            this.keyboard = new Keyboard(window);
+            this.keyboard.sub(this.onKeyboard.bind(this));
+            game.draw();
+        };
+        Game.prototype.addHut = function () {
+            var hut = "         \n ####### \n #     # \n # bb  # \n # bbbb# \n # bbb # \n ###b### \n    B    \n   B     ".split("\n");
+            var h = hut.length;
+            var pat = this.player.at;
+            for (var y = 0; y < h; y++) {
+                var line = hut[y];
+                var w = line.length;
+                for (var x = 0; x < w; x++) {
+                    var sym = line[x];
+                    var tile = new Tile$1(sym);
+                    this.grid[pat[0] + x - 4][pat[1] + y - 4] = tile;
+                }
+            }
+        };
         Game.prototype.keypress = function (e) {
             if (e.code.substr(0, 5) == "Digit") {
                 var slot = e.code.substr(5);
                 if (e.shiftKey) {
                     localStorage.setItem(slot, JSON.stringify(this.serialise()));
-                    console.log("Save to " + slot);
+                    game.log("Save to " + slot);
                 }
                 else {
                     var save = localStorage.getItem(slot);
                     if (save) {
-                        console.log("Load from " + slot);
                         this.deserialise(JSON.parse(save));
+                        game.log("Load from " + slot);
                     }
                     else {
-                        console.log("No save in " + slot);
+                        game.log("No save in " + slot);
                     }
                 }
             }
@@ -3843,13 +4981,26 @@ void main() {
         Game.prototype.drawAtDisplay = function (displayAt, bg) {
             var delta = this.deltaAndHalf().delta;
             var at = sub2d(displayAt, delta);
-            var tile = this.safeAt(at);
-            this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), bg || this.tileBg(at));
+            if (eq2d(this.mouseOver, displayAt)) {
+                bg = "#400";
+            }
+            this.d.draw(displayAt[0], displayAt[1], this.tileSym(at), this.tileFg(at), bg || this.tileBg(at));
         };
         Game.prototype.mousemove = function (e) {
+            var displayAt = this.d.eventToPosition(e);
+            var outside = displayAt[1] <= 0 || displayAt[1] >= this.options.displaySize[1] - 1;
+            if (outside) {
+                this.tooltip = null;
+                return;
+            }
+            var delta = this.deltaAndHalf().delta;
+            var at = sub2d(displayAt, delta);
+            var tile = this.safeAt(at);
+            this.tooltip = tile.tooltip(at);
+            var old = this.mouseOver;
+            this.mouseOver = displayAt;
+            this.drawAtDisplay(old);
             this.drawAtDisplay(this.mouseOver);
-            this.mouseOver = this.d.eventToPosition(e);
-            this.drawAtDisplay(this.mouseOver, "#400");
         };
         Game.prototype.initMobs = function () {
             this.scheduler.clear();
@@ -3881,23 +5032,20 @@ void main() {
                 roomHeight: [3, 6]
             });
             map.create(function (x, y, what) {
-                var symbol = what ? ((x + y) % 2 ? "♠" : "♣") : " ";
+                var symbol = what ? "♠" : " ";
                 _this.grid[x][y] = new Tile$1(symbol);
             });
             this.findFreeTiles();
+            /*for(let at of this.freeTiles){
+              if(RNG.getUniform() < 0.3){
+                let tile = this.at(at)
+                tile.symbol = "."
+                tile.cost += 3
+              }
+            }*/
             var rooms = map.getRooms();
-            this.landmarks = rooms.map(function (r) { return r.getCenter(); });
             var roomsRandom = RNG$1.shuffle(rooms);
-            /*
-            let roomsByX = rooms.sort(r => r.getCenter()[0]);
-        
-            this.exits = [
-              [roomsByX[0].getLeft() - 1, roomsByX[0].getCenter()[1]],
-              [
-                roomsByX[roomsByX.length - 1].getRight() + 1,
-                roomsByX[roomsByX.length - 1].getCenter()[1]
-              ]
-            ];*/
+            this.landmarks = rooms.map(function (r) { return r.getCenter(); });
             this.exits = [[1e6, 0], [-1e6, 0]];
             for (var _i = 0, _a = this.freeTiles; _i < _a.length; _i++) {
                 var at = _a[_i];
@@ -3910,30 +5058,52 @@ void main() {
                         this.exits[1] = at;
                 }
             }
-            console.log(this.exits);
             this.at(this.exits[0]).symbol = "<";
             this.at(this.exits[1]).symbol = ">";
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
-            this.player.at = roomsRandom[1].getCenter();
-            for (var i = 3; i < 3 + this.options.flowers; i++) {
-                var room = roomsRandom[i];
-                var c = room.getCenter();
-                this.flowers.push(c);
-                this.at(c).symbol = "⚘";
+            //this.addHut();
+            var freeLandmarks = this.landmarks.slice();
+            for (var i = 0; i < freeLandmarks.length; i++) {
+                var lm = freeLandmarks[i];
+                if (lm[0] > 5 && lm[0] < this.options.size[0] - 5 && lm[1] > 5 && lm[1] < this.options.size[1] - 5) {
+                    this.player.at = freeLandmarks[i].slice();
+                    freeLandmarks.splice(i, 1);
+                    break;
+                }
             }
-            for (var i = 3 + this.options.flowers; i < 3 + this.options.flowers + this.options.mobs; i++) {
-                var room = roomsRandom[i];
+            this.addHut();
+            f: for (var i = 0; i < this.options.flowers; i++) {
+                while (freeLandmarks.length > 0) {
+                    var place = freeLandmarks.pop();
+                    if (this.at(place).symbol == " ") {
+                        this.at(place).symbol = "⚘";
+                        continue f;
+                    }
+                }
+            }
+            m: for (var i = 0; i < this.options.mobs; i++) {
                 var monster = new Mob();
-                monster.at = room.getCenter();
+                while (freeLandmarks.length > 0) {
+                    var place = freeLandmarks.pop();
+                    if (this.at(place).symbol == " ") {
+                        monster.at = place.slice();
+                        continue m;
+                    }
+                }
+                if (!monster.at)
+                    game.mobs.pop();
             }
+            this.pathfinder.setGrid();
+            game.log(lang.guide);
+            game.log(lang.not_here);
         };
         Game.prototype.tileBg = function (at) {
             var tile = this.safeAt(at);
             var bg = [0, 0, 0];
             var d = distance(at, this.player.at);
-            var inScentRadius = Math.max(Math.min(this.player.concentration, 10), this.player.hate * 0.1) +
-                7 >
-                d;
+            var inScentRadius = d <
+                7 +
+                    Math.max(Math.min(this.player.concentration, 10), this.player.hate * 0.1);
             if (!tile.seen && (!inScentRadius || tile.scent == 0)) {
                 return Color.toRGB(this.hateBg);
             }
@@ -3947,93 +5117,151 @@ void main() {
             }
             return Color.toRGB(bg);
         };
-        Game.prototype.tileFg = function (tile) {
-            if (tile.mob && tile.visible)
-                return (this.player == tile.mob && this.seeingRed) ? "red" : "white";
-            else
-                return ["♠", "♣", "."].includes(tile.symbol) ? null : "red";
-        };
-        Game.prototype.tileSym = function (tile) {
+        Game.prototype.tileFg = function (at) {
+            var tile = this.safeAt(at);
             if (tile.mob && tile.visible) {
-                return this.player == tile.mob ? "☻" : "☺";
+                if (tile.mob.isPlayer) {
+                    if (this.seeingRed)
+                        return "red";
+                    var redness = Math.min(200, this.killed * 20);
+                    return Color.toRGB([255, 255 - redness, 255 - redness]);
+                }
+                else {
+                    return "white";
+                }
             }
-            else {
-                return tile.visible || tile.seen ? tile.symbol : " ";
+            if (!tile.mob && tile.seen && tile.symbol == "♠") {
+                RNG$1.setSeed(at[0] * 1000 + at[1] * 3);
+                var shade = RNG$1.getUniformInt(150, 250);
+                return Color.toRGB([shade, shade, shade]);
             }
+            if (!tile.symbol.match(/[ ♠#_]/))
+                return "red";
+            return null;
+        };
+        Game.prototype.tileSym = function (at) {
+            var tile = this.safeAt(at);
+            if (tile.mob && tile.visible) {
+                return tile.mob.isPlayer ? "☻" : "☺";
+            }
+            if (tile.visible || tile.seen) {
+                if (tile.symbol == "♠") {
+                    RNG$1.setSeed(at[0] * 1000 + at[1] * 3);
+                    return RNG$1.getItem(["♠", "♣"]);
+                }
+                if (tile.symbol == "b" || tile.symbol == "B")
+                    return "*";
+                return tile.symbol;
+            }
+            return " ";
         };
         Game.prototype.deltaAndHalf = function () {
             var _this = this;
-            var half = [0, 1].map(function (axis) { return Math.floor(_this.options.displaySize[axis] / 2); });
+            var half = [0, 1].map(function (axis) {
+                return Math.floor(_this.options.displaySize[axis] / 2);
+            });
             var delta = [0, 1].map(function (axis) { return -_this.player.at[axis] + half[axis]; });
             return { delta: delta, half: half };
         };
+        Game.prototype.drawAt = function (at, delta, filter) {
+            var _a;
+            if (!delta)
+                delta = this.deltaAndHalf().delta;
+            var displayAt = add2d(at, delta);
+            var tile = this.safeAt(at);
+            var _b = [this.tileSym(at), this.tileFg(at), this.tileBg(at)], sym = _b[0], fg = _b[1], bg = _b[2];
+            if (filter) {
+                _a = filter([sym, fg, bg]), sym = _a[0], fg = _a[1], bg = _a[2];
+            }
+            if (tile != this.emptyTile)
+                this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
+        };
         Game.prototype.draw = function () {
-            var _this = this;
-            this.d.drawText(0, 0, "_".repeat(this.options.displaySize[1]));
+            this.d.clear();
             this.d.drawText(0, 0, "%b{red}%c{red}" +
-                "_".repeat((this.player.hate / this.options.displaySize[1]) * 100));
+                "-".repeat(Math.round((this.player.hate * this.options.displaySize[0]) / 100)));
             this.hateBg = this.seeingRed
                 ? [255, 0, 0]
                 : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
             var _a = this.deltaAndHalf(), delta = _a.delta, half = _a.half;
-            for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0]; x++) {
-                for (var y = this.player.at[1] - half[1] + 1; y < this.player.at[1] + half[1] - 1; y++) {
-                    var displayAt = add2d([x, y], delta);
-                    var tile = this.safeAt([x, y]);
-                    this.d.draw(displayAt[0], displayAt[1], this.tileSym(tile), this.tileFg(tile), this.tileBg([x, y]));
+            for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0] + 1; x++) {
+                for (var y = this.player.at[1] - half[1] + 1; y < this.player.at[1] + half[1]; y++) {
+                    this.drawAt([x, y], delta);
                 }
             }
-            this.d.drawText(0, this.options.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + "_".repeat(this.options.displaySize[0]));
-            var statusLine = "use NUMPAD ";
-            statusLine +=
-                "%c{gray}avoid? " +
-                    this.mobs.map(function (m) { return (m.alive ? "%c{white}☺" : "%c{red}*"); }).join("");
+            this.d.drawText(0, this.options.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + " ".repeat(this.options.displaySize[0]));
+            var statusLine = "";
             if (this.won) {
-                statusLine += " %c{red}GAME COMPLETE";
+                statusLine += " %c{red}" + lang.game_complete;
             }
             else if (this.allFlowersCollected()) {
                 statusLine += " %c{gray}visit %c{red}☨";
             }
             else {
+                if (this.milestones["flower_first"]) {
+                    for (var i = 0; i < Math.max(this.options.flowersNeeded, this.flowersCollected); i++) {
+                        statusLine += i < this.flowersCollected ? "%c{red}⚘" : "%c{gray}⚘";
+                    }
+                }
+            }
+            if (this.milestones["mob_first"]) {
                 statusLine +=
-                    " %c{gray}collect " +
-                        this.flowers
-                            .map(function (t) { return (_this.at(t).symbol == "⚘" ? "%c{gray}⚘" : "%c{red}⚘"); })
-                            .join("");
+                    "%c{gray} " +
+                        this.mobs.map(function (m) { return (m.alive ? "%c{white}☺" : "%c{red}*"); }).join("") + " ";
             }
             this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
         };
-        Game.prototype.waitForInput = function () {
-            game.engine.lock();
-        };
         Game.prototype.onKeyboard = function (code) {
-            if (this.player.playerAct(code))
-                game.engine.unlock();
+            this.lastKey = code;
+            if (Mob.meansStop(code))
+                this.player.stop();
+            if (this.waitingForInput)
+                this.playerAct();
         };
-        Game.prototype.click = function (e) {
-            if (this.seeingRed)
-                return;
+        Game.prototype.displayToGrid = function (at) {
             var delta = this.deltaAndHalf().delta;
-            var to = sub2d(this.mouseOver, delta);
-            var tile = this.at(to);
-            if (!tile)
-                return;
-            if (tile.cost > 1000) {
-                var nearest = this.freeTiles.
-                    map(function (at) { return ({ at: at, d: distance(at, to) }); }).
-                    reduce(function (prev, cur) { return cur.d < prev.d ? cur : prev; }, { at: [0, 0], d: 1e6 });
-                if (distance(to, this.player.at) < nearest.d) {
+            return sub2d(at, delta);
+        };
+        Game.prototype.onClick = function (e) {
+            e.preventDefault();
+            if (e instanceof MouseEvent) {
+                if (e.button == 2) {
+                    this.onKeyboard("Space");
                     return;
                 }
-                to = nearest.at;
-                console.log(to);
             }
-            game.player.path = game.player.findPathTo(to);
-            if (this.player.playerAct("path"))
-                game.engine.unlock();
+            this.click();
+        };
+        Game.prototype.click = function () {
+            if (game.player.hasPath()) {
+                game.player.stop();
+                return;
+            }
+            var to = this.displayToGrid(this.mouseOver);
+            var tile = this.safeAt(to);
+            if (eq2d(to, game.player.at)) {
+                game.player.path = [game.player.at.slice()];
+            }
+            else {
+                if (tile.cost > 1000) {
+                    var nearest = this.freeTiles
+                        .map(function (at) { return ({ at: at, d: distance(at, to) }); })
+                        .reduce(function (prev, cur) { return (cur.d < prev.d ? cur : prev); }, {
+                        at: [0, 0],
+                        d: 1e6
+                    });
+                    if (distance(to, this.player.at) < nearest.d) {
+                        return;
+                    }
+                    to = nearest.at;
+                }
+                game.player.setPath(to);
+            }
+            if (this.waitingForInput)
+                this.playerAct();
         };
         Game.prototype.allFlowersCollected = function () {
-            return this.flowersCollected == this.flowers.length;
+            return this.flowersCollected == this.options.flowersNeeded;
         };
         Game.prototype.eachTile = function (hook) {
             var _a = this.options.size, w = _a[0], h = _a[1];
@@ -4042,12 +5270,60 @@ void main() {
                     if (hook([x, y], this.grid[x][y]))
                         return;
         };
+        Game.prototype.log = function (text) {
+            var params = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                params[_i - 1] = arguments[_i];
+            }
+            console.log(params);
+            if (text in lang)
+                text = lang[text];
+            if (params) {
+                for (var i in params)
+                    text = text.replace("{" + i + "}", params[i]);
+            }
+            this._log.push(text.trim().replace(/(?:\r\n|\r|\n)/g, "<br/>"));
+            if (this.onLog) {
+                this.onLog(text);
+            }
+        };
+        Game.prototype.alertOnce = function (id) {
+            if (this.milestones[id])
+                return;
+            this.player.stop();
+            this.milestones[id] = 1;
+            this.log(lang[id]);
+        };
+        Game.prototype.playerAct = function () {
+            var _this = this;
+            var moveMade = this.player.playerAct();
+            game.draw();
+            if (moveMade) {
+                if (this.seeingRed || this.player.hasPath()) {
+                    this.waitingForInput = false;
+                    window.setTimeout(function () {
+                        _this.waitingForInput = true;
+                        game.engine.unlock();
+                    }, 50);
+                }
+                else {
+                    game.engine.unlock();
+                }
+            }
+        };
         return Game;
     }());
+    //♠♣⚘☻☺😁😞😐
+    /*
+        let roomsByX = rooms.sort(r => r.getCenter()[0]);
 
-    function createCommonjsModule(fn, module) {
-    	return module = { exports: {} }, fn(module, module.exports), module.exports;
-    }
+        this.exits = [
+          [roomsByX[0].getLeft() - 1, roomsByX[0].getCenter()[1]],
+          [
+            roomsByX[roomsByX.length - 1].getRight() + 1,
+            roomsByX[roomsByX.length - 1].getCenter()[1]
+          ]
+        ];*/
 
     var fontfaceobserver_standalone = createCommonjsModule(function (module) {
     /* Font Face Observer v2.1.0 - © Bram Stein. License: BSD-3-Clause */(function(){function l(a,b){document.addEventListener?a.addEventListener("scroll",b,!1):a.attachEvent("scroll",b);}function m(a){document.body?a():document.addEventListener?document.addEventListener("DOMContentLoaded",function c(){document.removeEventListener("DOMContentLoaded",c);a();}):document.attachEvent("onreadystatechange",function k(){if("interactive"==document.readyState||"complete"==document.readyState)document.detachEvent("onreadystatechange",k),a();});}function t(a){this.a=document.createElement("div");this.a.setAttribute("aria-hidden","true");this.a.appendChild(document.createTextNode(a));this.b=document.createElement("span");this.c=document.createElement("span");this.h=document.createElement("span");this.f=document.createElement("span");this.g=-1;this.b.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";this.c.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";
@@ -4064,27 +5340,105 @@ void main() {
 
     const file = "src\\App.svelte";
 
-    function create_fragment(ctx) {
-    	var div;
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.record = list[i];
+    	return child_ctx;
+    }
+
+    // (124:6) {#if log.length}
+    function create_if_block(ctx) {
+    	var t, div, raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged);
+
+    	var each_value = ctx.log.slice(0, ctx.log.length - 1);
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			t = space();
+    			div = element("div");
+    			div.className = "record svelte-1ft05fu";
+    			add_location(div, file, 129, 8, 2927);
+    		},
+
+    		m: function mount(target, anchor) {
+    			for (var i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert(target, t, anchor);
+    			insert(target, div, anchor);
+    			div.innerHTML = raw_value;
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.log) {
+    				each_value = ctx.log.slice(0, ctx.log.length - 1);
+
+    				for (var i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(t.parentNode, t);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    				each_blocks.length = each_value.length;
+    			}
+
+    			if ((changed.log || changed.lettersLogged) && raw_value !== (raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged))) {
+    				div.innerHTML = raw_value;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+
+    			if (detaching) {
+    				detach(t);
+    				detach(div);
+    			}
+    		}
+    	};
+    }
+
+    // (125:8) {#each log.slice(0, log.length - 1) as record}
+    function create_each_block(ctx) {
+    	var div, raw_value = ctx.record;
 
     	return {
     		c: function create() {
     			div = element("div");
-    			div.id = "game";
-    			add_location(div, file, 29, 0, 533);
-    		},
-
-    		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			div.className = "record svelte-1ft05fu";
+    			add_location(div, file, 125, 10, 2834);
     		},
 
     		m: function mount(target, anchor) {
     			insert(target, div, anchor);
+    			div.innerHTML = raw_value;
     		},
 
-    		p: noop,
-    		i: noop,
-    		o: noop,
+    		p: function update(changed, ctx) {
+    			if ((changed.log) && raw_value !== (raw_value = ctx.record)) {
+    				div.innerHTML = raw_value;
+    			}
+    		},
 
     		d: function destroy(detaching) {
     			if (detaching) {
@@ -4094,34 +5448,231 @@ void main() {
     	};
     }
 
+    function create_fragment(ctx) {
+    	var div0, t1, div4, div3, div1, t2, div2, dispose;
+
+    	var if_block = (ctx.log.length) && create_if_block(ctx);
+
+    	return {
+    		c: function create() {
+    			div0 = element("div");
+    			div0.textContent = "Tooltip";
+    			t1 = space();
+    			div4 = element("div");
+    			div3 = element("div");
+    			div1 = element("div");
+    			t2 = space();
+    			div2 = element("div");
+    			if (if_block) if_block.c();
+    			div0.className = "tooltip fadein svelte-1ft05fu";
+    			add_location(div0, file, 113, 0, 2455);
+    			div1.className = "game svelte-1ft05fu";
+    			div1.id = "game";
+    			add_location(div1, file, 117, 4, 2580);
+    			div2.className = "log svelte-1ft05fu";
+    			add_location(div2, file, 122, 4, 2705);
+    			div3.className = "main-table svelte-1ft05fu";
+    			add_location(div3, file, 116, 2, 2550);
+    			div4.className = "mainer-table svelte-1ft05fu";
+    			add_location(div4, file, 115, 0, 2520);
+    			dispose = listen(div1, "contextmenu", contextmenu_handler);
+    		},
+
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div0, anchor);
+    			add_binding_callback(() => ctx.div0_binding(div0, null));
+    			insert(target, t1, anchor);
+    			insert(target, div4, anchor);
+    			append(div4, div3);
+    			append(div3, div1);
+    			add_binding_callback(() => ctx.div1_binding(div1, null));
+    			append(div3, t2);
+    			append(div3, div2);
+    			if (if_block) if_block.m(div2, null);
+    			add_binding_callback(() => ctx.div2_binding(div2, null));
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.items) {
+    				ctx.div0_binding(null, div0);
+    				ctx.div0_binding(div0, null);
+    			}
+    			if (changed.items) {
+    				ctx.div1_binding(null, div1);
+    				ctx.div1_binding(div1, null);
+    			}
+
+    			if (ctx.log.length) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
+    					if_block = create_if_block(ctx);
+    					if_block.c();
+    					if_block.m(div2, null);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+
+    			if (changed.items) {
+    				ctx.div2_binding(null, div2);
+    				ctx.div2_binding(div2, null);
+    			}
+    		},
+
+    		i: noop,
+    		o: noop,
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div0);
+    			}
+
+    			ctx.div0_binding(null, div0);
+
+    			if (detaching) {
+    				detach(t1);
+    				detach(div4);
+    			}
+
+    			ctx.div1_binding(null, div1);
+    			if (if_block) if_block.d();
+    			ctx.div2_binding(null, div2);
+    			dispose();
+    		}
+    	};
+    }
+
     let regex = /[?&]([^=#]+)=([^&#]*)/g;
 
-    function instance($$self, $$props, $$invalidate) {
+    function timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function contextmenu_handler(e) {
+    	return e.preventDefault();
+    }
+
+    function instance$1($$self, $$props, $$invalidate) {
     	
 
-      let icons = new fontfaceobserver_standalone('Icons');
+      let icons = new fontfaceobserver_standalone("Icons");
+      let { log = [] } = $$props;
 
       let conf = {};
       let hash = location.hash;
       let url = window.location.href;
       let match;
-      
-      while(match = regex.exec(url)) {
-          conf[match[1]] = JSON.parse(match[2]);  }  
-      
-      console.log(conf);
+      let game;
+      let gameDiv;
+      let gameLog;
+      let tooltip;
+      let lettersLogged = 0;
+
+      while ((match = regex.exec(url))) {
+        conf[match[1]] = JSON.parse(match[2]);  }
+
+      function updateLog(text) {
+        $$invalidate('log', log = game._log);
+        $$invalidate('lettersLogged', lettersLogged = 0);
+        gameLog.scrollTop = 1e6; $$invalidate('gameLog', gameLog);
+      }
 
       icons.load().then(() => {
-        new Game(conf);  
+        game = new Game(conf);
+        game.onLog = updateLog;    game.start();
+        gameLog.style.height = gameDiv.clientHeight + "px"; $$invalidate('gameLog', gameLog);
       });
 
-    	return {};
+      onMount(async () => {
+
+        setInterval(() => {
+          let last = log[log.length - 1];
+          if (lettersLogged < last.length) {
+            $$invalidate('lettersLogged', lettersLogged =
+              Math.ceil((last.length - lettersLogged) / 40) + lettersLogged);
+            gameLog.scrollTop = gameLog.scrollHeight; $$invalidate('gameLog', gameLog);
+          }    
+        }, 10);
+
+      });
+
+      function toggleTooltip(on) {
+        let classes = tooltip.classList;
+        if (on) {
+          classes.add("visible");
+        } else {
+          classes.remove("visible");
+        }
+      }
+
+      window.addEventListener("mousemove", async e => {
+        if (Math.abs(e.movementY) + Math.abs(e.movementX) > 3) {
+          toggleTooltip(false);
+          await timeout(30);
+        }
+
+        if (tooltip) {
+          tooltip.style.left = e.clientX + "px"; $$invalidate('tooltip', tooltip);
+          tooltip.style.top = e.clientY + "px"; $$invalidate('tooltip', tooltip);
+          toggleTooltip(game.tooltip);
+          tooltip.innerHTML = game.tooltip; $$invalidate('tooltip', tooltip);
+        }
+      });
+
+    	const writable_props = ['log'];
+    	Object.keys($$props).forEach(key => {
+    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<App> was created with unknown prop '${key}'`);
+    	});
+
+    	function div0_binding($$node, check) {
+    		tooltip = $$node;
+    		$$invalidate('tooltip', tooltip);
+    	}
+
+    	function div1_binding($$node, check) {
+    		gameDiv = $$node;
+    		$$invalidate('gameDiv', gameDiv);
+    	}
+
+    	function div2_binding($$node, check) {
+    		gameLog = $$node;
+    		$$invalidate('gameLog', gameLog);
+    	}
+
+    	$$self.$set = $$props => {
+    		if ('log' in $$props) $$invalidate('log', log = $$props.log);
+    	};
+
+    	return {
+    		log,
+    		gameDiv,
+    		gameLog,
+    		tooltip,
+    		lettersLogged,
+    		div0_binding,
+    		div1_binding,
+    		div2_binding
+    	};
     }
 
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, []);
+    		init(this, options, instance$1, create_fragment, safe_not_equal, ["log"]);
+    	}
+
+    	get log() {
+    		throw new Error("<App>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set log(value) {
+    		throw new Error("<App>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 

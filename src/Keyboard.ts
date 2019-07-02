@@ -1,25 +1,37 @@
 type Handler = (keyCode: string) => void
 
-export class Keyboard {
+export default class Keyboard {
 
   interval = 100
   pressed: { [key: string]: number } = {};
   subs: ((keyCode: string) => void)[] = []
 
-  constructor() {
-    window.addEventListener("keydown", this);
-    window.addEventListener("keyup", this);
+  constructor(element:Element|Window) {
+    element.addEventListener("keydown", this);
+    element.addEventListener("keyup", this);
+    element.addEventListener("mousedown", this);
+    element.addEventListener("mouseup", this);
   }
 
-  handleEvent(e:KeyboardEvent) {
-    let code = e.code
-    if(e.type == "keydown"){
+  handleEvent(e:KeyboardEvent|MouseEvent) {
+    let code
+    let type
+
+    if(e instanceof KeyboardEvent){
+      code = e.code
+      type = e.type=="keydown"?"down":"up"
+    } else {
+      code = "Click" + e.button
+      type = e.type == "mousedown"?"down":"up"
+    }
+
+    if(type == "down"){
       if(!(code in this.pressed)){
-        this.click(e.code)
-        this.pressed[code] = window.setInterval(() => this.click(e.code), this.interval)
+        this.click(code)
+        this.pressed[code] = window.setInterval(() => this.click(code), this.interval)
       }
     }
-    if(e.type == "keyup"){
+    if(type == "up"){
       window.clearInterval(this.pressed[code])
       delete this.pressed[code]
     }
@@ -57,7 +69,3 @@ export class Keyboard {
     this.subs = []
   }
 }
-
-let keyboard = new Keyboard();
-
-export default keyboard;

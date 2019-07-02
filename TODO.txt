@@ -1,8 +1,16 @@
+Exits, NPCs using them
+NPC fear
+Flee
+Guards
+Menu UI
+Graphics
+
+DONE
 
 Mouse Support
 Standing still bonuses
-Exits, NPCs using them
-NPC fear
-Guards
 Text Log
-Saving?
+Saving
+
+NOTES
+Fear: sees blood, sees kill, sees anger
