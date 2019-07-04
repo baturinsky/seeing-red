@@ -1,12 +1,12 @@
-Exits, NPCs using them
-NPC fear
-Flee
 Guards
-Menu UI
 Graphics
 
 DONE
 
+Exits, NPCs using them
+NPC fear
+Flee
+Menu UI
 Mouse Support
 Standing still bonuses
 Text Log

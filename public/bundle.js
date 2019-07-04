@@ -34,6 +34,11 @@ var app = (function (exports) {
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function detach_before(after) {
+        while (after.previousSibling) {
+            after.parentNode.removeChild(after.previousSibling);
+        }
+    }
     function destroy_each(iterations, detaching) {
         for (let i = 0; i < iterations.length; i += 1) {
             if (iterations[i])
@@ -55,6 +60,9 @@ var app = (function (exports) {
     }
     function children(element) {
         return Array.from(element.childNodes);
+    }
+    function set_style(node, key, value) {
+        node.style.setProperty(key, value);
     }
 
     let current_component;
@@ -81,6 +89,10 @@ var app = (function (exports) {
             update_scheduled = true;
             resolved_promise.then(flush);
         }
+    }
+    function tick() {
+        schedule_update();
+        return resolved_promise;
     }
     function add_binding_callback(fn) {
         binding_callbacks.push(fn);
@@ -3202,6 +3214,62 @@ void main() {
 
     const Color = color;
 
+    var lang = {
+        guide: "\nNUMPAD keys = move around\nclick - move to cursor or stop\nclick self - wait\nNum5, space - stop/wait\nShift + 1-9: save\n1-9: load\n",
+        me: "It's me. A regular everyday normal person.",
+        flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
+        flower_first: "One of those weird red flowers <em>\u2698</em> she is fond of. <span class='important'>I'll pick some for her.</span> \nShe said she wants them with roots.",
+        flower_mob_first: "<em>How dares it ☺ to be near the flower ⚘ !</em>",
+        collected: "I carefully dig out the flower <em>⚘</em> {0}",
+        collected_all: "I have collected enough flowers. But she is nowhere to seen. <span class='important'>Maybe she is home already? I'll go check.</span>",
+        collected_even: "There is a custom that you should not gift even number of flowers to a living person. Hope she is not superstitious.",
+        tree: "Thick forest.",
+        exit: "The path to the village.",
+        entrance: "The path back to the road.",
+        blood: "A pool of blood. Why is it here?",
+        blood_old: "Looks like a dried blood. Weird.",
+        blood_trail: "A trail of blood. Quite old.",
+        wall: "An old, but sturdy hut wall. She lives here.",
+        mob: "Monster",
+        mob_first: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
+        smell: "A trail of smell.",
+        smell_first: "Those things smell \n<span style='background:#a00'>&nbsp;</span><span style='background:#800'>&nbsp;</span><span style='background:#600'>&nbsp;</span><span style='background:#400'>&nbsp;</span>\nquite bad. I can feel the trail of their stench from quite a far away.",
+        calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
+        rage: "<span style='color:darkred'>Look and smell of those monsters raise a wave of rage in my heart.</span>",
+        rage_more: "<em>I'm furious. I feel like I can snap at any moment.</em>",
+        seeing_red: "<em>Waaargh!</em>",
+        seeing_red_end: "What has just happened?",
+        death: "<em>Splort.</em>",
+        not_here: "She is not here. Probably somewhere in the forest picking up herbs again. <span class='important'>I'll  go look for her.</span>",
+        mob_wary: "It stares at me warily.",
+        mob_afraid: "It covers in fear.",
+        mob_fleeing: "It flees to it's lair screaming.",
+        mob_startled: "☺ avoids you.",
+        mob_flees: "☺ runs away.",
+        game_complete: "GAME COMPLETE",
+        grave: "I grave. Seems to be recent.",
+        read_letter: [
+            "Still no signs of her. Oh, right, I still have her letter. Maybe reading it will give some clues? I started reading:",
+            "I have decided to continue reading the letter:",
+            "Still can't find her. Maybe she is in ehe village? I'll continue with the letter:",
+            "I'll read the remaining letter part:"
+        ],
+        close_letter: [
+            "My sight has suddenly blurred, making seeing writing difficult. I will continue reading next time.",
+            "Is she trying to be a philosopher here? Not my cup of tea. I'll better continue looking for her.",
+            "It was painful to reading it. And impossible not to. I'll read the rest, just not now.",
+            "It was all. I stand for a while looking at the letter blankly.  If she'd only know... "
+        ],
+        letter: [
+            "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease: Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI perform surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarely ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep looking for it, but nothing of note so far.\nBut I have found something else - this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
+        ],
+        ending_denial: "\nIt's her! She smiles at me.\n<div class=\"she\">\nOh, you have picked the flowers! How nice of you. I have a good news. \nDo you remember me dreaming of finding a way to cure evil in people? I have found it!\nIt's these very flowers fragrance. It works slow, but inhaling it for a long time will destroy the evil in people completely!\nWould you please plant them around the village for me? \n</div>\n<div class=\"ending-type\">Ending 1/5: Denial.</div>\n",
+        ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance? why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And I was always in pain so big, I only could manage by throwing it at others.\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
+        ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say those memories will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not like it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
+        ending_depression: "\nOf cause, she is not here. This blood must be hers. And the stash with her books and research is still here. She would not leave without it.\nLooks like her fears did materialised. \n\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about it's environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be hard to weed it out around settlements. \nI'll show this to doctors in city. Maybe even will find te one she has sent the letter to this time.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
+        ending_true: "\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n\nSuch a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.\nI cam with the elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\nAh... God! I turned out to be such a damsel in distress.\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
+    };
+
     var keyMap = {};
     keyMap["Numpad8"] = 0;
     keyMap["Numpad9"] = 1;
@@ -3213,6 +3281,7 @@ void main() {
     keyMap["Numpad7"] = 7;
     keyMap["Numpad5"] = -1;
     keyMap["Space"] = -1;
+    var WARY = 30, AFRAID = 60, PANIC = 100;
     var Mob = /** @class */ (function () {
         function Mob() {
             this.sees = [];
@@ -3268,7 +3337,8 @@ void main() {
                 game.playerAct();
             }
             else {
-                this.mobAct();
+                if (this.at)
+                    this.mobAct();
             }
         };
         Mob.prototype.tile = function () {
@@ -3278,8 +3348,6 @@ void main() {
             var tile = this.tile();
             var targetMob = game.at(newAt).mob;
             if (targetMob) {
-                if (targetMob.isPlayer)
-                    return;
                 if (this.isPlayer) {
                     targetMob.die();
                     this.hate = 0;
@@ -3290,27 +3358,33 @@ void main() {
                     else {
                         targetMob.at = this.at.slice(0, 2);
                         tile.mob = targetMob;
+                        targetMob.reroute();
                     }
                 }
             }
             if (tile.mob == this)
                 tile.mob = null;
             this.at = newAt.slice(0, 2);
-            this.tile().mob = this;
+            tile = this.tile();
+            tile.mob = this;
             if (this.isPlayer) {
-                if (this.tile().symbol == "⚘") {
-                    this.tile().symbol = " ";
+                if (tile.symbol == "⚘") {
+                    tile.symbol = " ";
                     game.flowersCollected++;
-                    game.log("collected", game.flowersCollected + "/" + game.options.flowersNeeded);
+                    game.log(lang.collected, game.flowersCollected + "/" + game.options.flowersNeeded);
                     if (game.flowersCollected == game.options.flowersNeeded) {
-                        game.log("collected_all");
+                        game.log(lang.collected_all);
                     }
-                    if (game.flowersCollected >= game.options.flowersNeeded && game.flowersCollected % 2 == 0) {
-                        game.log("collected_even");
+                    if (game.flowersCollected >= game.options.flowersNeeded &&
+                        game.flowersCollected % 2 == 0) {
+                        game.log(lang.collected_even);
                     }
                 }
-                if (this.tile().symbol == "☨" && game.allFlowersCollected()) {
-                    game.won = true;
+                /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
+                  game.won = true;
+                }*/
+                if (tile.symbol == "b" && game.allFlowersCollected()) {
+                    game.win();
                 }
             }
             else {
@@ -3319,7 +3393,7 @@ void main() {
         };
         Mob.prototype.die = function () {
             this.alive = false;
-            game.log("death");
+            game.log(lang.death);
             if (!this.isPlayer) {
                 game.killed++;
             }
@@ -3333,7 +3407,6 @@ void main() {
                     tile.cost += 2;
                 }
             });
-            game.pathfinder.setGrid();
         };
         Mob.prototype.leaveScent = function () {
             var tile = game.at(this.at);
@@ -3341,26 +3414,41 @@ void main() {
             if (tile.scent <= 0.01) {
                 game.scent.push(tile);
             }
-            tile.scent = 1;
+            tile.scent = 0.5 + Math.min(1, this.fear / 100);
         };
         Mob.prototype.findNearestMob = function () {
             var nearestMob = game.mobs
-                .map(function (m) { return ({
-                mob: m,
-                d: m.isPlayer || !m.alive ? 1e6 : distance(m.at, game.player.at)
-            }); })
+                .map(function (m) {
+                return {
+                    mob: m,
+                    d: m.isPlayer || !m.alive || !m.at
+                        ? 1e6
+                        : distance(m.at, game.player.at)
+                };
+            })
                 .reduce(function (prev, cur) { return (cur.d < prev.d ? cur : prev); }, {
                 mob: null,
                 d: 1e6
             });
             return nearestMob.mob;
         };
+        Mob.prototype.pathFinderUsed = function () {
+            var finder = !this.isPlayer && this.fear >= WARY && this.tile().visible
+                ? game.escapefinder
+                : game.pathfinder;
+            return finder;
+        };
         Mob.prototype.findPathTo = function (to) {
-            var finder = this.isPlayer ? game.pathfinder : game.escapefinder;
+            var finder = this.pathFinderUsed();
             var path = finder.find(this.at, to);
             if (path)
                 path.shift();
             return path;
+        };
+        Mob.prototype.reroute = function () {
+            if (this.hasPath()) {
+                this.path = this.pathFinderUsed().find(this.at, this.path.pop());
+            }
         };
         Mob.prototype.seesOthers = function () {
             for (var _i = 0, _a = this.sees; _i < _a.length; _i++) {
@@ -3389,9 +3477,6 @@ void main() {
                 if (this.hasPath()) {
                     if (this.path[0][0] == this.at[0] && this.path[0][1] == this.at[1]) {
                         this.stay();
-                        /*if(this.hate == 0){
-                          this.path.shift()
-                        }*/
                     }
                     else {
                         this.goTo(this.path.shift());
@@ -3422,6 +3507,12 @@ void main() {
                 this.goTo(newAt);
             }
             this.lookAround();
+            /*for(let mob of game.mobs){
+              if(mob.emote){
+                new Animation([mob.at[0], mob.at[1] - 1], 2, {duration: 1000, symbol:mob.emote});
+                mob.emote = null
+              }
+            }*/
             return true;
         };
         Mob.prototype.setPath = function (to) {
@@ -3434,10 +3525,24 @@ void main() {
                 }
                 if (this.path && this.path.length > 0)
                     this.goTo(this.path.shift());
+                var tile = this.tile();
+                if (tile.symbol == "*") {
+                    this.fear += 2;
+                }
+                if (tile.symbol == "<" || (tile.symbol == "<" && !this.hasPath())) {
+                    tile.mob = null;
+                    this.at = null;
+                    this.path = null;
+                }
             }
             else {
                 this.path = [];
-                var goal = RNG$1.getItem(game.landmarks);
+                var goal = void 0;
+                var leaving = RNG$1.getUniform() < 0.01 + Math.max(0, this.fear - AFRAID) / 100;
+                if (leaving)
+                    goal = RNG$1.getItem(game.exits);
+                else
+                    goal = RNG$1.getItem(game.landmarks);
                 this.path = this.findPathTo(goal);
             }
         };
@@ -3460,9 +3565,38 @@ void main() {
             var seen = this.seesOthers();
             if (seen && !this.seesEnemies && this.hasPath()) {
                 this.stop();
-                new Animation([seen.at[0], seen.at[1] - 1], 2, 500);
+                game.alertOnce("mob_first");
+                new Animation([seen.at[0], seen.at[1] - 1], 2, { duration: 500, interval: 100 });
             }
             this.seesEnemies = seen ? true : false;
+        };
+        Mob.prototype.tooltip = function () {
+            if (this.isPlayer) {
+                return lang.me;
+            }
+            else {
+                var afraid = this.fear < WARY
+                    ? null
+                    : this.fear < AFRAID
+                        ? lang.mob_wary
+                        : this.fear < PANIC
+                            ? lang.mob_afraid
+                            : lang.mob_fleeing;
+                return lang.mob + (afraid ? "<br/>" + afraid : "");
+            }
+        };
+        Mob.prototype.lookAtMe = function () {
+            var dFear = game.player.hate / 10 + (game.seeingRed ? 10 : 0);
+            dFear *= 1 + game.killed;
+            if (this.fear < AFRAID && this.fear + dFear >= AFRAID) {
+                game.log(lang.mob_startled);
+                this.emote = "!";
+            }
+            if (this.fear < PANIC && this.fear + dFear >= PANIC) {
+                game.log(lang.mob_flees);
+                this.emote = "⚡";
+            }
+            this.fear += dFear;
         };
         Mob.prototype.lookAround = function () {
             var _this = this;
@@ -3479,16 +3613,19 @@ void main() {
                 }
             var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return !game.safeAt([x, y]).opaque; });
             this.sees = [];
-            var dHate = game.seeingRed ? -0.5 : -0.3;
+            var dHate = game.seeingRed ? -0.3 : -0.2;
             var seesFlower = false;
+            var seesMobs = false;
             fov.compute(this.at[0], this.at[1], 20, function (x, y, r, vis) {
                 _this.sees.push([x, y]);
                 var tile = game.at([x, y]);
                 if (tile.symbol == "⚘" && r <= 10)
                     seesFlower = true;
                 if (tile.mob && !tile.mob.isPlayer) {
+                    tile.mob.lookAtMe();
+                    seesMobs = true;
                     game.alertOnce("mob_first");
-                    dHate += 10 / (r + 5);
+                    dHate += 10 / (r + 3);
                 }
                 tile.visible = (vis * (20 - r)) / 20;
                 tile.seen = 1;
@@ -3498,23 +3635,28 @@ void main() {
                 game.alertOnce("smell_first");
             }
             if (seesFlower) {
+                game.alertOnce("flower_first");
                 if (dHate > 0) {
                     game.alertOnce("flower_mob_first");
                     dHate *= 2;
                 }
                 else {
-                    game.alertOnce("flower_first");
                     dHate += -3;
                 }
             }
-            this.changeHateBy(dHate);
+            this.changeHateBy(Math.min(10, dHate * game.options.hateGain));
+            if (game.letterRead < game.flowersCollected &&
+                !seesMobs &&
+                ((RNG$1.getUniform() < 0.1 && this.hate == 0) || seesFlower)) {
+                game.readNextLetter();
+            }
             var wasSeeingRed = game.seeingRed;
             if (RNG$1.getUniform() < 0.3 ||
                 game.player.hate == 100 ||
                 game.player.hate == 0) {
                 game.seeingRed = (this.hate - 50) / 50 > RNG$1.getUniform();
                 if (wasSeeingRed != game.seeingRed)
-                    game.log(game.seeingRed ? "seeing_red" : "seeing_red_end");
+                    game.log(game.seeingRed ? lang.seeing_red : lang.seeing_red_end);
             }
             game.escapefinder.setGridFear();
         };
@@ -4524,54 +4666,6 @@ void main() {
     EasyStar.LEFT = 'LEFT';
     EasyStar.TOP_LEFT = 'TOP_LEFT';
 
-    var lang = {
-        guide: "\nNUMPAD keys = move around\nclick - move to cursor or stop\nclick self - wait\nNum5, space - stop/wait\nShift + 1-9: save\n1-9: load\n",
-        me: "It's me. A regular everyday normal person.",
-        flower: "A flower. Seeing it grow makes me calm. I should pick it for her.",
-        flower_first: "One of those weird red flowers <span style='color:red'>⚘</span> she is fond of. I should pick some for her.",
-        flower_mob_first: "<span style='color:red'>How dares it to be near the flower!</span>",
-        collected: "Flower <span style='color:red'>⚘</span> collected {0}",
-        collected_all: "I have collected enough flowers. Still no signs of her. Maybe she is home already? I'll go check.",
-        collected_even: "There is a custom that you should not gift even number of flowers to a living person. Hope she is not superstitious.",
-        tree: "Thick forest.",
-        exit: "The path to the village.",
-        entrance: "The path back to the road.",
-        blood: "A pool of blood. Why is it here?",
-        blood_old: "Looks like a dried blood. Weird.",
-        blood_trail: "A trail of blood. Quite old.",
-        wall: "An old, but sturdy hut wall. She lives here.",
-        mob: "Monster",
-        mob_first: "I see one of the monsters <span style='color:red'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
-        smell: "A trail of smell.",
-        smell_first: "Those things smell <span style='background:red'>&nbsp;</span><span style='background:darkred'>&nbsp;</span> quite bad. I can feel the trail of their stench from quite a far away.",
-        calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
-        rage: "<span style='color:darkred'>Look and smell of those monsters raise a wave of rage in my heart.</span>",
-        rage_more: "<span style='color:red'>I'm furious. I feel like I can snap at any moment.</span>",
-        seeing_red: "<span style='color:red'>Waaargh!</span>",
-        seeing_red_end: "What has just happened?",
-        death: "<span style='color:red'>Splort.</span>",
-        not_here: "She is not here. Probably somewhere in the forest picking up herbs again. I should go look for her.",
-        mob_wary: "It stares at me blankly. Looks like it suspects something.",
-        mob_afraid: "It seems to be full of fear. It tries don't come near me.",
-        mob_fleeing: "It flees to the lair screaming.",
-        game_complete: "GAME COMPLETE",
-        read_letter: [
-            "Where is she? Wait, I have her letter. Maybe reading it will give some clues. I started reading:",
-            "I have decided to continue reading the letter:",
-            "Still can't find her. Maybe she is in ehe village? I'll continue with the letter:",
-            "I'll read the remaining letter part:"
-        ],
-        close_letter: [
-            "My sight has suddenly blurred, making seeing writing difficult. I should continue reading next time.",
-            "Is she trying to be a philosopher here? Not my cup of tea. I'll better continue looking for her.",
-            "It was painful to reading it. And impossible not to. I'll read the rest, just not now.",
-            "It was all. I stand for a while looking at the letter blankly.  If she'd only know... "
-        ],
-        letter: [
-            "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease - Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI performed surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarly ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies at least.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep searching, but only thing of note I have found so far is this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
-        ]
-    };
-
     var Keyboard = /** @class */ (function () {
         function Keyboard(element) {
             this.interval = 100;
@@ -4658,24 +4752,24 @@ void main() {
         return Milestones;
     }());
     var Animation = /** @class */ (function () {
-        function Animation(at, mode, timer, interval) {
+        function Animation(at, mode, options) {
             if (mode === void 0) { mode = 1; }
-            if (timer === void 0) { timer = 200; }
-            if (interval === void 0) { interval = 50; }
             this.at = at;
             this.mode = mode;
-            this.timer = timer;
-            this.interval = interval;
+            this.options = options;
             this.run();
         }
         Animation.prototype.run = function () {
             var _this = this;
-            window.setTimeout(function () {
+            var duration = this.options.duration || 1000;
+            var interval = this.options.interval || 50;
+            var timer = duration;
+            var handle = window.setInterval(function () {
                 var on;
-                _this.timer -= _this.interval;
+                timer -= interval;
                 switch (_this.mode) {
                     case 1:
-                        on = _this.timer % 250 < 150;
+                        on = timer % 250 < 150;
                         game.drawAt(_this.at, null, function (_a) {
                             var sym = _a[0], fg = _a[1], bg = _a[2];
                             return [
@@ -4686,24 +4780,22 @@ void main() {
                         });
                         break;
                     case 2:
-                        on = _this.timer % 400 < 200;
+                        on = timer % 400 < 200;
                         game.drawAt(_this.at, null, function (_a) {
                             var sym = _a[0], fg = _a[1], bg = _a[2];
                             return [
-                                "!",
+                                _this.options.symbol || "?",
                                 on ? "red" : "white",
                                 bg
                             ];
                         });
                         break;
                 }
-                if (_this.timer > 0) {
-                    _this.run();
-                }
-                else {
+                if (timer <= 0) {
                     game.drawAt(_this.at);
+                    clearTimeout(handle);
                 }
-            }, this.interval);
+            }, interval);
         };
         return Animation;
     }());
@@ -4770,6 +4862,13 @@ void main() {
                 var mob = _a[_i];
                 mob.actFixedInterval();
             }
+            if (RNG$1.getUniform() < 0.001) {
+                var exit = RNG$1.getItem(game.exits);
+                if (!game.at(exit).mob) {
+                    var mob = new Mob();
+                    mob.at = exit.slice();
+                }
+            }
         };
         return Ticker;
     }());
@@ -4801,10 +4900,7 @@ void main() {
             if (!this.seen && !this.scent)
                 return null;
             if (this.mob) {
-                if (this.mob.isPlayer)
-                    return lang.me;
-                else
-                    return lang.mob;
+                return this.mob.tooltip();
             }
             switch (this.symbol) {
                 case "⚘":
@@ -4821,6 +4917,8 @@ void main() {
                     return lang.blood_old;
                 case "B":
                     return lang.blood_trail;
+                case "☨":
+                    return lang.grave;
                 case "#":
                     return lang.wall;
                 case " ":
@@ -4841,44 +4939,54 @@ void main() {
     function eq2d(a, b) {
         return a[0] == b[0] && a[1] == b[1];
     }
+    var Options = /** @class */ (function () {
+        function Options(o) {
+            this.displaySize = [45, 45];
+            this.size = [80, 80];
+            this.mobs = 18;
+            this.flowers = 6;
+            this.hateGain = 1;
+            this.emptiness = 0.3;
+            Object.assign(this, o);
+            this.flowersNeeded = this.flowersNeeded || this.flowers - 1;
+        }
+        return Options;
+    }());
     var Game = /** @class */ (function () {
         function Game(options) {
-            if (options === void 0) { options = {}; }
-            this.options = options;
             this.emptyTile = new Tile$1("♠");
             this.scent = [];
             this.mouseOver = [0, 0];
             this.pathfinder = new Pathfinder();
             this.escapefinder = new Pathfinder();
             this.waitingForInput = true;
-            this.killed = 0;
-            this.milestones = new Milestones();
+            this.autoSaved = true;
+            this.paused = false;
             this.mobs = [];
             this.seeingRed = false;
             this.won = false;
             this.time = 0;
             this._log = [];
             this.flowersCollected = 0;
+            this.letterRead = 0;
+            this.panic = 0;
+            this.options = new Options(options);
             game = this;
             window.gameState = this;
-            options.size = options.size || [60, 60];
-            options.emptiness = options.emptiness * 1 || 0.35;
-            options.mobs = "mobs" in options ? options.mobs : 10;
-            options.flowers = options.flowers * 1 || 6;
-            options.flowersNeeded = options.flowersNeeded * 1 || options.flowers - 1;
-            options.displaySize = options.displaySize || [45, 45];
-            RNG$1.setSeed(options.seed || Math.random());
+            RNG$1.setSeed(this.options.seed || Math.random());
         }
         Game.prototype.serialise = function () {
             return {
                 options: this.options,
                 seeingRed: this.seeingRed,
                 flowersCollected: this.flowersCollected,
+                letterRead: this.letterRead,
                 time: this.time,
                 won: this.won,
                 landmarks: this.landmarks,
                 exits: this.exits,
                 killed: this.killed,
+                panic: this.panic,
                 _log: this._log,
                 milestones: this.milestones.serialise(),
                 grid: this.grid.map(function (line) { return line.map(function (t) { return t.serialise(); }); }),
@@ -4886,14 +4994,17 @@ void main() {
             };
         };
         Game.prototype.deserialise = function (s) {
-            this.options = s.options;
+            this.options = new Options(s.options);
             this.seeingRed = s.seeingRed;
-            this.flowersCollected = s.flowersCollected;
             this.time = s.time;
             this.won = s.won;
+            this.panic = s.panic;
             this.landmarks = s.landmarks;
             this.exits = s.exits;
-            (this.killed = s.killed), (this._log = s._log);
+            this.killed = s.killed;
+            this.flowersCollected = s.flowersCollected;
+            this.letterRead = s.letterRead;
+            this._log = s._log;
             this.scent = [];
             this.milestones = new Milestones().deserialise(s.milestones);
             this.grid = s.grid.map(function (line) {
@@ -4918,9 +5029,24 @@ void main() {
                 return this.emptyTile;
             return this.grid[at[0]][at[1]];
         };
-        Game.prototype.start = function () {
+        Game.prototype.save = function (slot) {
+            localStorage.setItem(slot, JSON.stringify(game.serialise()));
+            localStorage.setItem("!" + slot, "yes");
+            if (slot != "0")
+                game.log("Saved to " + slot);
+        };
+        Game.prototype.load = function (slot) {
+            if (!this.hasSave(slot))
+                return;
+            var save = localStorage.getItem(slot);
+            game.deserialise(JSON.parse(save));
+            game.log("Loaded from " + (slot == "0" ? "autosave" : slot));
+        };
+        Game.prototype.hasSave = function (slot) {
+            return localStorage.getItem("!" + slot) ? true : false;
+        };
+        Game.prototype.init = function () {
             var _this = this;
-            this.player = new Mob();
             var d = (this.d = new Display({
                 width: this.options.displaySize[0],
                 height: this.options.displaySize[1],
@@ -4931,22 +5057,45 @@ void main() {
                 fontFamily: "Icons"
             }));
             document.getElementById("game").appendChild(d.getContainer());
-            this.generateMap();
             this.scheduler = new Schedulers.Speed();
             this.engine = new Engine(this.scheduler);
-            this.initMobs();
             this.engine.start();
-            this.player.lookAround();
+            setInterval(function () {
+                if (!_this.autoSaved) {
+                    _this.save('0');
+                    _this.autoSaved = true;
+                }
+            }, 1000);
             window.addEventListener("keypress", function (e) { return _this.keypress(e); });
             d.getContainer().addEventListener("mousedown", function (e) { return _this.onClick(e); });
             d.getContainer().addEventListener("touchend", function (e) { return _this.onClick(e); });
             d.getContainer().addEventListener("mousemove", function (e) { return _this.mousemove(e); });
             this.keyboard = new Keyboard(window);
             this.keyboard.sub(this.onKeyboard.bind(this));
-            game.draw();
+            if (this.hasSave("0")) {
+                this.load("0");
+            }
+            else {
+                this.start();
+            }
+        };
+        Game.prototype.start = function () {
+            this._log = [];
+            this.mobs = [];
+            this.won = false;
+            this.killed = 0;
+            this.flowersCollected = 0;
+            this.panic = 0;
+            this.letterRead = 0;
+            this.time = 0;
+            this.seeingRed = false;
+            this.milestones = new Milestones();
+            this.generateMap();
+            this.initMobs();
+            this.draw();
         };
         Game.prototype.addHut = function () {
-            var hut = "         \n ####### \n #     # \n # bb  # \n # bbbb# \n # bbb # \n ###b### \n    B    \n   B     ".split("\n");
+            var hut = "         \n ####### \n #   S # \n # bb  # \n # bbbb# \n # bbb # \n ###b### \n    B    \n   B     ".split("\n");
             var h = hut.length;
             var pat = this.player.at;
             for (var y = 0; y < h; y++) {
@@ -4960,20 +5109,22 @@ void main() {
             }
         };
         Game.prototype.keypress = function (e) {
+            if (this.paused)
+                return;
+            if (e.shiftKey && e.code == "KeyR") {
+                this.start();
+            }
             if (e.code.substr(0, 5) == "Digit") {
                 var slot = e.code.substr(5);
                 if (e.shiftKey) {
-                    localStorage.setItem(slot, JSON.stringify(this.serialise()));
-                    game.log("Save to " + slot);
+                    this.save(slot);
                 }
                 else {
-                    var save = localStorage.getItem(slot);
-                    if (save) {
-                        this.deserialise(JSON.parse(save));
-                        game.log("Load from " + slot);
+                    if (this.hasSave(slot)) {
+                        this.load(slot);
                     }
                     else {
-                        game.log("No save in " + slot);
+                        this.log("No save in " + slot);
                     }
                 }
             }
@@ -5007,6 +5158,8 @@ void main() {
             this.scheduler.add(new Ticker(), true);
             for (var _i = 0, _a = this.mobs; _i < _a.length; _i++) {
                 var mob = _a[_i];
+                if (!mob.at)
+                    continue;
                 this.scheduler.add(mob, true);
                 this.at(mob.at).mob = mob;
             }
@@ -5063,6 +5216,7 @@ void main() {
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
             //this.addHut();
             var freeLandmarks = this.landmarks.slice();
+            this.player = new Mob();
             for (var i = 0; i < freeLandmarks.length; i++) {
                 var lm = freeLandmarks[i];
                 if (lm[0] > 5 && lm[0] < this.options.size[0] - 5 && lm[1] > 5 && lm[1] < this.options.size[1] - 5) {
@@ -5081,11 +5235,13 @@ void main() {
                     }
                 }
             }
+            this.player.lookAround();
             m: for (var i = 0; i < this.options.mobs; i++) {
                 var monster = new Mob();
                 while (freeLandmarks.length > 0) {
                     var place = freeLandmarks.pop();
-                    if (this.at(place).symbol == " ") {
+                    var tile = this.at(place);
+                    if (tile.symbol == " " && !tile.seen) {
                         monster.at = place.slice();
                         continue m;
                     }
@@ -5102,7 +5258,7 @@ void main() {
             var bg = [0, 0, 0];
             var d = distance(at, this.player.at);
             var inScentRadius = d <
-                7 +
+                10 +
                     Math.max(Math.min(this.player.concentration, 10), this.player.hate * 0.1);
             if (!tile.seen && (!inScentRadius || tile.scent == 0)) {
                 return Color.toRGB(this.hateBg);
@@ -5127,7 +5283,8 @@ void main() {
                     return Color.toRGB([255, 255 - redness, 255 - redness]);
                 }
                 else {
-                    return "white";
+                    var brightness = Math.max(128, 255 - tile.mob.fear);
+                    return Color.toRGB([255, brightness, brightness]);
                 }
             }
             if (!tile.mob && tile.seen && tile.symbol == "♠") {
@@ -5151,6 +5308,14 @@ void main() {
                 }
                 if (tile.symbol == "b" || tile.symbol == "B")
                     return "*";
+                if (tile.symbol == "S") {
+                    if (game.allFlowersCollected()) {
+                        return "S";
+                    }
+                    else {
+                        return " ";
+                    }
+                }
                 return tile.symbol;
             }
             return " ";
@@ -5173,7 +5338,9 @@ void main() {
             if (filter) {
                 _a = filter([sym, fg, bg]), sym = _a[0], fg = _a[1], bg = _a[2];
             }
-            if (tile != this.emptyTile)
+            if (tile == this.emptyTile)
+                this.d.draw(displayAt[0], displayAt[1], " ", null, Color.toRGB(this.hateBg));
+            else
                 this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
         };
         Game.prototype.draw = function () {
@@ -5183,6 +5350,7 @@ void main() {
             this.hateBg = this.seeingRed
                 ? [255, 0, 0]
                 : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
+            document.body.style.background = Color.toRGB(this.hateBg);
             var _a = this.deltaAndHalf(), delta = _a.delta, half = _a.half;
             for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0] + 1; x++) {
                 for (var y = this.player.at[1] - half[1] + 1; y < this.player.at[1] + half[1]; y++) {
@@ -5191,27 +5359,21 @@ void main() {
             }
             this.d.drawText(0, this.options.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + " ".repeat(this.options.displaySize[0]));
             var statusLine = "";
-            if (this.won) {
-                statusLine += " %c{red}" + lang.game_complete;
-            }
-            else if (this.allFlowersCollected()) {
-                statusLine += " %c{gray}visit %c{red}☨";
-            }
-            else {
-                if (this.milestones["flower_first"]) {
-                    for (var i = 0; i < Math.max(this.options.flowersNeeded, this.flowersCollected); i++) {
-                        statusLine += i < this.flowersCollected ? "%c{red}⚘" : "%c{gray}⚘";
-                    }
+            if (this.milestones["flower_first"]) {
+                for (var i = 0; i < Math.max(this.options.flowersNeeded, this.flowersCollected); i++) {
+                    statusLine += i < this.flowersCollected ? "%c{red}⚘" : "%c{gray}⚘";
                 }
             }
             if (this.milestones["mob_first"]) {
                 statusLine +=
                     "%c{gray} " +
-                        this.mobs.map(function (m) { return (m.alive ? "%c{white}☺" : "%c{red}*"); }).join("") + " ";
+                        this.mobs.filter(function (m) { return !m.isPlayer; }).map(function (m) { return (!m.at ? "%c{white}<" : m.alive ? "%c{white}☺" : "%c{red}*"); }).join("") + " ";
             }
             this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
         };
         Game.prototype.onKeyboard = function (code) {
+            if (this.paused)
+                return;
             this.lastKey = code;
             if (Mob.meansStop(code))
                 this.player.stop();
@@ -5223,6 +5385,8 @@ void main() {
             return sub2d(at, delta);
         };
         Game.prototype.onClick = function (e) {
+            if (this.paused)
+                return;
             e.preventDefault();
             if (e instanceof MouseEvent) {
                 if (e.button == 2) {
@@ -5275,14 +5439,13 @@ void main() {
             for (var _i = 1; _i < arguments.length; _i++) {
                 params[_i - 1] = arguments[_i];
             }
-            console.log(params);
             if (text in lang)
                 text = lang[text];
             if (params) {
                 for (var i in params)
                     text = text.replace("{" + i + "}", params[i]);
             }
-            this._log.push(text.trim().replace(/(?:\r\n|\r|\n)/g, "<br/>"));
+            this._log.push(text.trim() /*.replace(/(?:\r\n|\r|\n)/g, "<br/>"*/);
             if (this.onLog) {
                 this.onLog(text);
             }
@@ -5297,8 +5460,10 @@ void main() {
         Game.prototype.playerAct = function () {
             var _this = this;
             var moveMade = this.player.playerAct();
-            game.draw();
+            this.draw();
             if (moveMade) {
+                if (!this.player.hasPath() && !this.seeingRed)
+                    this.autoSaved = false;
                 if (this.seeingRed || this.player.hasPath()) {
                     this.waitingForInput = false;
                     window.setTimeout(function () {
@@ -5311,9 +5476,29 @@ void main() {
                 }
             }
         };
+        Game.prototype.readNextLetter = function () {
+            this.player.stop();
+            if (lang.letter.length >= this.letterRead) {
+                var i = this.letterRead;
+                if (lang.read_letter[i])
+                    this.log(lang.read_letter[i] + "<br/>***<br/>" + lang.letter[i] + "<br/>***<br/>" + lang.close_letter[i]);
+                /*this.log(lang.letter[i])
+                this.log(lang.close_letter[i])*/
+                this.letterRead++;
+            }
+        };
+        Game.prototype.win = function () {
+            this.won = true;
+            this.paused = true;
+            var pacifist = RNG$1.getUniformInt(1, this.killed + 1) <= 2;
+            var optimist = this.flowersCollected % 2 == 1;
+            var ending = pacifist ? (optimist ? lang.ending_bargain : lang.ending_depression) : (optimist ? lang.ending_denial : lang.ending_anger);
+            this.onEnd(ending);
+            game.start();
+        };
         return Game;
     }());
-    //♠♣⚘☻☺😁😞😐
+    //♠♣⚘☻☺😁😞😐⚡
     /*
         let roomsByX = rooms.sort(r => r.getCenter()[0]);
 
@@ -5324,6 +5509,14 @@ void main() {
             roomsByX[roomsByX.length - 1].getCenter()[1]
           ]
         ];*/
+    /*
+        if (this.won) {
+          statusLine += " %c{red}" + lang.game_complete;
+        } else if (this.allFlowersCollected()) {
+          statusLine += " %c{gray}visit %c{red}☨";
+        } else {
+        }
+    */
 
     var fontfaceobserver_standalone = createCommonjsModule(function (module) {
     /* Font Face Observer v2.1.0 - © Bram Stein. License: BSD-3-Clause */(function(){function l(a,b){document.addEventListener?a.addEventListener("scroll",b,!1):a.attachEvent("scroll",b);}function m(a){document.body?a():document.addEventListener?document.addEventListener("DOMContentLoaded",function c(){document.removeEventListener("DOMContentLoaded",c);a();}):document.attachEvent("onreadystatechange",function k(){if("interactive"==document.readyState||"complete"==document.readyState)document.detachEvent("onreadystatechange",k),a();});}function t(a){this.a=document.createElement("div");this.a.setAttribute("aria-hidden","true");this.a.appendChild(document.createTextNode(a));this.b=document.createElement("span");this.c=document.createElement("span");this.h=document.createElement("span");this.f=document.createElement("span");this.g=-1;this.b.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";this.c.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";
@@ -5346,7 +5539,271 @@ void main() {
     	return child_ctx;
     }
 
-    // (124:6) {#if log.length}
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = Object.create(ctx);
+    	child_ctx.slot = list[i];
+    	return child_ctx;
+    }
+
+    // (254:2) {:else}
+    function create_else_block(ctx) {
+    	var h1, t1, div4, div2, div0, button0, t3, div1, button1, t5, div3, dispose;
+
+    	var each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    	var each_blocks = [];
+
+    	for (var i = 0; i < 9; i += 1) {
+    		each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
+    	return {
+    		c: function create() {
+    			h1 = element("h1");
+    			h1.textContent = "Seeing Red";
+    			t1 = space();
+    			div4 = element("div");
+    			div2 = element("div");
+    			div0 = element("div");
+    			button0 = element("button");
+    			button0.textContent = "New Game";
+    			t3 = space();
+    			div1 = element("div");
+    			button1 = element("button");
+    			button1.textContent = "Continue";
+    			t5 = space();
+    			div3 = element("div");
+
+    			for (var i = 0; i < 9; i += 1) {
+    				each_blocks[i].c();
+    			}
+    			h1.className = "svelte-fflb7f";
+    			add_location(h1, file, 254, 4, 5147);
+    			button0.className = "svelte-fflb7f";
+    			add_location(button0, file, 257, 13, 5251);
+    			add_location(div0, file, 257, 8, 5246);
+    			button1.className = "svelte-fflb7f";
+    			add_location(button1, file, 258, 13, 5324);
+    			add_location(div1, file, 258, 8, 5319);
+    			set_style(div2, "text-align", "center");
+    			div2.className = "svelte-fflb7f";
+    			add_location(div2, file, 256, 6, 5204);
+    			div3.className = "saves svelte-fflb7f";
+    			add_location(div3, file, 260, 6, 5412);
+    			div4.className = "menu-table svelte-fflb7f";
+    			add_location(div4, file, 255, 4, 5172);
+
+    			dispose = [
+    				listen(button0, "click", ctx.click_handler_1),
+    				listen(button1, "click", ctx.click_handler_2)
+    			];
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, h1, anchor);
+    			insert(target, t1, anchor);
+    			insert(target, div4, anchor);
+    			append(div4, div2);
+    			append(div2, div0);
+    			append(div0, button0);
+    			append(div2, t3);
+    			append(div2, div1);
+    			append(div1, button1);
+    			append(div4, t5);
+    			append(div4, div3);
+
+    			for (var i = 0; i < 9; i += 1) {
+    				each_blocks[i].m(div3, null);
+    			}
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.game) {
+    				each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    				for (var i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(changed, child_ctx);
+    					} else {
+    						each_blocks[i] = create_each_block_1(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(div3, null);
+    					}
+    				}
+
+    				for (; i < 9; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(h1);
+    				detach(t1);
+    				detach(div4);
+    			}
+
+    			destroy_each(each_blocks, detaching);
+
+    			run_all(dispose);
+    		}
+    	};
+    }
+
+    // (247:2) {#if winText}
+    function create_if_block_1(ctx) {
+    	var div1, raw_after, t, div0, button, dispose;
+
+    	return {
+    		c: function create() {
+    			div1 = element("div");
+    			raw_after = element('noscript');
+    			t = space();
+    			div0 = element("div");
+    			button = element("button");
+    			button.textContent = "Continue";
+    			button.className = "svelte-fflb7f";
+    			add_location(button, file, 250, 8, 5045);
+    			set_style(div0, "text-align", "center");
+    			add_location(div0, file, 249, 6, 5003);
+    			div1.className = "win svelte-fflb7f";
+    			div1.id = "win";
+    			add_location(div1, file, 247, 4, 4927);
+    			dispose = listen(button, "click", ctx.click_handler);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div1, anchor);
+    			append(div1, raw_after);
+    			raw_after.insertAdjacentHTML("beforebegin", ctx.winText);
+    			append(div1, t);
+    			append(div1, div0);
+    			append(div0, button);
+    			add_binding_callback(() => ctx.div1_binding(div1, null));
+    		},
+
+    		p: function update(changed, ctx) {
+    			if (changed.winText) {
+    				detach_before(raw_after);
+    				raw_after.insertAdjacentHTML("beforebegin", ctx.winText);
+    			}
+
+    			if (changed.items) {
+    				ctx.div1_binding(null, div1);
+    				ctx.div1_binding(div1, null);
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div1);
+    			}
+
+    			ctx.div1_binding(null, div1);
+    			dispose();
+    		}
+    	};
+    }
+
+    // (266:12) {#if game && game.hasSave(slot)}
+    function create_if_block_2(ctx) {
+    	var button, dispose;
+
+    	function click_handler_4() {
+    		return ctx.click_handler_4(ctx);
+    	}
+
+    	return {
+    		c: function create() {
+    			button = element("button");
+    			button.textContent = "Load";
+    			button.className = "svelte-fflb7f";
+    			add_location(button, file, 266, 14, 5661);
+    			dispose = listen(button, "click", click_handler_4);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, button, anchor);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(button);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    // (262:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+    function create_each_block_1(ctx) {
+    	var div, t0, t1, button, t3, dispose;
+
+    	function click_handler_3() {
+    		return ctx.click_handler_3(ctx);
+    	}
+
+    	var if_block = (ctx.game && ctx.game.hasSave(ctx.slot)) && create_if_block_2(ctx);
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			t0 = text(ctx.slot);
+    			t1 = text(".\r\n            ");
+    			button = element("button");
+    			button.textContent = "Save";
+    			t3 = space();
+    			if (if_block) if_block.c();
+    			button.className = "svelte-fflb7f";
+    			add_location(button, file, 264, 12, 5550);
+    			div.className = "save svelte-fflb7f";
+    			add_location(div, file, 262, 10, 5496);
+    			dispose = listen(button, "click", click_handler_3);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, t0);
+    			append(div, t1);
+    			append(div, button);
+    			append(div, t3);
+    			if (if_block) if_block.m(div, null);
+    		},
+
+    		p: function update(changed, new_ctx) {
+    			ctx = new_ctx;
+    			if (ctx.game && ctx.game.hasSave(ctx.slot)) {
+    				if (!if_block) {
+    					if_block = create_if_block_2(ctx);
+    					if_block.c();
+    					if_block.m(div, null);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			if (if_block) if_block.d();
+    			dispose();
+    		}
+    	};
+    }
+
+    // (285:6) {#if log.length}
     function create_if_block(ctx) {
     	var t, div, raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged);
 
@@ -5366,8 +5823,8 @@ void main() {
 
     			t = space();
     			div = element("div");
-    			div.className = "record svelte-1ft05fu";
-    			add_location(div, file, 129, 8, 2927);
+    			div.className = "record svelte-fflb7f";
+    			add_location(div, file, 290, 8, 6220);
     		},
 
     		m: function mount(target, anchor) {
@@ -5418,15 +5875,15 @@ void main() {
     	};
     }
 
-    // (125:8) {#each log.slice(0, log.length - 1) as record}
+    // (286:8) {#each log.slice(0, log.length - 1) as record}
     function create_each_block(ctx) {
     	var div, raw_value = ctx.record;
 
     	return {
     		c: function create() {
     			div = element("div");
-    			div.className = "record svelte-1ft05fu";
-    			add_location(div, file, 125, 10, 2834);
+    			div.className = "record svelte-fflb7f";
+    			add_location(div, file, 286, 10, 6127);
     		},
 
     		m: function mount(target, anchor) {
@@ -5449,33 +5906,46 @@ void main() {
     }
 
     function create_fragment(ctx) {
-    	var div0, t1, div4, div3, div1, t2, div2, dispose;
+    	var div0, t1, div1, t2, div5, div4, div2, t3, div3, dispose;
 
-    	var if_block = (ctx.log.length) && create_if_block(ctx);
+    	function select_block_type(ctx) {
+    		if (ctx.winText) return create_if_block_1;
+    		return create_else_block;
+    	}
+
+    	var current_block_type = select_block_type(ctx);
+    	var if_block0 = current_block_type(ctx);
+
+    	var if_block1 = (ctx.log.length) && create_if_block(ctx);
 
     	return {
     		c: function create() {
     			div0 = element("div");
     			div0.textContent = "Tooltip";
     			t1 = space();
-    			div4 = element("div");
-    			div3 = element("div");
     			div1 = element("div");
+    			if_block0.c();
     			t2 = space();
+    			div5 = element("div");
+    			div4 = element("div");
     			div2 = element("div");
-    			if (if_block) if_block.c();
-    			div0.className = "tooltip fadein svelte-1ft05fu";
-    			add_location(div0, file, 113, 0, 2455);
-    			div1.className = "game svelte-1ft05fu";
-    			div1.id = "game";
-    			add_location(div1, file, 117, 4, 2580);
-    			div2.className = "log svelte-1ft05fu";
-    			add_location(div2, file, 122, 4, 2705);
-    			div3.className = "main-table svelte-1ft05fu";
-    			add_location(div3, file, 116, 2, 2550);
-    			div4.className = "mainer-table svelte-1ft05fu";
-    			add_location(div4, file, 115, 0, 2520);
-    			dispose = listen(div1, "contextmenu", contextmenu_handler);
+    			t3 = space();
+    			div3 = element("div");
+    			if (if_block1) if_block1.c();
+    			div0.className = "tooltip fadein svelte-fflb7f";
+    			add_location(div0, file, 242, 0, 4799);
+    			div1.className = "menu svelte-fflb7f";
+    			add_location(div1, file, 244, 0, 4864);
+    			div2.className = "game svelte-fflb7f";
+    			div2.id = "game";
+    			add_location(div2, file, 277, 4, 5871);
+    			div3.className = "log svelte-fflb7f";
+    			add_location(div3, file, 283, 4, 5998);
+    			div4.className = "main-table svelte-fflb7f";
+    			add_location(div4, file, 276, 2, 5841);
+    			div5.className = "mainer-table svelte-fflb7f";
+    			add_location(div5, file, 275, 0, 5811);
+    			dispose = listen(div2, "contextmenu", contextmenu_handler);
     		},
 
     		l: function claim(nodes) {
@@ -5486,14 +5956,18 @@ void main() {
     			insert(target, div0, anchor);
     			add_binding_callback(() => ctx.div0_binding(div0, null));
     			insert(target, t1, anchor);
-    			insert(target, div4, anchor);
-    			append(div4, div3);
-    			append(div3, div1);
-    			add_binding_callback(() => ctx.div1_binding(div1, null));
-    			append(div3, t2);
-    			append(div3, div2);
-    			if (if_block) if_block.m(div2, null);
+    			insert(target, div1, anchor);
+    			if_block0.m(div1, null);
+    			add_binding_callback(() => ctx.div1_binding_1(div1, null));
+    			insert(target, t2, anchor);
+    			insert(target, div5, anchor);
+    			append(div5, div4);
+    			append(div4, div2);
     			add_binding_callback(() => ctx.div2_binding(div2, null));
+    			append(div4, t3);
+    			append(div4, div3);
+    			if (if_block1) if_block1.m(div3, null);
+    			add_binding_callback(() => ctx.div3_binding(div3, null));
     		},
 
     		p: function update(changed, ctx) {
@@ -5501,27 +5975,43 @@ void main() {
     				ctx.div0_binding(null, div0);
     				ctx.div0_binding(div0, null);
     			}
-    			if (changed.items) {
-    				ctx.div1_binding(null, div1);
-    				ctx.div1_binding(div1, null);
-    			}
 
-    			if (ctx.log.length) {
-    				if (if_block) {
-    					if_block.p(changed, ctx);
-    				} else {
-    					if_block = create_if_block(ctx);
-    					if_block.c();
-    					if_block.m(div2, null);
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block0) {
+    				if_block0.p(changed, ctx);
+    			} else {
+    				if_block0.d(1);
+    				if_block0 = current_block_type(ctx);
+    				if (if_block0) {
+    					if_block0.c();
+    					if_block0.m(div1, null);
     				}
-    			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
     			}
 
+    			if (changed.items) {
+    				ctx.div1_binding_1(null, div1);
+    				ctx.div1_binding_1(div1, null);
+    			}
     			if (changed.items) {
     				ctx.div2_binding(null, div2);
     				ctx.div2_binding(div2, null);
+    			}
+
+    			if (ctx.log.length) {
+    				if (if_block1) {
+    					if_block1.p(changed, ctx);
+    				} else {
+    					if_block1 = create_if_block(ctx);
+    					if_block1.c();
+    					if_block1.m(div3, null);
+    				}
+    			} else if (if_block1) {
+    				if_block1.d(1);
+    				if_block1 = null;
+    			}
+
+    			if (changed.items) {
+    				ctx.div3_binding(null, div3);
+    				ctx.div3_binding(div3, null);
     			}
     		},
 
@@ -5537,12 +6027,20 @@ void main() {
 
     			if (detaching) {
     				detach(t1);
-    				detach(div4);
+    				detach(div1);
     			}
 
-    			ctx.div1_binding(null, div1);
-    			if (if_block) if_block.d();
+    			if_block0.d();
+    			ctx.div1_binding_1(null, div1);
+
+    			if (detaching) {
+    				detach(t2);
+    				detach(div5);
+    			}
+
     			ctx.div2_binding(null, div2);
+    			if (if_block1) if_block1.d();
+    			ctx.div3_binding(null, div3);
     			dispose();
     		}
     	};
@@ -5571,8 +6069,12 @@ void main() {
       let game;
       let gameDiv;
       let gameLog;
+      let menuDiv;
+      let winDiv;
       let tooltip;
       let lettersLogged = 0;
+      let menu = false;
+      let winText;
 
       while ((match = regex.exec(url))) {
         conf[match[1]] = JSON.parse(match[2]);  }
@@ -5584,27 +6086,31 @@ void main() {
       }
 
       icons.load().then(() => {
-        game = new Game(conf);
-        game.onLog = updateLog;    game.start();
+        $$invalidate('game', game = new Game(conf));
+        game.onLog = updateLog; $$invalidate('game', game);
+        game.onEnd = gameOver; $$invalidate('game', game);
+        game.init();
         gameLog.style.height = gameDiv.clientHeight + "px"; $$invalidate('gameLog', gameLog);
+        toggleMenu(false);
       });
 
       onMount(async () => {
-
         setInterval(() => {
-          let last = log[log.length - 1];
-          if (lettersLogged < last.length) {
-            $$invalidate('lettersLogged', lettersLogged =
-              Math.ceil((last.length - lettersLogged) / 40) + lettersLogged);
-            gameLog.scrollTop = gameLog.scrollHeight; $$invalidate('gameLog', gameLog);
-          }    
+          if (log && log.length > 0) {
+            let last = log[log.length - 1];
+            if (lettersLogged < last.length) {
+              $$invalidate('lettersLogged', lettersLogged =
+                Math.ceil((last.length - lettersLogged) / 40) + lettersLogged);
+              gameLog.scrollTop = gameLog.scrollHeight; $$invalidate('gameLog', gameLog);
+            }
+          }
         }, 10);
-
       });
 
-      function toggleTooltip(on) {
+      function toggleTooltip(text) {
+        tooltip.innerHTML = text; $$invalidate('tooltip', tooltip);
         let classes = tooltip.classList;
-        if (on) {
+        if (text) {
           classes.add("visible");
         } else {
           classes.remove("visible");
@@ -5612,18 +6118,64 @@ void main() {
       }
 
       window.addEventListener("mousemove", async e => {
+        if (menu) return;
+
         if (Math.abs(e.movementY) + Math.abs(e.movementX) > 3) {
-          toggleTooltip(false);
+          toggleTooltip(null);
           await timeout(30);
         }
 
         if (tooltip) {
           tooltip.style.left = e.clientX + "px"; $$invalidate('tooltip', tooltip);
           tooltip.style.top = e.clientY + "px"; $$invalidate('tooltip', tooltip);
-          toggleTooltip(game.tooltip);
-          tooltip.innerHTML = game.tooltip; $$invalidate('tooltip', tooltip);
+          if (game) {
+            toggleTooltip(game.tooltip);
+          }
         }
       });
+
+      window.addEventListener("keydown", e => {
+        if (e.code == "Escape") {
+          if(winText){
+            $$invalidate('winText', winText = null);        
+          } else {
+            toggleMenu(!menu);
+          }
+        }
+      });
+
+      function toggleMenu(on) {
+        menu = on;
+        game.paused = on; $$invalidate('game', game);
+        menuDiv.style.opacity = on ? 1 : 0; $$invalidate('menuDiv', menuDiv);
+        menuDiv.style["pointer-events"] = on ? "auto" : "none"; $$invalidate('menuDiv', menuDiv);
+        if (on) {
+          toggleTooltip(null);
+        }
+      }
+
+      function save(slot) {
+        game.save(slot);
+        toggleMenu(false);
+      }
+
+      function load(slot) {
+        game.load(slot);
+        toggleMenu(false);
+      }
+
+      function newGame() {
+        game.start();
+        toggleMenu(false);
+      }
+
+      async function gameOver(text) {
+        toggleMenu(true);
+        $$invalidate('winText', winText = text);
+        await tick();    
+        winDiv.style.opacity = 0; $$invalidate('winDiv', winDiv);
+        window.setTimeout((() => { const $$result = winDiv.style.opacity = 1; $$invalidate('winDiv', winDiv); return $$result; }), 100);
+      }
 
     	const writable_props = ['log'];
     	Object.keys($$props).forEach(key => {
@@ -5635,12 +6187,44 @@ void main() {
     		$$invalidate('tooltip', tooltip);
     	}
 
+    	function click_handler() {
+    		const $$result = (winText = null);
+    		$$invalidate('winText', winText);
+    		return $$result;
+    	}
+
     	function div1_binding($$node, check) {
+    		winDiv = $$node;
+    		$$invalidate('winDiv', winDiv);
+    	}
+
+    	function click_handler_1() {
+    		return newGame();
+    	}
+
+    	function click_handler_2() {
+    		return toggleMenu(false);
+    	}
+
+    	function click_handler_3({ slot }) {
+    		return save(slot);
+    	}
+
+    	function click_handler_4({ slot }) {
+    		return load(slot);
+    	}
+
+    	function div1_binding_1($$node, check) {
+    		menuDiv = $$node;
+    		$$invalidate('menuDiv', menuDiv);
+    	}
+
+    	function div2_binding($$node, check) {
     		gameDiv = $$node;
     		$$invalidate('gameDiv', gameDiv);
     	}
 
-    	function div2_binding($$node, check) {
+    	function div3_binding($$node, check) {
     		gameLog = $$node;
     		$$invalidate('gameLog', gameLog);
     	}
@@ -5651,13 +6235,28 @@ void main() {
 
     	return {
     		log,
+    		game,
     		gameDiv,
     		gameLog,
+    		menuDiv,
+    		winDiv,
     		tooltip,
     		lettersLogged,
+    		winText,
+    		toggleMenu,
+    		save,
+    		load,
+    		newGame,
     		div0_binding,
+    		click_handler,
     		div1_binding,
-    		div2_binding
+    		click_handler_1,
+    		click_handler_2,
+    		click_handler_3,
+    		click_handler_4,
+    		div1_binding_1,
+    		div2_binding,
+    		div3_binding
     	};
     }
 

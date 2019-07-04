@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, afterUpdate, tick } from "svelte";
   import { Game } from "./Game";
   import FontFaceObserver from "fontfaceobserver";
 
@@ -15,8 +15,12 @@
   let game;
   let gameDiv;
   let gameLog;
+  let menuDiv;
+  let winDiv;
   let tooltip;
   let lettersLogged = 0;
+  let menu = false;
+  let winText;
 
   while ((match = regex.exec(url))) {
     conf[match[1]] = JSON.parse(match[2]);
@@ -31,26 +35,29 @@
   icons.load().then(() => {
     game = new Game(conf);
     game.onLog = updateLog;
-    game.start();
+    game.onEnd = gameOver;
+    game.init();
     gameLog.style.height = gameDiv.clientHeight + "px";
+    toggleMenu(false);
   });
 
   onMount(async () => {
-
     setInterval(() => {
-      let last = log[log.length - 1];
-      if (lettersLogged < last.length) {
-        lettersLogged =
-          Math.ceil((last.length - lettersLogged) / 40) + lettersLogged;
-        gameLog.scrollTop = gameLog.scrollHeight;
-      }    
+      if (log && log.length > 0) {
+        let last = log[log.length - 1];
+        if (lettersLogged < last.length) {
+          lettersLogged =
+            Math.ceil((last.length - lettersLogged) / 40) + lettersLogged;
+          gameLog.scrollTop = gameLog.scrollHeight;
+        }
+      }
     }, 10);
-
   });
 
-  function toggleTooltip(on) {
+  function toggleTooltip(text) {
+    tooltip.innerHTML = text;
     let classes = tooltip.classList;
-    if (on) {
+    if (text) {
       classes.add("visible");
     } else {
       classes.remove("visible");
@@ -62,18 +69,64 @@
   }
 
   window.addEventListener("mousemove", async e => {
+    if (menu) return;
+
     if (Math.abs(e.movementY) + Math.abs(e.movementX) > 3) {
-      toggleTooltip(false);
+      toggleTooltip(null);
       await timeout(30);
     }
 
     if (tooltip) {
       tooltip.style.left = e.clientX + "px";
       tooltip.style.top = e.clientY + "px";
-      toggleTooltip(game.tooltip);
-      tooltip.innerHTML = game.tooltip;
+      if (game) {
+        toggleTooltip(game.tooltip);
+      }
     }
   });
+
+  window.addEventListener("keydown", e => {
+    if (e.code == "Escape") {
+      if(winText){
+        winText = null;        
+      } else {
+        toggleMenu(!menu);
+      }
+    }
+  });
+
+  function toggleMenu(on) {
+    menu = on;
+    game.paused = on;
+    menuDiv.style.opacity = on ? 1 : 0;
+    menuDiv.style["pointer-events"] = on ? "auto" : "none";
+    if (on) {
+      toggleTooltip(null);
+    }
+  }
+
+  function save(slot) {
+    game.save(slot);
+    toggleMenu(false);
+  }
+
+  function load(slot) {
+    game.load(slot);
+    toggleMenu(false);
+  }
+
+  function newGame() {
+    game.start();
+    toggleMenu(false);
+  }
+
+  async function gameOver(text) {
+    toggleMenu(true);
+    winText = text;
+    await tick();    
+    winDiv.style.opacity = 0;
+    window.setTimeout((() => winDiv.style.opacity = 1), 100)
+  }
 </script>
 
 <style>
@@ -88,14 +141,25 @@
   .main-table {
     border: 2px solid white;
     display: flex;
-    padding: 1px;    
-  }  
+    padding: 1px;
+    justify-content: center;
+  }
   .main-table > div {
     border: 2px solid white;
   }
   .mainer-table {
     display: flex;
   }
+
+  .menu-table {
+    display: flex;
+    padding: 1px;
+    justify-content: center;
+  }
+  .menu-table > div {
+    border: 2px solid white;
+  }
+
   .tooltip {
     position: fixed;
     z-index: 10;
@@ -106,12 +170,108 @@
     font-family: Icons;
   }
   .record {
-    border-top: solid 0.5px grey; 
+    border-top: solid 0.5px grey;
     padding: 3px;
+  }
+  .menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 1);
+    opacity: 0;
+    z-index: 3;
+    font-size: 24pt;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    transition: opacity 0.2s ease-in-out;
+    cursor: default;
+  }
+  .save {
+    margin: 5px;
+  }
+  .save button {
+    width: 100px;
+    padding: 3px;
+  }
+  .saves {
+    text-align: left;
+    margin-left: 1px;
+  }
+  h1 {
+    color: red;
+    font-weight: bold;
+  }
+  button {
+    font-size: 18pt;
+    font-weight: bold;
+  }
+  
+  .win {
+    text-align: left;
+    font-size: 18pt;
+    width:600px;
+    margin: auto;
+    opacity: 0;
+    transition: opacity 10s ease-in-out;
+  }
+
+  .win button{
+    margin-top: 50px;
+    border: 1px solid white;
+  }
+
+  :global(.she){
+    color:#ff4000;
+    padding-top: 5px;
+  }
+
+  :global(.you){
+    color:white;
+    padding-top: 5px;
+  }
+
+  :global(.ending-type){
+    margin-top: 30px;
+    font-size: 24px;
+    text-align: center;    
   }
 </style>
 
 <div class="tooltip fadein" bind:this={tooltip}>Tooltip</div>
+
+<div class="menu" bind:this={menuDiv}>
+
+  {#if winText}
+    <div class="win" id="win" bind:this={winDiv}>
+      {@html winText}
+      <div style="text-align:center;">
+        <button on:click={() => (winText = null)}>Continue</button>
+      </div>
+    </div>
+  {:else}
+    <h1>Seeing Red</h1>
+    <div class="menu-table">
+      <div style="text-align:center;">
+        <div><button on:click={() => newGame()}>New Game</button></div>
+        <div><button on:click={() => toggleMenu(false)}>Continue</button></div>
+      </div>
+      <div class="saves">
+        {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+          <div class="save">
+             {slot}.
+            <button on:click={() => save(slot)}>Save</button>
+            {#if game && game.hasSave(slot)}
+              <button on:click={() => load(slot)}>Load</button>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+</div>
 
 <div class="mainer-table">
   <div class="main-table">
@@ -120,6 +280,7 @@
       id="game"
       on:contextmenu={e => e.preventDefault()}
       bind:this={gameDiv} />
+
     <div class="log" bind:this={gameLog}>
       {#if log.length}
         {#each log.slice(0, log.length - 1) as record}
