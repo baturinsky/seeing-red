@@ -88,11 +88,31 @@
   window.addEventListener("keydown", e => {
     if (e.code == "Escape") {
       if(winText){
-        winText = null;        
+        winText = null;
       } else {
         toggleMenu(!menu);
       }
     }
+
+    if(e.shiftKey && e.code == "KeyR"){
+      game.start()
+      toggleMenu(false)
+    }
+    if (e.code.substr(0, 5) == "Digit") {
+      let slot = e.code.substr(5);
+      if (e.shiftKey) {
+        game.save(slot)
+        toggleMenu(false)
+      } else {
+        if (game.hasSave(slot)) {
+          game.load(slot)
+          toggleMenu(false)
+        } else {
+          game.log("No save in " + slot);
+        }
+      }
+    }
+
   });
 
   function toggleMenu(on) {
@@ -102,6 +122,10 @@
     menuDiv.style["pointer-events"] = on ? "auto" : "none";
     if (on) {
       toggleTooltip(null);
+    }
+
+    if(!on){
+      winText = null;
     }
   }
 
@@ -256,7 +280,9 @@
     <div class="menu-table">
       <div style="text-align:center;">
         <div><button on:click={() => newGame()}>New Game</button></div>
-        <div><button on:click={() => toggleMenu(false)}>Continue</button></div>
+        {#if game && game.time > 0}
+          <div><button on:click={() => toggleMenu(false)}>Continue</button></div>
+        {/if}
       </div>
       <div class="saves">
         {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}

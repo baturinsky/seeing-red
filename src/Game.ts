@@ -400,7 +400,7 @@ export class Game {
     this.engine.start();
 
     setInterval(() => {
-      if(!this.autoSaved){
+      if(!this.won && !this.autoSaved){
         this.save('0')        
         this.autoSaved = true;
       }
@@ -464,23 +464,6 @@ export class Game {
   }
 
   keypress(e: KeyboardEvent) {
-    if(this.paused)
-      return;
-    if(e.shiftKey && e.code == "KeyR"){
-      this.start()
-    }
-    if (e.code.substr(0, 5) == "Digit") {
-      let slot = e.code.substr(5);
-      if (e.shiftKey) {
-        this.save(slot)                
-      } else {
-        if (this.hasSave(slot)) {
-          this.load(slot)
-        } else {
-          this.log("No save in " + slot);
-        }
-      }
-    }
   }
 
   drawAtDisplay(displayAt: number[], bg?: string) {
@@ -706,7 +689,7 @@ export class Game {
       if (tile.symbol == "b" || tile.symbol == "B")
         return "*"
       if (tile.symbol == "S"){
-        if(game.allFlowersCollected()){
+        if(tile.visible && game.allFlowersCollected() && (this.flowersCollected % 2 == 1)){
           return "S";
         } else {
           return " ";
@@ -746,6 +729,13 @@ export class Game {
   }
 
   draw() {
+    this.hateBg = this.seeingRed
+      ? [255, 0, 0]
+      : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
+
+    let hateRGB = Color.toRGB(this.hateBg)
+
+    this.d.setOptions({bg:hateRGB})
     this.d.clear();
 
     this.d.drawText(
@@ -757,11 +747,7 @@ export class Game {
         )
     );
 
-    this.hateBg = this.seeingRed
-      ? [255, 0, 0]
-      : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
-
-    document.body.style.background = Color.toRGB(this.hateBg)
+    document.body.style.background = hateRGB
 
     const { delta, half } = this.deltaAndHalf();
 
@@ -782,7 +768,7 @@ export class Game {
     this.d.drawText(
       0,
       this.options.displaySize[1] - 1,
-      "%b{#180C24}%c{#180C24}" + " ".repeat(this.options.displaySize[0])
+      "%b{"+hateRGB+"}%c{"+hateRGB+"}" + " ".repeat(this.options.displaySize[0])
     );
 
     let statusLine = "";
@@ -795,7 +781,7 @@ export class Game {
     }
 
     if(this.milestones["mob_first"]){
-      statusLine +=
+      statusLine += "%b{"+hateRGB+"}"+
         "%c{gray} " +
         this.mobs.filter(m => !m.isPlayer).map(m => (!m.at?"%c{white}<":m.alive ? "%c{white}☺" : "%c{red}*")).join("") + " ";
     }
@@ -869,7 +855,7 @@ export class Game {
   }
 
   allFlowersCollected() {
-    return this.flowersCollected == this.options.flowersNeeded;
+    return this.flowersCollected >= this.options.flowersNeeded;
   }
 
   eachTile(hook: (at: number[], tile: Tile) => boolean | void) {

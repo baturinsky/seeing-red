@@ -107,8 +107,9 @@ Would you please plant them around the village for me?
 ending_anger:`
 Of cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?
 She is not in this world anymore. All that remained of her is a huge, painful hole in my soul.
-Why is it there? Why do I miss her so much? I have lived for many years without knowing of her existance? why do I need her so much now?
-Or maybe, I always missed her, just did not know it. And I was always in pain so big, I only could manage by throwing it at others.
+Why is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?
+Or maybe, I always missed her, just did not know it. And vecause of that I was always in pain so big, I only could manage by throwing it at others.
+<br/><br/>
 Would explain a lot, wouldn't it?
 <div class="ending-type">Ending 2/5: Anger.</div>
 `,
@@ -122,9 +123,9 @@ ending_bargain:`
 <div class="she">But there are still things I have done. People I have healed. Memories of me. 
 Memories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>
 
-<div class="you">You want to say those memories will make me you?</div>
+<div class="you">You want to say that memories of you will make me you?</div>
 
-<div class="she">Ha ha, yes, to an extent. Do you not like it?</div>
+<div class="she">Ha ha, yes, to an extent. Do you not want it?</div>
 
 <div class="you">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? 
 Keep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>
@@ -134,14 +135,14 @@ Keep helping people, even though they can kill me for that? I'll never fill the 
 <div class="ending-type">Ending 3/5: Bargain.</div>
 `,
 ending_depression:`
-Of cause, she is not here. This blood must be hers. And the stash with her books and research is still here. She would not leave without it.
-Looks like her fears did materialised. 
-
-Looking through her notes, I have found a theory about Strangling's cause. She thinks it's these flowers I have collected. 
+Of cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.
+Looks like her fears did materialise. 
+<br/><br/>
+Looking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. 
 They cause an allergy that slowly, by steadily makes people's lungs unusable. 
 Good thing is these flowers are quite picky about it's environment. They grow only in dark dump places, and do not spread too much.
 So it would not be hard to weed it out around settlements. 
-I'll show this to doctors in city. Maybe even will find te one she has sent the letter to this time.
+I'll show this to doctors in city. Maybe this time will even find the one she has sent the letter to.
 <div class="ending-type">Ending 4/5: Depression/Acceptance.</div>
 `,
 ending_true:`

@@ -17,11 +17,17 @@ button{
   border: none;
   background: black;
   color: white;
+  border: solid 1px black;
+  margin: 2px;
 }
 
 button:hover{
-  background: grey;
+  background: #444;
   cursor: pointer;
+}
+
+button:active{
+  border: none;
 }
 
 a {

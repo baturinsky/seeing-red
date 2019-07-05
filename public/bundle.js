@@ -3264,9 +3264,9 @@ void main() {
             "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease: Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI perform surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarely ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep looking for it, but nothing of note so far.\nBut I have found something else - this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
         ],
         ending_denial: "\nIt's her! She smiles at me.\n<div class=\"she\">\nOh, you have picked the flowers! How nice of you. I have a good news. \nDo you remember me dreaming of finding a way to cure evil in people? I have found it!\nIt's these very flowers fragrance. It works slow, but inhaling it for a long time will destroy the evil in people completely!\nWould you please plant them around the village for me? \n</div>\n<div class=\"ending-type\">Ending 1/5: Denial.</div>\n",
-        ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance? why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And I was always in pain so big, I only could manage by throwing it at others.\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
-        ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say those memories will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not like it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
-        ending_depression: "\nOf cause, she is not here. This blood must be hers. And the stash with her books and research is still here. She would not leave without it.\nLooks like her fears did materialised. \n\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about it's environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be hard to weed it out around settlements. \nI'll show this to doctors in city. Maybe even will find te one she has sent the letter to this time.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
+        ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And vecause of that I was always in pain so big, I only could manage by throwing it at others.\n<br/><br/>\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
+        ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say that memories of you will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not want it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
+        ending_depression: "\nOf cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.\nLooks like her fears did materialise. \n<br/><br/>\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about it's environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be hard to weed it out around settlements. \nI'll show this to doctors in city. Maybe this time will even find the one she has sent the letter to.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
         ending_true: "\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n\nSuch a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.\nI cam with the elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\nAh... God! I turned out to be such a damsel in distress.\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
     };
 
@@ -5061,7 +5061,7 @@ void main() {
             this.engine = new Engine(this.scheduler);
             this.engine.start();
             setInterval(function () {
-                if (!_this.autoSaved) {
+                if (!_this.won && !_this.autoSaved) {
                     _this.save('0');
                     _this.autoSaved = true;
                 }
@@ -5109,25 +5109,6 @@ void main() {
             }
         };
         Game.prototype.keypress = function (e) {
-            if (this.paused)
-                return;
-            if (e.shiftKey && e.code == "KeyR") {
-                this.start();
-            }
-            if (e.code.substr(0, 5) == "Digit") {
-                var slot = e.code.substr(5);
-                if (e.shiftKey) {
-                    this.save(slot);
-                }
-                else {
-                    if (this.hasSave(slot)) {
-                        this.load(slot);
-                    }
-                    else {
-                        this.log("No save in " + slot);
-                    }
-                }
-            }
         };
         Game.prototype.drawAtDisplay = function (displayAt, bg) {
             var delta = this.deltaAndHalf().delta;
@@ -5309,7 +5290,7 @@ void main() {
                 if (tile.symbol == "b" || tile.symbol == "B")
                     return "*";
                 if (tile.symbol == "S") {
-                    if (game.allFlowersCollected()) {
+                    if (tile.visible && game.allFlowersCollected() && (this.flowersCollected % 2 == 1)) {
                         return "S";
                     }
                     else {
@@ -5344,20 +5325,22 @@ void main() {
                 this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
         };
         Game.prototype.draw = function () {
-            this.d.clear();
-            this.d.drawText(0, 0, "%b{red}%c{red}" +
-                "-".repeat(Math.round((this.player.hate * this.options.displaySize[0]) / 100)));
             this.hateBg = this.seeingRed
                 ? [255, 0, 0]
                 : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
-            document.body.style.background = Color.toRGB(this.hateBg);
+            var hateRGB = Color.toRGB(this.hateBg);
+            this.d.setOptions({ bg: hateRGB });
+            this.d.clear();
+            this.d.drawText(0, 0, "%b{red}%c{red}" +
+                "-".repeat(Math.round((this.player.hate * this.options.displaySize[0]) / 100)));
+            document.body.style.background = hateRGB;
             var _a = this.deltaAndHalf(), delta = _a.delta, half = _a.half;
             for (var x = this.player.at[0] - half[0]; x < this.player.at[0] + half[0] + 1; x++) {
                 for (var y = this.player.at[1] - half[1] + 1; y < this.player.at[1] + half[1]; y++) {
                     this.drawAt([x, y], delta);
                 }
             }
-            this.d.drawText(0, this.options.displaySize[1] - 1, "%b{#180C24}%c{#180C24}" + " ".repeat(this.options.displaySize[0]));
+            this.d.drawText(0, this.options.displaySize[1] - 1, "%b{" + hateRGB + "}%c{" + hateRGB + "}" + " ".repeat(this.options.displaySize[0]));
             var statusLine = "";
             if (this.milestones["flower_first"]) {
                 for (var i = 0; i < Math.max(this.options.flowersNeeded, this.flowersCollected); i++) {
@@ -5365,9 +5348,9 @@ void main() {
                 }
             }
             if (this.milestones["mob_first"]) {
-                statusLine +=
+                statusLine += "%b{" + hateRGB + "}" +
                     "%c{gray} " +
-                        this.mobs.filter(function (m) { return !m.isPlayer; }).map(function (m) { return (!m.at ? "%c{white}<" : m.alive ? "%c{white}☺" : "%c{red}*"); }).join("") + " ";
+                    this.mobs.filter(function (m) { return !m.isPlayer; }).map(function (m) { return (!m.at ? "%c{white}<" : m.alive ? "%c{white}☺" : "%c{red}*"); }).join("") + " ";
             }
             this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
         };
@@ -5425,7 +5408,7 @@ void main() {
                 this.playerAct();
         };
         Game.prototype.allFlowersCollected = function () {
-            return this.flowersCollected == this.options.flowersNeeded;
+            return this.flowersCollected >= this.options.flowersNeeded;
         };
         Game.prototype.eachTile = function (hook) {
             var _a = this.options.size, w = _a[0], h = _a[1];
@@ -5545,9 +5528,11 @@ void main() {
     	return child_ctx;
     }
 
-    // (254:2) {:else}
+    // (278:2) {:else}
     function create_else_block(ctx) {
-    	var h1, t1, div4, div2, div0, button0, t3, div1, button1, t5, div3, dispose;
+    	var h1, t1, div3, div1, div0, button, t3, t4, div2, dispose;
+
+    	var if_block = (ctx.game && ctx.game.time > 0) && create_if_block_3(ctx);
 
     	var each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -5562,62 +5547,63 @@ void main() {
     			h1 = element("h1");
     			h1.textContent = "Seeing Red";
     			t1 = space();
-    			div4 = element("div");
-    			div2 = element("div");
-    			div0 = element("div");
-    			button0 = element("button");
-    			button0.textContent = "New Game";
-    			t3 = space();
-    			div1 = element("div");
-    			button1 = element("button");
-    			button1.textContent = "Continue";
-    			t5 = space();
     			div3 = element("div");
+    			div1 = element("div");
+    			div0 = element("div");
+    			button = element("button");
+    			button.textContent = "New Game";
+    			t3 = space();
+    			if (if_block) if_block.c();
+    			t4 = space();
+    			div2 = element("div");
 
     			for (var i = 0; i < 9; i += 1) {
     				each_blocks[i].c();
     			}
     			h1.className = "svelte-fflb7f";
-    			add_location(h1, file, 254, 4, 5147);
-    			button0.className = "svelte-fflb7f";
-    			add_location(button0, file, 257, 13, 5251);
-    			add_location(div0, file, 257, 8, 5246);
-    			button1.className = "svelte-fflb7f";
-    			add_location(button1, file, 258, 13, 5324);
-    			add_location(div1, file, 258, 8, 5319);
-    			set_style(div2, "text-align", "center");
-    			div2.className = "svelte-fflb7f";
-    			add_location(div2, file, 256, 6, 5204);
-    			div3.className = "saves svelte-fflb7f";
-    			add_location(div3, file, 260, 6, 5412);
-    			div4.className = "menu-table svelte-fflb7f";
-    			add_location(div4, file, 255, 4, 5172);
-
-    			dispose = [
-    				listen(button0, "click", ctx.click_handler_1),
-    				listen(button1, "click", ctx.click_handler_2)
-    			];
+    			add_location(h1, file, 278, 4, 5633);
+    			button.className = "svelte-fflb7f";
+    			add_location(button, file, 281, 13, 5737);
+    			add_location(div0, file, 281, 8, 5732);
+    			set_style(div1, "text-align", "center");
+    			div1.className = "svelte-fflb7f";
+    			add_location(div1, file, 280, 6, 5690);
+    			div2.className = "saves svelte-fflb7f";
+    			add_location(div2, file, 286, 6, 5952);
+    			div3.className = "menu-table svelte-fflb7f";
+    			add_location(div3, file, 279, 4, 5658);
+    			dispose = listen(button, "click", ctx.click_handler_1);
     		},
 
     		m: function mount(target, anchor) {
     			insert(target, h1, anchor);
     			insert(target, t1, anchor);
-    			insert(target, div4, anchor);
-    			append(div4, div2);
-    			append(div2, div0);
-    			append(div0, button0);
-    			append(div2, t3);
-    			append(div2, div1);
-    			append(div1, button1);
-    			append(div4, t5);
-    			append(div4, div3);
+    			insert(target, div3, anchor);
+    			append(div3, div1);
+    			append(div1, div0);
+    			append(div0, button);
+    			append(div1, t3);
+    			if (if_block) if_block.m(div1, null);
+    			append(div3, t4);
+    			append(div3, div2);
 
     			for (var i = 0; i < 9; i += 1) {
-    				each_blocks[i].m(div3, null);
+    				each_blocks[i].m(div2, null);
     			}
     		},
 
     		p: function update(changed, ctx) {
+    			if (ctx.game && ctx.game.time > 0) {
+    				if (!if_block) {
+    					if_block = create_if_block_3(ctx);
+    					if_block.c();
+    					if_block.m(div1, null);
+    				}
+    			} else if (if_block) {
+    				if_block.d(1);
+    				if_block = null;
+    			}
+
     			if (changed.game) {
     				each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -5629,7 +5615,7 @@ void main() {
     					} else {
     						each_blocks[i] = create_each_block_1(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(div3, null);
+    						each_blocks[i].m(div2, null);
     					}
     				}
 
@@ -5643,17 +5629,19 @@ void main() {
     			if (detaching) {
     				detach(h1);
     				detach(t1);
-    				detach(div4);
+    				detach(div3);
     			}
+
+    			if (if_block) if_block.d();
 
     			destroy_each(each_blocks, detaching);
 
-    			run_all(dispose);
+    			dispose();
     		}
     	};
     }
 
-    // (247:2) {#if winText}
+    // (271:2) {#if winText}
     function create_if_block_1(ctx) {
     	var div1, raw_after, t, div0, button, dispose;
 
@@ -5666,12 +5654,12 @@ void main() {
     			button = element("button");
     			button.textContent = "Continue";
     			button.className = "svelte-fflb7f";
-    			add_location(button, file, 250, 8, 5045);
+    			add_location(button, file, 274, 8, 5531);
     			set_style(div0, "text-align", "center");
-    			add_location(div0, file, 249, 6, 5003);
+    			add_location(div0, file, 273, 6, 5489);
     			div1.className = "win svelte-fflb7f";
     			div1.id = "win";
-    			add_location(div1, file, 247, 4, 4927);
+    			add_location(div1, file, 271, 4, 5413);
     			dispose = listen(button, "click", ctx.click_handler);
     		},
 
@@ -5708,7 +5696,37 @@ void main() {
     	};
     }
 
-    // (266:12) {#if game && game.hasSave(slot)}
+    // (283:8) {#if game && game.time > 0}
+    function create_if_block_3(ctx) {
+    	var div, button, dispose;
+
+    	return {
+    		c: function create() {
+    			div = element("div");
+    			button = element("button");
+    			button.textContent = "Continue";
+    			button.className = "svelte-fflb7f";
+    			add_location(button, file, 283, 15, 5849);
+    			add_location(div, file, 283, 10, 5844);
+    			dispose = listen(button, "click", ctx.click_handler_2);
+    		},
+
+    		m: function mount(target, anchor) {
+    			insert(target, div, anchor);
+    			append(div, button);
+    		},
+
+    		d: function destroy(detaching) {
+    			if (detaching) {
+    				detach(div);
+    			}
+
+    			dispose();
+    		}
+    	};
+    }
+
+    // (292:12) {#if game && game.hasSave(slot)}
     function create_if_block_2(ctx) {
     	var button, dispose;
 
@@ -5721,7 +5739,7 @@ void main() {
     			button = element("button");
     			button.textContent = "Load";
     			button.className = "svelte-fflb7f";
-    			add_location(button, file, 266, 14, 5661);
+    			add_location(button, file, 292, 14, 6201);
     			dispose = listen(button, "click", click_handler_4);
     		},
 
@@ -5743,7 +5761,7 @@ void main() {
     	};
     }
 
-    // (262:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+    // (288:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
     function create_each_block_1(ctx) {
     	var div, t0, t1, button, t3, dispose;
 
@@ -5763,9 +5781,9 @@ void main() {
     			t3 = space();
     			if (if_block) if_block.c();
     			button.className = "svelte-fflb7f";
-    			add_location(button, file, 264, 12, 5550);
+    			add_location(button, file, 290, 12, 6090);
     			div.className = "save svelte-fflb7f";
-    			add_location(div, file, 262, 10, 5496);
+    			add_location(div, file, 288, 10, 6036);
     			dispose = listen(button, "click", click_handler_3);
     		},
 
@@ -5803,7 +5821,7 @@ void main() {
     	};
     }
 
-    // (285:6) {#if log.length}
+    // (311:6) {#if log.length}
     function create_if_block(ctx) {
     	var t, div, raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged);
 
@@ -5824,7 +5842,7 @@ void main() {
     			t = space();
     			div = element("div");
     			div.className = "record svelte-fflb7f";
-    			add_location(div, file, 290, 8, 6220);
+    			add_location(div, file, 316, 8, 6760);
     		},
 
     		m: function mount(target, anchor) {
@@ -5875,7 +5893,7 @@ void main() {
     	};
     }
 
-    // (286:8) {#each log.slice(0, log.length - 1) as record}
+    // (312:8) {#each log.slice(0, log.length - 1) as record}
     function create_each_block(ctx) {
     	var div, raw_value = ctx.record;
 
@@ -5883,7 +5901,7 @@ void main() {
     		c: function create() {
     			div = element("div");
     			div.className = "record svelte-fflb7f";
-    			add_location(div, file, 286, 10, 6127);
+    			add_location(div, file, 312, 10, 6667);
     		},
 
     		m: function mount(target, anchor) {
@@ -5933,18 +5951,18 @@ void main() {
     			div3 = element("div");
     			if (if_block1) if_block1.c();
     			div0.className = "tooltip fadein svelte-fflb7f";
-    			add_location(div0, file, 242, 0, 4799);
+    			add_location(div0, file, 266, 0, 5285);
     			div1.className = "menu svelte-fflb7f";
-    			add_location(div1, file, 244, 0, 4864);
+    			add_location(div1, file, 268, 0, 5350);
     			div2.className = "game svelte-fflb7f";
     			div2.id = "game";
-    			add_location(div2, file, 277, 4, 5871);
+    			add_location(div2, file, 303, 4, 6411);
     			div3.className = "log svelte-fflb7f";
-    			add_location(div3, file, 283, 4, 5998);
+    			add_location(div3, file, 309, 4, 6538);
     			div4.className = "main-table svelte-fflb7f";
-    			add_location(div4, file, 276, 2, 5841);
+    			add_location(div4, file, 302, 2, 6381);
     			div5.className = "mainer-table svelte-fflb7f";
-    			add_location(div5, file, 275, 0, 5811);
+    			add_location(div5, file, 301, 0, 6351);
     			dispose = listen(div2, "contextmenu", contextmenu_handler);
     		},
 
@@ -6137,11 +6155,31 @@ void main() {
       window.addEventListener("keydown", e => {
         if (e.code == "Escape") {
           if(winText){
-            $$invalidate('winText', winText = null);        
+            $$invalidate('winText', winText = null);
           } else {
             toggleMenu(!menu);
           }
         }
+
+        if(e.shiftKey && e.code == "KeyR"){
+          game.start();
+          toggleMenu(false);
+        }
+        if (e.code.substr(0, 5) == "Digit") {
+          let slot = e.code.substr(5);
+          if (e.shiftKey) {
+            game.save(slot);
+            toggleMenu(false);
+          } else {
+            if (game.hasSave(slot)) {
+              game.load(slot);
+              toggleMenu(false);
+            } else {
+              game.log("No save in " + slot);
+            }
+          }
+        }
+
       });
 
       function toggleMenu(on) {
@@ -6151,6 +6189,10 @@ void main() {
         menuDiv.style["pointer-events"] = on ? "auto" : "none"; $$invalidate('menuDiv', menuDiv);
         if (on) {
           toggleTooltip(null);
+        }
+
+        if(!on){
+          $$invalidate('winText', winText = null);
         }
       }
 
