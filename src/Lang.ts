@@ -1,12 +1,15 @@
 let lang = {
 guide:
 `
-NUMPAD keys = move around
-click - move to cursor or stop
-click self - wait
-Num5, space - stop/wait
-Shift + 1-9: save
-1-9: load
+<span style="color:lightgrey">
+click - move to cursor or stop<br/>
+click self - wait<br/>
+NUMPAD keys - move around<br/>
+Num5, space - wait<br/>
+Shift + 1-9: save<br/>
+1-9: load<br/>
+Shift + R: restart
+</span>
 `,
 me: "It's me. A regular everyday normal person.",
 flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
@@ -46,7 +49,7 @@ grave: "I grave. Seems to be recent.",
 read_letter:[
 "Still no signs of her. Oh, right, I still have her letter. Maybe reading it will give some clues? I started reading:",
 "I have decided to continue reading the letter:",
-"Still can't find her. Maybe she is in ehe village? I'll continue with the letter:",
+"Still can't find her. Maybe she is in the village? I'll continue with the letter:",
 "I'll read the remaining letter part:"
 ],
 close_letter:[
@@ -108,7 +111,7 @@ ending_anger:`
 Of cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?
 She is not in this world anymore. All that remained of her is a huge, painful hole in my soul.
 Why is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?
-Or maybe, I always missed her, just did not know it. And vecause of that I was always in pain so big, I only could manage by throwing it at others.
+Or maybe, I always missed her, just did not know it. And because of that I was always in pain so big, I only could manage by throwing it at others.
 <br/><br/>
 Would explain a lot, wouldn't it?
 <div class="ending-type">Ending 2/5: Anger.</div>
@@ -140,9 +143,9 @@ Looks like her fears did materialise.
 <br/><br/>
 Looking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. 
 They cause an allergy that slowly, by steadily makes people's lungs unusable. 
-Good thing is these flowers are quite picky about it's environment. They grow only in dark dump places, and do not spread too much.
-So it would not be hard to weed it out around settlements. 
-I'll show this to doctors in city. Maybe this time will even find the one she has sent the letter to.
+Good thing is these flowers are quite picky about their environment. They grow only in dark dump places, and do not spread too much.
+So it would not be difficult to weed them out around settlements. 
+I'll show this to doctors in city. Maybe this time I will even find the one she has sent the letter to.
 <div class="ending-type">Ending 4/5: Depression/Acceptance.</div>
 `,
 ending_true:`
@@ -152,7 +155,7 @@ Some brigand tried to rob her and slashed her with a knife when she cried out. W
 My wife is looking after her at our house until she gets better.  I can take you to her.
 
 Such a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.
-I cam with the elder and then...
+I came with the elder and then...
 
 It's her! Very pale, but alive. She smiles at me weakly. 
 

@@ -1,13 +1,4 @@
-import {
-  Display,
-  RNG,
-  DIRS,
-  FOV,
-  Scheduler as Schedulers,
-  Engine,
-  Path,
-  Color
-} from "rot-js";
+import { Display, RNG, Scheduler as Schedulers, Engine, Color } from "rot-js";
 import Digger from "rot-js/lib/map/digger";
 import Scheduler from "rot-js/lib/scheduler/scheduler";
 import Mob from "./Mob";
@@ -16,7 +7,7 @@ import EasyStar from "easystarjs";
 import lang from "./Lang";
 import Keyboard from "./Keyboard";
 
-let screenBg = Color.fromString("#180C24") as [number, number, number];
+let screenBg = Color.fromString("#180c24") as [number, number, number];
 export function distance(a: number[], b: number[]) {
   let x = a[0] - b[0];
   let y = a[1] - b[1];
@@ -24,10 +15,10 @@ export function distance(a: number[], b: number[]) {
 }
 
 class Milestones {
-
   serialise() {
-    let s: any = {};
+    let s: any = {};    
     Object.assign(s, this);
+    delete s.isPlayer
     return s;
   }
 
@@ -41,10 +32,10 @@ export class Animation {
   constructor(
     public at: number[],
     public mode: number = 1,
-    public options:{
-      duration?:number,
-      interval?:number,
-      symbol?:string
+    public options: {
+      duration?: number;
+      interval?: number;
+      symbol?: string;
     }
   ) {
     this.run();
@@ -53,7 +44,7 @@ export class Animation {
   run() {
     let duration = this.options.duration || 1000;
     let interval = this.options.interval || 50;
-    let timer = duration
+    let timer = duration;
 
     let handle = window.setInterval(() => {
       let on: boolean;
@@ -70,7 +61,7 @@ export class Animation {
         case 2:
           on = timer % 400 < 200;
           game.drawAt(this.at, null, ([sym, fg, bg]) => [
-            this.options.symbol||"?",
+            this.options.symbol || "?",
             on ? "red" : "white",
             bg
           ]);
@@ -79,7 +70,7 @@ export class Animation {
 
       if (timer <= 0) {
         game.drawAt(this.at);
-        clearTimeout(handle)
+        clearTimeout(handle);
       }
     }, interval);
   }
@@ -155,11 +146,11 @@ class Ticker {
       mob.actFixedInterval();
     }
 
-    if(RNG.getUniform() < 0.001){
-      let exit = RNG.getItem(game.exits)
-      if(!game.at(exit).mob){
-        let mob = new Mob()
-        mob.at = exit.slice()
+    if (RNG.getUniform() < game.options.spawn / 10) {
+      let exit = RNG.getItem(game.exits);
+      if (!game.at(exit).mob) {
+        let mob = new Mob();
+        mob.at = exit.slice();
       }
     }
   }
@@ -177,7 +168,7 @@ export class Tile {
   static impassible = /[♠#]/;
   constructor(public symbol: string) {
     this.cost = symbol.match(Tile.impassible) ? 1e6 : 1;
-    this.opaque = symbol.match(Tile.impassible)? true : false;
+    this.opaque = symbol.match(Tile.impassible) ? true : false;
   }
 
   serialise() {
@@ -199,7 +190,7 @@ export class Tile {
     if (!this.seen && !this.scent) return null;
 
     if (this.mob) {
-      return this.mob.tooltip()
+      return this.mob.tooltip();
     }
 
     switch (this.symbol) {
@@ -240,20 +231,20 @@ function eq2d(a: number[], b: number[]) {
   return a[0] == b[0] && a[1] == b[1];
 }
 
-class Options{
-  displaySize = [45, 45];
-  size = [80, 80]
+class Options {
+  size = [80, 80];
   seed: number;
-  mobs = 18
-  flowers = 6
+  mobs = 18;
+  flowers = 6;
   flowersNeeded?: number;
-  hateGain = 1
-  emptiness = 0.3
+  hateGain = 1;
+  emptiness = 0.3;
+  spawn = 0.1;
+  despawn = 0.01;
 
-  constructor(o:any){
-    Object.assign(this,o)
+  constructor(o: any) {
+    Object.assign(this, o);
     this.flowersNeeded = this.flowersNeeded || this.flowers - 1;
-
   }
 }
 
@@ -275,12 +266,14 @@ export class Game {
   keyboard: Keyboard;
   autoSaved = true;
   paused = false;
+  displaySize = [45, 45];
 
-  options: Options
+  options: Options;
   landmarks: number[][];
   grid: Tile[][];
   exits: number[][];
   killed: number;
+  guardsSpawned: number;
   milestones: Milestones;
 
   mobs: Mob[] = [];
@@ -306,6 +299,7 @@ export class Game {
       landmarks: this.landmarks,
       exits: this.exits,
       killed: this.killed,
+      guardsSpawned: this.guardsSpawned,
       panic: this.panic,
       _log: this._log,
       milestones: this.milestones.serialise(),
@@ -323,6 +317,7 @@ export class Game {
     this.landmarks = s.landmarks;
     this.exits = s.exits;
     this.killed = s.killed;
+    this.guardsSpawned = s.guardsSpawned;
     this.flowersCollected = s.flowersCollected;
     this.letterRead = s.letterRead;
     this._log = s._log;
@@ -355,37 +350,32 @@ export class Game {
     return this.grid[at[0]][at[1]];
   }
 
-  constructor(options?:any) {
-    this.options = new Options(options)
+  constructor() {
     game = this;
     (window as any).gameState = this;
-    RNG.setSeed(this.options.seed || Math.random());
   }
 
-  save(slot:string){
+  save(slot: string) {
     localStorage.setItem(slot, JSON.stringify(game.serialise()));
-    localStorage.setItem("!" + slot, "yes")
-    if(slot != "0")
-      game.log("Saved to " + slot);
+    localStorage.setItem("!" + slot, "yes");
+    if (slot != "0") game.log("Saved to " + slot);
   }
-  
-  load(slot:string){
-    if(!this.hasSave(slot))
-      return;
-    let save = localStorage.getItem(slot)    
+
+  load(slot: string) {
+    if (!this.hasSave(slot)) return;
+    let save = localStorage.getItem(slot);
     game.deserialise(JSON.parse(save));
-    game.log("Loaded from " + (slot=="0"?"autosave":slot));
+    game.log("Loaded from " + (slot == "0" ? "autosave" : slot));
   }
 
-  hasSave(slot:string){
-    return localStorage.getItem("!" + slot)?true:false
+  hasSave(slot: string) {
+    return localStorage.getItem("!" + slot) ? true : false;
   }
 
-  init() {
-
+  init(size: number[]) {
     let d = (this.d = new Display({
-      width: this.options.displaySize[0],
-      height: this.options.displaySize[1],
+      width: size[0],
+      height: size[1],
       fontSize: 32,
       spacing: 0.6,
       forceSquareRatio: true,
@@ -400,11 +390,11 @@ export class Game {
     this.engine.start();
 
     setInterval(() => {
-      if(!this.won && !this.autoSaved){
-        this.save('0')        
+      if (!this.won && !this.autoSaved) {
+        this.save("0");
         this.autoSaved = true;
       }
-    }, 1000)
+    }, 1000);
 
     window.addEventListener("keypress", e => this.keypress(e));
     d.getContainer().addEventListener("mousedown", e => this.onClick(e));
@@ -414,16 +404,13 @@ export class Game {
     this.keyboard = new Keyboard(window);
     this.keyboard.sub(this.onKeyboard.bind(this));
 
-    if(this.hasSave("0")){
-      this.load("0")
-    } else {
-      this.start()
-    }
   }
 
-  start(){
-    this._log = []
-    this.mobs = []
+  start(cfg: any) {
+    this.options = new Options(cfg);
+    RNG.setSeed(this.options.seed || Math.random());
+    this._log = [];
+    this.mobs = [];
     this.won = false;
     this.killed = 0;
     this.flowersCollected = 0;
@@ -431,15 +418,14 @@ export class Game {
     this.letterRead = 0;
     this.time = 0;
     this.seeingRed = false;
-    this.milestones = new Milestones()
+    this.milestones = new Milestones();
     this.generateMap();
-    this.initMobs();    
-    this.draw()
+    this.initMobs();
+    this.draw();
   }
 
   addHut() {
-    let hut = 
-`         
+    let hut = `         
  ####### 
  #   S # 
  # bb  # 
@@ -463,8 +449,7 @@ export class Game {
     }
   }
 
-  keypress(e: KeyboardEvent) {
-  }
+  keypress(e: KeyboardEvent) {}
 
   drawAtDisplay(displayAt: number[], bg?: string) {
     let { delta } = this.deltaAndHalf();
@@ -486,8 +471,7 @@ export class Game {
 
   mousemove(e: MouseEvent) {
     let displayAt = this.d.eventToPosition(e);
-    let outside =
-      displayAt[1] <= 0 || displayAt[1] >= this.options.displaySize[1] - 1;
+    let outside = displayAt[1] <= 0 || displayAt[1] >= this.displaySize[1] - 1;
     if (outside) {
       this.tooltip = null;
       return;
@@ -509,8 +493,7 @@ export class Game {
     this.scheduler.clear();
     this.scheduler.add(new Ticker(), true);
     for (let mob of this.mobs) {
-      if(!mob.at)
-        continue;
+      if (!mob.at) continue;
       this.scheduler.add(mob, true);
       this.at(mob.at).mob = mob;
     }
@@ -572,46 +555,48 @@ export class Game {
 
     this.at(roomsRandom[0].getCenter()).symbol = "☨";
 
-    //this.addHut();
+    let freeLandmarks = this.landmarks.slice();
+    this.player = new Mob(1);
 
-    let freeLandmarks = this.landmarks.slice()
-    this.player = new Mob();
-
-    for(let i=0; i<freeLandmarks.length;i++){
-      let lm = freeLandmarks[i]
-      if(lm[0] > 5 && lm[0] < this.options.size[0]-5 && lm[1] > 5 && lm[1] < this.options.size[1]-5){
+    for (let i = 0; i < freeLandmarks.length; i++) {
+      let lm = freeLandmarks[i];
+      if (
+        lm[0] > 5 &&
+        lm[0] < this.options.size[0] - 5 &&
+        lm[1] > 5 &&
+        lm[1] < this.options.size[1] - 5
+      ) {
         this.player.at = freeLandmarks[i].slice();
-        freeLandmarks.splice(i,1)
+        freeLandmarks.splice(i, 1);
         break;
       }
-    }    
+    }
 
-    this.addHut()
+    this.addHut();
 
-    f:for (let i = 0; i < this.options.flowers; i++) {
-      while(freeLandmarks.length>0){
-        let place = freeLandmarks.pop()
-        if(this.at(place).symbol == " "){
-          this.at(place).symbol = "⚘";  
-          continue f
+    f: for (let i = 0; i < this.options.flowers; i++) {
+      while (freeLandmarks.length > 0) {
+        let place = freeLandmarks.pop();
+        if (this.at(place).symbol == " ") {
+          this.at(place).symbol = "⚘";
+          continue f;
         }
       }
     }
 
-    this.player.lookAround()
+    this.player.lookAround();
 
-    m:for (let i = 0; i < this.options.mobs; i++) {
+    m: for (let i = 0; i < this.options.mobs; i++) {
       let monster = new Mob();
-      while(freeLandmarks.length>0){
-        let place = freeLandmarks.pop()
-        let tile = this.at(place)
-        if(tile.symbol == " " && !tile.seen){
+      while (freeLandmarks.length > 0) {
+        let place = freeLandmarks.pop();
+        let tile = this.at(place);
+        if (tile.symbol == " " && !tile.seen) {
           monster.at = place.slice();
           continue m;
         }
       }
-      if(!monster.at)
-        game.mobs.pop()
+      if (!monster.at) game.mobs.pop();
     }
 
     this.pathfinder.setGrid();
@@ -649,18 +634,22 @@ export class Game {
     return Color.toRGB(bg);
   }
 
+  mobFg(mob: Mob) {
+    if (mob.isPlayer) {
+      if (this.seeingRed) return "red";
+      let redness = Math.min(200, this.killed * 20);
+      return Color.toRGB([255, 255 - redness, 255 - redness]);
+    } else {
+      let brightness = Math.max(128, 255 - mob.fear);
+      return Color.toRGB([255, brightness, brightness]);
+    }
+  }
+
   tileFg(at: number[]) {
     let tile = this.safeAt(at);
 
     if (tile.mob && tile.visible) {
-      if (tile.mob.isPlayer) {
-        if (this.seeingRed) return "red";
-        let redness = Math.min(200, this.killed * 20);
-        return Color.toRGB([255, 255 - redness, 255 - redness]);
-      } else {        
-        let brightness = Math.max(128, 255 - tile.mob.fear)
-        return Color.toRGB([255, brightness, brightness]);
-      }
+      return this.mobFg(tile.mob);
     }
 
     if (!tile.mob && tile.seen && tile.symbol == "♠") {
@@ -668,6 +657,8 @@ export class Game {
       let shade = RNG.getUniformInt(150, 250);
       return Color.toRGB([shade, shade, shade]);
     }
+
+    if (tile.symbol == "b" || tile.symbol == "B") return "#800";
 
     if (!tile.symbol.match(/[ ♠#_]/)) return "red";
 
@@ -686,10 +677,13 @@ export class Game {
         RNG.setSeed(at[0] * 1000 + at[1] * 3);
         return RNG.getItem(["♠", "♣"]);
       }
-      if (tile.symbol == "b" || tile.symbol == "B")
-        return "*"
-      if (tile.symbol == "S"){
-        if(tile.visible && game.allFlowersCollected() && (this.flowersCollected % 2 == 1)){
+      if (tile.symbol == "b" || tile.symbol == "B") return "*";
+      if (tile.symbol == "S") {
+        if (
+          tile.visible &&
+          game.allFlowersCollected() &&
+          this.flowersCollected % 2 == 1
+        ) {
           return "S";
         } else {
           return " ";
@@ -701,9 +695,7 @@ export class Game {
   }
 
   deltaAndHalf() {
-    const half = [0, 1].map(axis =>
-      Math.floor(this.options.displaySize[axis] / 2)
-    );
+    const half = [0, 1].map(axis => Math.floor(this.displaySize[axis] / 2));
     const delta = [0, 1].map(axis => -this.player.at[axis] + half[axis]);
     return { delta, half };
   }
@@ -723,9 +715,14 @@ export class Game {
     }
 
     if (tile == this.emptyTile)
-      this.d.draw(displayAt[0], displayAt[1], " ", null, Color.toRGB(this.hateBg));    
-    else
-      this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
+      this.d.draw(
+        displayAt[0],
+        displayAt[1],
+        " ",
+        null,
+        Color.toRGB(this.hateBg)
+      );
+    else this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
   }
 
   draw() {
@@ -733,21 +730,19 @@ export class Game {
       ? [255, 0, 0]
       : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
 
-    let hateRGB = Color.toRGB(this.hateBg)
+    let hateRGB = Color.toRGB(this.hateBg);
 
-    this.d.setOptions({bg:hateRGB})
+    this.d.setOptions({ bg: hateRGB });
     this.d.clear();
 
     this.d.drawText(
       0,
       0,
       "%b{red}%c{red}" +
-        "-".repeat(
-          Math.round((this.player.hate * this.options.displaySize[0]) / 100)
-        )
+        "-".repeat(Math.round((this.player.hate * this.displaySize[0]) / 100))
     );
 
-    document.body.style.background = hateRGB
+    document.documentElement.style.background = hateRGB;
 
     const { delta, half } = this.deltaAndHalf();
 
@@ -767,31 +762,53 @@ export class Game {
 
     this.d.drawText(
       0,
-      this.options.displaySize[1] - 1,
-      "%b{"+hateRGB+"}%c{"+hateRGB+"}" + " ".repeat(this.options.displaySize[0])
+      this.displaySize[1] - 1,
+      "%b{" + hateRGB + "}%c{" + hateRGB + "}" + " ".repeat(this.displaySize[0])
     );
 
     let statusLine = "";
 
-
-    if(this.milestones["flower_first"]){
-      for (let i = 0; i < Math.max(this.options.flowersNeeded, this.flowersCollected); i++) {
+    if (this.milestones["flower_first"]) {
+      for (
+        let i = 0;
+        i < Math.max(this.options.flowersNeeded, this.flowersCollected);
+        i++
+      ) {
         statusLine += i < this.flowersCollected ? "%c{red}⚘" : "%c{gray}⚘";
       }
     }
 
-    if(this.milestones["mob_first"]){
-      statusLine += "%b{"+hateRGB+"}"+
-        "%c{gray} " +
-        this.mobs.filter(m => !m.isPlayer).map(m => (!m.at?"%c{white}<":m.alive ? "%c{white}☺" : "%c{red}*")).join("") + " ";
+    if(this.player.waiting()){
+      this.drawAt(
+        [this.player.at[0], this.player.at[1] - 1],
+        delta,
+        ([sym, fg, bg]) => [[".", "‥", "…"][new Date().getSeconds() % 3], "white", bg]
+      );
     }
 
-    this.d.drawText(0, this.options.displaySize[1] - 1, statusLine);
+    if (this.milestones["mob_first"]) {
+      statusLine +=
+        "%b{" +
+        hateRGB +
+        "}" +
+        "%c{gray} " +
+        this.mobs
+          .filter(m => !m.isPlayer && m.at)
+          .map(m =>
+              m.alive
+              ? "%c{" + this.mobFg(m) + "}☺"
+              : "%c{red}*"
+          )
+          .join("") +
+        " !" +
+        this.panic.toFixed();
+    }
+
+    this.d.drawText(0, this.displaySize[1] - 1, statusLine);
   }
 
   onKeyboard(code) {
-    if(this.paused)
-      return;
+    if (this.paused) return;
 
     this.lastKey = code;
 
@@ -806,8 +823,7 @@ export class Game {
   }
 
   onClick(e: MouseEvent | TouchEvent) {
-    if(this.paused)
-      return;
+    if (this.paused) return;
     e.preventDefault();
 
     if (e instanceof MouseEvent) {
@@ -864,14 +880,12 @@ export class Game {
       for (let y = 0; y < w; y++) if (hook([x, y], this.grid[x][y])) return;
   }
 
-  log(text: string, ...params:string[]) {
-    if(text in lang)
-      text = lang[text];
-    if(params){
-      for(let i in params)
-        text = text.replace("{" + i + "}", params[i])
+  log(text: string, ...params: string[]) {
+    if (text in lang) text = lang[text];
+    if (params) {
+      for (let i in params) text = text.replace("{" + i + "}", params[i]);
     }
-    this._log.push(text.trim()/*.replace(/(?:\r\n|\r|\n)/g, "<br/>"*/);
+    this._log.push(text.trim() /*.replace(/(?:\r\n|\r|\n)/g, "<br/>"*/);
     if (this.onLog) {
       this.onLog(text);
     }
@@ -888,8 +902,7 @@ export class Game {
     let moveMade = this.player.playerAct();
     this.draw();
     if (moveMade) {
-      if(!this.player.hasPath() && !this.seeingRed)
-        this.autoSaved = false;
+      if (!this.player.hasPath() && !this.seeingRed) this.autoSaved = false;
       if (this.seeingRed || this.player.hasPath()) {
         this.waitingForInput = false;
         window.setTimeout(() => {
@@ -902,30 +915,41 @@ export class Game {
     }
   }
 
-  readNextLetter(){        
+  readNextLetter() {
     this.player.stop();
-    if(lang.letter.length >= this.letterRead){      
-      let i = this.letterRead
-      if(lang.read_letter[i])
-        this.log(lang.read_letter[i] + `<br/>***<br/>` + lang.letter[i] + `<br/>***<br/>` + lang.close_letter[i]);
+    if (lang.letter.length >= this.letterRead) {
+      let i = this.letterRead;
+      if (lang.read_letter[i])
+        this.log(
+          lang.read_letter[i] +
+            `<br/>***<br/>` +
+            lang.letter[i] +
+            `<br/>***<br/>` +
+            lang.close_letter[i]
+        );
       /*this.log(lang.letter[i])
       this.log(lang.close_letter[i])*/
-      this.letterRead++
-    }        
+      this.letterRead++;
+    }
   }
 
-  win(){
+  win() {
     this.won = true;
     this.paused = true;
     let pacifist = RNG.getUniformInt(1, this.killed + 1) <= 2;
     let optimist = this.flowersCollected % 2 == 1;
-    let ending = pacifist?(optimist?lang.ending_bargain:lang.ending_depression):(optimist?lang.ending_denial:lang.ending_anger)
-    this.onEnd(ending)
-    game.start()
+    let ending = pacifist
+      ? optimist
+        ? lang.ending_bargain
+        : lang.ending_depression
+      : optimist
+      ? lang.ending_denial
+      : lang.ending_anger;
+    this.onEnd(ending);
   }
 }
 
-//♠♣⚘☻☺😁😞😐⚡
+//♠♣⚘☻☺😁😞😐⚡⌛
 
 /*
     let roomsByX = rooms.sort(r => r.getCenter()[0]);
@@ -945,4 +969,19 @@ export class Game {
       statusLine += " %c{gray}visit %c{red}☨";
     } else {
     }
-*/    
+*/
+
+/*
+    let waitAnim = 0;
+    setInterval(() => {
+      if (this.player.waiting()) {
+        this.drawAt(
+          [this.player.at[0], this.player.at[1] - 1],
+          null,
+          ([sym, fg, bg]) => [[".", "‥", "…"][waitAnim], "white", bg]
+        );
+        waitAnim = (waitAnim + 1)%3;
+      }
+    }, 1000);
+
+*/

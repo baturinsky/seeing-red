@@ -33,12 +33,17 @@
   }
 
   icons.load().then(() => {
-    game = new Game(conf);
+    game = new Game();
     game.onLog = updateLog;
     game.onEnd = gameOver;
-    game.init();
+    game.init([45, 45]);
+    if(game.hasSave("0")){
+      game.load("0")
+    } else {
+      game.start(conf)
+    }
     gameLog.style.height = gameDiv.clientHeight + "px";
-    toggleMenu(false);
+    toggleMenu(true);
   });
 
   onMount(async () => {
@@ -140,7 +145,7 @@
   }
 
   function newGame() {
-    game.start();
+    game.start(conf);
     toggleMenu(false);
   }
 
@@ -150,6 +155,7 @@
     await tick();    
     winDiv.style.opacity = 0;
     window.setTimeout((() => winDiv.style.opacity = 1), 100)
+    game.start(conf)
   }
 </script>
 
@@ -160,7 +166,7 @@
     overflow-y: auto;
     height: 100px;
     margin-left: 1px;
-    max-width: 600px;
+    width: 400px;
   }
   .main-table {
     border: 2px solid white;
@@ -173,6 +179,7 @@
   }
   .mainer-table {
     display: flex;
+    justify-content:center;
   }
 
   .menu-table {
@@ -204,7 +211,7 @@
     bottom: 0;
     left: 0;
     background: rgba(0, 0, 0, 1);
-    opacity: 0;
+    opacity: 1;
     z-index: 3;
     font-size: 24pt;
     padding: 10px;
@@ -247,6 +254,11 @@
     border: 1px solid white;
   }
 
+  .all{
+    overflow:hidden;
+    height:100%;      
+  }
+
   :global(.she){
     color:#ff4000;
     padding-top: 5px;
@@ -262,9 +274,18 @@
     font-size: 24px;
     text-align: center;    
   }
+
+  button:disabled,
+  button[disabled]{
+    cursor: default;
+    opacity: 0.2;
+    background: black;
+  }
 </style>
 
 <div class="tooltip fadein" bind:this={tooltip}>Tooltip</div>
+
+<div class="all">
 
 <div class="menu" bind:this={menuDiv}>
 
@@ -288,10 +309,8 @@
         {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
           <div class="save">
              {slot}.
-            <button on:click={() => save(slot)}>Save</button>
-            {#if game && game.hasSave(slot)}
-              <button on:click={() => load(slot)}>Load</button>
-            {/if}
+            <button disabled={!game || game.time==0} on:click={() => save(slot)}>Save</button>
+            <button disabled={!game || !game.hasSave(slot)} on:click={() => load(slot)}>Load</button>
           </div>
         {/each}
       </div>
@@ -320,4 +339,5 @@
       {/if}
     </div>
   </div>
+</div>
 </div>

@@ -1,7 +1,6 @@
-import { DIRS, FOV, RNG, Path } from "rot-js/lib/index";
+import { DIRS, FOV, RNG } from "rot-js/lib/index";
 import { game, distance, Animation } from "./Game";
 import lang from "./Lang";
-import { throws } from "assert";
 
 let keyMap = {};
 keyMap["Numpad8"] = 0;
@@ -17,7 +16,13 @@ keyMap["Space"] = -1;
 
 const WARY = 30,
   AFRAID = 60,
-  PANIC = 100;
+  PANIC = 100,
+  MOB = 0,
+  PLAYER = 1,
+  BLUE_ONI = 2,
+  RED_ONI = 3,
+  ELDER = 4
+  ;
 
 export default class Mob {
   at: number[];
@@ -28,40 +33,35 @@ export default class Mob {
   alive: boolean = true;
   concentration = 0;
   seesEnemies = false;
+  freeze:number = 0;
   emote?: string;
 
   get isPlayer() {
-    return this == game.player;
+    return game.player == this;
   }
 
+  set isPlayer(val:boolean) {
+  }
+
+
   serialise() {
-    return {
-      hate: this.hate,
-      fear: this.fear,
-      alive: this.alive,
-      concentration: this.concentration,
-      at: this.at,
-      path: this.path,
-      isPlayer: this.isPlayer
-    };
+    let s: any = {};
+    Object.assign(s, this);
+    return s
+  }
+
+  deserialise(s: any) {
+    Object.assign(this, s)
+    if(s.type == PLAYER)
+      game.player = this;
+    return this;
   }
 
   static meansStop(code: string) {
     return keyMap[code] == -1;
   }
 
-  deserialise(s: any) {
-    this.hate = s.hate;
-    this.fear = s.fear;
-    this.alive = s.alive;
-    this.concentration = s.concentration;
-    this.at = s.at;
-    this.path = s.path;
-    if (s.isPlayer) game.player = this;
-    return this;
-  }
-
-  constructor() {
+  constructor(public type = MOB) {
     game.mobs.push(this);
   }
 
@@ -223,6 +223,10 @@ export default class Mob {
     return null;
   }
 
+  waiting(){
+    return this.path && this.path[0] && this.path[0][0] == this.at[0] && this.path[0][1] == this.at[1]
+  }
+
   playerAct(): boolean {
     if (game.seeingRed) {
       this.stop();
@@ -238,7 +242,7 @@ export default class Mob {
       if (!this.hasPath()) this.stop();
 
       if (this.hasPath()) {
-        if (this.path[0][0] == this.at[0] && this.path[0][1] == this.at[1]) {
+        if (this.waiting()) {
           this.stay();
         } else {
           this.goTo(this.path.shift());
@@ -295,22 +299,27 @@ export default class Mob {
 
       let tile = this.tile();
       if (tile.symbol == "*") {
-        this.fear += 2;
+        this.fear += 5;
       }
 
       if (tile.symbol == "<" || (tile.symbol == "<" && !this.hasPath())) {
-        tile.mob = null;
-        this.at = null;
-        this.path = null;
+        this.leave()
       }
     } else {
       this.path = [];
       let goal: number[];
-      let leaving = RNG.getUniform() < 0.01 + Math.max(0, this.fear - AFRAID) / 100;
+      let leaving = RNG.getUniform() < game.options.despawn + Math.max(0, this.fear - AFRAID) / 100;
       if (leaving) goal = RNG.getItem(game.exits);
       else goal = RNG.getItem(game.landmarks);
       this.path = this.findPathTo(goal);
     }
+  }
+
+  leave(){
+    this.tile().mob = null;
+    this.at = null;
+    this.path = null;
+    game.panic += this.fear;
   }
 
   stay() {
