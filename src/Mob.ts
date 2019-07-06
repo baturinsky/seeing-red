@@ -1,6 +1,7 @@
-import { DIRS, FOV, RNG } from "rot-js/lib/index";
+import { DIRS, FOV, RNG, Color } from "rot-js/lib/index";
 import { game, distance, Animation } from "./Game";
 import lang from "./Lang";
+import { throws } from "assert";
 
 let keyMap = {};
 keyMap["Numpad8"] = 0;
@@ -16,15 +17,16 @@ keyMap["Space"] = -1;
 
 const WARY = 30,
   AFRAID = 60,
-  PANIC = 100,
-  MOB = 0,
-  PLAYER = 1,
-  BLUE_ONI = 2,
-  RED_ONI = 3,
-  ELDER = 4
-  ;
+  PANIC = 100;
 
 export default class Mob {
+
+  static MOB = 0;
+  static PLAYER = 1;
+  static BLUE_ONI = 2;
+  static RED_ONI = 3;
+  static ELDER = 4;
+
   at: number[];
   sees: number[][] = [];
   path: number[][];
@@ -36,13 +38,13 @@ export default class Mob {
   freeze:number = 0;
   emote?: string;
 
-  get isPlayer() {
+  isPlayer() {
     return game.player == this;
   }
 
-  set isPlayer(val:boolean) {
+  isGuard() {
+    return this.type == Mob.RED_ONI || this.type == Mob.BLUE_ONI || this.type == Mob.ELDER
   }
-
 
   serialise() {
     let s: any = {};
@@ -52,7 +54,7 @@ export default class Mob {
 
   deserialise(s: any) {
     Object.assign(this, s)
-    if(s.type == PLAYER)
+    if(s.type == Mob.PLAYER)
       game.player = this;
     return this;
   }
@@ -61,20 +63,42 @@ export default class Mob {
     return keyMap[code] == -1;
   }
 
-  constructor(public type = MOB) {
+  constructor(public type = Mob.MOB) {
     game.mobs.push(this);
   }
 
   getSpeed() {
     let speed = 100;
-    if (this.isPlayer) {
+    if (this.isPlayer()) {
       speed = 120 + this.hate;
+    } else if(this.isGuard){
+      return 120;
     }
     return speed;
   }
 
   act() {
-    if (this.isPlayer) {
+    if(!this.alive){
+      console.log("zombie");
+      console.log(this);
+    }
+
+    if(this.freeze>0){
+      this.freeze -= this.getSpeed();
+      return;
+    }
+    
+    if(this.isGuard() && !this.at){
+      let tile = game.at(game.exits[0]);
+      if (!tile.mob) {
+        this.at = game.exits[0].slice();
+        tile.mob = this;
+        console.log("Spawn guard");
+        console.log(this);
+      }
+    }
+
+    if (this.isPlayer()) {
       game.engine.lock();
       game.playerAct();
     } else {
@@ -86,20 +110,56 @@ export default class Mob {
     return game.at(this.at);
   }
 
+  fight(target:Mob){
+    console.log("FIGHT");
+    console.log(this);
+    console.log(target);
+    let win:boolean
+    if(target.type == Mob.BLUE_ONI){
+      win = this.hate < RNG.getUniformInt(1,100) + 20      
+      game.log(win?lang.blue_victory:lang.blue_lose)
+    } else if(target.type == Mob.RED_ONI) {
+      win = this.hate > RNG.getUniformInt(1,100) - 20
+      game.log(win?lang.red_victory:lang.red_lose)
+    } else {
+      if(game.killed > 0){
+        win = false
+        game.log(lang.elder_lose)
+      } else {
+        return;
+      }
+    }
+    game.log(win?lang.death:lang.lose)
+    if(win) {
+      target.die();
+    } else
+      this.die()
+  }
+
   goTo(newAt: number[]) {
     let tile = this.tile();
+    this.concentration = 0;
 
     let targetMob = game.at(newAt).mob;
     if (targetMob) {
-      if (this.isPlayer) {
-        targetMob.die();
-        this.hate = 0;
+      if (this.isPlayer()) {
+        if(targetMob.isGuard()){
+          this.fight(targetMob)
+          return
+        } else {
+          targetMob.die();
+        }
       } else {
-        if (RNG.getUniform() < 0.5) return;
-        else {
-          targetMob.at = this.at.slice(0, 2);
-          tile.mob = targetMob;
-          targetMob.reroute()
+        if(targetMob.isPlayer() && this.isGuard()){
+          targetMob.fight(this)
+          return
+        } else {
+          if (RNG.getUniform() < 0.5) return;
+          else {
+            targetMob.at = this.at.slice(0, 2);
+            tile.mob = targetMob;
+            targetMob.reroute()
+          }
         }
       }
     }
@@ -109,7 +169,7 @@ export default class Mob {
     tile = this.tile();
     tile.mob = this;
 
-    if (this.isPlayer) {
+    if (this.isPlayer()) {
       if (tile.symbol == "⚘") {
         tile.symbol = " ";
         game.flowersCollected++;
@@ -131,7 +191,7 @@ export default class Mob {
         game.won = true;
       }*/
       if (tile.symbol == "b" && game.allFlowersCollected()) {
-        game.win()
+        game.end()
       }
     } else {
       this.leaveScent();
@@ -140,15 +200,8 @@ export default class Mob {
 
   die() {
     this.alive = false;
-
-    game.log(lang.death);
-
-    if (!this.isPlayer) {
-      game.killed++;
-    }
-
-    this.tile().mob = null;
     game.scheduler.remove(this);
+    this.tile().mob = null;
 
     var fov = new FOV.PreciseShadowcasting(
       (x, y) => !game.safeAt([x, y]).opaque
@@ -161,6 +214,24 @@ export default class Mob {
         tile.cost += 2;
       }
     });
+
+    console.log(this);
+    console.log("dies");
+
+    if(this.isPlayer()){
+      game.complete = true;
+      game.engine.lock();
+      return
+    } else {
+      game.player.hate = 0;
+      game.seeingRed = false;
+    }
+
+    game.log(lang.death);
+
+    if (!this.isPlayer()) {
+      game.killed++;
+    }
     
   }
 
@@ -179,7 +250,7 @@ export default class Mob {
         return {
           mob: m,
           d:
-            m.isPlayer || !m.alive || !m.at
+            m.isPlayer() || !m.alive || !m.at
               ? 1e6
               : distance(m.at, game.player.at)
         };
@@ -193,11 +264,10 @@ export default class Mob {
   }
 
   pathFinderUsed(){
-    let finder =
-      !this.isPlayer && this.fear >= WARY && this.tile().visible
-        ? game.escapefinder
-        : game.pathfinder;
-    return finder;
+    if(this.isPlayer() || this.isGuard() || this.fear < WARY || !this.tile().visible)
+      return game.pathfinder;
+    else
+      return game.escapefinder;
   }
 
   findPathTo(to: number[]) {
@@ -263,15 +333,13 @@ export default class Mob {
       if (kmc == -1) {
         this.stay();
       } else {
-        this.concentration = 0;
+        var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
+        let newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
+        if (game.at(newAt).cost > 1000) {
+          return false;
+        }
+        this.goTo(newAt);
       }
-
-      var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
-      let newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
-      if (game.at(newAt).cost > 1000) {
-        return false;
-      }
-      this.goTo(newAt);
     }
 
     this.lookAround();
@@ -291,18 +359,29 @@ export default class Mob {
   }
 
   mobAct() {
+    
+    if(this.isGuard()){
+      this.fear = 0;
+      if(this.at && game.player.seesEnemies){
+        this.setPath(game.player.at)
+      }
+    }
+
     if (this.path && this.path.length > 0) {
       if (this.tile().visible) {
         this.path = this.findPathTo(this.path.pop());
       }
       if (this.path && this.path.length > 0) this.goTo(this.path.shift());
+      
+      if(!this.alive)
+        return;
 
       let tile = this.tile();
       if (tile.symbol == "*") {
         this.fear += 5;
       }
 
-      if (tile.symbol == "<" || (tile.symbol == "<" && !this.hasPath())) {
+      if (tile.symbol == "<" && !this.hasPath()) {
         this.leave()
       }
     } else {
@@ -324,7 +403,7 @@ export default class Mob {
 
   stay() {
     this.concentration++;
-    if (this.isPlayer && this.concentration > 5 && this.hate == 0)
+    if (this.isPlayer() && this.concentration > 5 && this.hate == 0)
       game.alertOnce("calm");
     this.changeHateBy(-0.5);
   }
@@ -343,7 +422,7 @@ export default class Mob {
     let seen = this.seesOthers();
     if (seen && !this.seesEnemies && this.hasPath()) {
       this.stop();
-      game.alertOnce("mob_first");
+      game.alertOnce("mob_first_" + seen.type);
       new Animation([seen.at[0], seen.at[1] - 1], 2, { duration: 500, interval:100 });
     }
 
@@ -351,7 +430,7 @@ export default class Mob {
   }
 
   tooltip() {
-    if (this.isPlayer) {
+    if (this.isPlayer()) {
       return lang.me;
     } else {
       let afraid =
@@ -378,6 +457,11 @@ export default class Mob {
       this.emote = "⚡";
     }
     this.fear += dFear;
+    if(this.type == Mob.ELDER && game.killed == 0){
+      if(distance(this.at, game.player.at) <= 3){
+        game.end(lang.ending_true);
+      }
+    }
   }
 
   lookAround() {
@@ -406,10 +490,10 @@ export default class Mob {
       this.sees.push([x, y]);
       let tile = game.at([x, y]);
       if (tile.symbol == "⚘" && r <= 10) seesFlower = true;
-      if (tile.mob && !tile.mob.isPlayer) {
+      if (tile.mob && !tile.mob.isPlayer()) {
         tile.mob.lookAtMe();
         seesMobs = true;
-        game.alertOnce("mob_first");
+        game.alertOnce("mob_first_"+tile.mob.type);
         dHate += 10 / (r + 3);
       }
       tile.visible = (vis * (20 - r)) / 20;
@@ -462,6 +546,27 @@ export default class Mob {
 
   stop() {
     this.path = null;
+  }
+
+  sym(){
+    return ['☺', '☻', 'g', 'G', 'e'][this.type]    
+  }
+
+  fg() {
+    if (this.isPlayer()) {
+      if (game.seeingRed) return "red";
+      let redness = Math.min(200, game.killed * 20);
+      return Color.toRGB([255, 255 - redness, 255 - redness]);
+    } else {
+      if(this.isGuard()){
+        if (this.type == Mob.BLUE_ONI)
+          return "white";
+        else
+          return "red";
+      }
+      let brightness = Math.max(128, 255 - this.fear);
+      return Color.toRGB([255, brightness, brightness]);
+    }
   }
 
   actFixedInterval() {}

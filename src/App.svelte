@@ -76,7 +76,7 @@
   window.addEventListener("mousemove", async e => {
     if (menu) return;
 
-    if (Math.abs(e.movementY) + Math.abs(e.movementX) > 3) {
+    if (Math.abs(e.movementY) + Math.abs(e.movementX) > 2) {
       toggleTooltip(null);
       await timeout(30);
     }

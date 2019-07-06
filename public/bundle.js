@@ -3220,7 +3220,7 @@ void main() {
         flower_mob_first: "<em>How dares it ☺ to be near the flower ⚘ !</em>",
         collected: "I carefully dig out the flower <em>⚘</em> {0}",
         collected_all: "I have collected enough flowers. But she is nowhere to seen. <span class='important'>Maybe she is home already? I'll go check.</span>",
-        collected_even: "There is a custom that you should not gift even number of flowers to a living person. Hope she is not superstitious.",
+        collected_even: "Even number of flowers is believed to be connected with death. I hope she is not superstitious.",
         tree: "Thick forest.",
         exit: "The path to the village.",
         entrance: "The path back to the road.",
@@ -3229,7 +3229,10 @@ void main() {
         blood_trail: "A trail of blood. Quite old.",
         wall: "An old, but sturdy hut wall. She lives here.",
         mob: "Monster",
-        mob_first: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
+        mob_first_0: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
+        mob_first_2: "This monster is crafty. I should be very careful and <span class='important'>keep my calm</span> while fighting with it.",
+        mob_first_3: "This monster is strong. But I'll overcome it if I <span class='important'>put all my hatred into the attack</span>.",
+        mob_first_4: "It's... another monster. Right? I think I have seen it... him.. before. They call him Elder. \nLooks like it... he wants to tell me something. Can I trust him?",
         smell: "A trail of smell.",
         smell_first: "Those things smell \n<span style='background:#a00'>&nbsp;</span><span style='background:#800'>&nbsp;</span><span style='background:#600'>&nbsp;</span><span style='background:#400'>&nbsp;</span>\nquite bad. I can feel the trail of their stench from quite a far away.",
         calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
@@ -3238,6 +3241,13 @@ void main() {
         seeing_red: "<em>Waaargh!</em>",
         seeing_red_end: "What has just happened?",
         death: "<em>Splort.</em>",
+        elder_angry: "So, here it is <em>e</em>. The one that I hate the most. And the one I have no chance to defeat. My only option is to run.",
+        elder_lose: "The fight with the elder monster ends at the instant. I am as helpless against it as ordinary monsters are against me.",
+        blue_victory: "I carefully dodged it's lunge and then made a precise killing strike.",
+        blue_lose: "I charged monster only to be skewered with a fast stab.",
+        red_victory: "I overwhelm it's defences with a stream of furious attacks.",
+        red_lose: "The monster blocks most of my attacks and shrug off the others. And then deals one, but powerful attack.",
+        lose: "<span class='important'>I collapse to never stand up again.<br/><br/>GAME OVER</span><br/><br/>Press Escape to continue.",
         not_here: "She is not here. Probably somewhere in the forest picking up herbs again. <span class='important'>I'll  go look for her.</span>",
         mob_wary: "It stares at me warily.",
         mob_afraid: "It covers in fear.",
@@ -3265,7 +3275,7 @@ void main() {
         ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And because of that I was always in pain so big, I only could manage by throwing it at others.\n<br/><br/>\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
         ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say that memories of you will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not want it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
         ending_depression: "\nOf cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.\nLooks like her fears did materialise. \n<br/><br/>\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about their environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be difficult to weed them out around settlements. \nI'll show this to doctors in city. Maybe this time I will even find the one she has sent the letter to.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
-        ending_true: "\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n\nSuch a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.\nI cam with the elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\nAh... God! I turned out to be such a damsel in distress.\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
+        ending_true: "\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n\nSuch a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.\nI came with the elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\nAh... God! I turned out to be such a damsel in distress.\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
     };
 
     var keyMap = {};
@@ -3279,10 +3289,10 @@ void main() {
     keyMap["Numpad7"] = 7;
     keyMap["Numpad5"] = -1;
     keyMap["Space"] = -1;
-    var WARY = 30, AFRAID = 60, PANIC = 100, MOB = 0, PLAYER = 1;
+    var WARY = 30, AFRAID = 60, PANIC = 100;
     var Mob = /** @class */ (function () {
         function Mob(type) {
-            if (type === void 0) { type = MOB; }
+            if (type === void 0) { type = Mob.MOB; }
             this.type = type;
             this.sees = [];
             this.hate = 0;
@@ -3293,15 +3303,12 @@ void main() {
             this.freeze = 0;
             game.mobs.push(this);
         }
-        Object.defineProperty(Mob.prototype, "isPlayer", {
-            get: function () {
-                return game.player == this;
-            },
-            set: function (val) {
-            },
-            enumerable: true,
-            configurable: true
-        });
+        Mob.prototype.isPlayer = function () {
+            return game.player == this;
+        };
+        Mob.prototype.isGuard = function () {
+            return this.type == Mob.RED_ONI || this.type == Mob.BLUE_ONI || this.type == Mob.ELDER;
+        };
         Mob.prototype.serialise = function () {
             var s = {};
             Object.assign(s, this);
@@ -3309,7 +3316,7 @@ void main() {
         };
         Mob.prototype.deserialise = function (s) {
             Object.assign(this, s);
-            if (s.type == PLAYER)
+            if (s.type == Mob.PLAYER)
                 game.player = this;
             return this;
         };
@@ -3318,13 +3325,33 @@ void main() {
         };
         Mob.prototype.getSpeed = function () {
             var speed = 100;
-            if (this.isPlayer) {
+            if (this.isPlayer()) {
                 speed = 120 + this.hate;
+            }
+            else if (this.isGuard) {
+                return 120;
             }
             return speed;
         };
         Mob.prototype.act = function () {
-            if (this.isPlayer) {
+            if (!this.alive) {
+                console.log("zombie");
+                console.log(this);
+            }
+            if (this.freeze > 0) {
+                this.freeze -= this.getSpeed();
+                return;
+            }
+            if (this.isGuard() && !this.at) {
+                var tile = game.at(game.exits[0]);
+                if (!tile.mob) {
+                    this.at = game.exits[0].slice();
+                    tile.mob = this;
+                    console.log("Spawn guard");
+                    console.log(this);
+                }
+            }
+            if (this.isPlayer()) {
                 game.engine.lock();
                 game.playerAct();
             }
@@ -3336,21 +3363,62 @@ void main() {
         Mob.prototype.tile = function () {
             return game.at(this.at);
         };
-        Mob.prototype.goTo = function (newAt) {
-            var tile = this.tile();
-            var targetMob = game.at(newAt).mob;
-            if (targetMob) {
-                if (this.isPlayer) {
-                    targetMob.die();
-                    this.hate = 0;
+        Mob.prototype.fight = function (target) {
+            console.log("FIGHT");
+            console.log(this);
+            console.log(target);
+            var win;
+            if (target.type == Mob.BLUE_ONI) {
+                win = this.hate < RNG$1.getUniformInt(1, 100) + 20;
+                game.log(win ? lang.blue_victory : lang.blue_lose);
+            }
+            else if (target.type == Mob.RED_ONI) {
+                win = this.hate > RNG$1.getUniformInt(1, 100) - 20;
+                game.log(win ? lang.red_victory : lang.red_lose);
+            }
+            else {
+                if (game.killed > 0) {
+                    win = false;
+                    game.log(lang.elder_lose);
                 }
                 else {
-                    if (RNG$1.getUniform() < 0.5)
+                    return;
+                }
+            }
+            game.log(win ? lang.death : lang.lose);
+            if (win) {
+                target.die();
+            }
+            else
+                this.die();
+        };
+        Mob.prototype.goTo = function (newAt) {
+            var tile = this.tile();
+            this.concentration = 0;
+            var targetMob = game.at(newAt).mob;
+            if (targetMob) {
+                if (this.isPlayer()) {
+                    if (targetMob.isGuard()) {
+                        this.fight(targetMob);
                         return;
+                    }
                     else {
-                        targetMob.at = this.at.slice(0, 2);
-                        tile.mob = targetMob;
-                        targetMob.reroute();
+                        targetMob.die();
+                    }
+                }
+                else {
+                    if (targetMob.isPlayer() && this.isGuard()) {
+                        targetMob.fight(this);
+                        return;
+                    }
+                    else {
+                        if (RNG$1.getUniform() < 0.5)
+                            return;
+                        else {
+                            targetMob.at = this.at.slice(0, 2);
+                            tile.mob = targetMob;
+                            targetMob.reroute();
+                        }
                     }
                 }
             }
@@ -3359,7 +3427,7 @@ void main() {
             this.at = newAt.slice(0, 2);
             tile = this.tile();
             tile.mob = this;
-            if (this.isPlayer) {
+            if (this.isPlayer()) {
                 if (tile.symbol == "⚘") {
                     tile.symbol = " ";
                     game.flowersCollected++;
@@ -3376,7 +3444,7 @@ void main() {
                   game.won = true;
                 }*/
                 if (tile.symbol == "b" && game.allFlowersCollected()) {
-                    game.win();
+                    game.end();
                 }
             }
             else {
@@ -3385,12 +3453,8 @@ void main() {
         };
         Mob.prototype.die = function () {
             this.alive = false;
-            game.log(lang.death);
-            if (!this.isPlayer) {
-                game.killed++;
-            }
-            this.tile().mob = null;
             game.scheduler.remove(this);
+            this.tile().mob = null;
             var fov = new FOV$1.PreciseShadowcasting(function (x, y) { return !game.safeAt([x, y]).opaque; });
             fov.compute(this.at[0], this.at[1], 3, function (x, y, r, vis) {
                 var tile = game.at([x, y]);
@@ -3399,6 +3463,21 @@ void main() {
                     tile.cost += 2;
                 }
             });
+            console.log(this);
+            console.log("dies");
+            if (this.isPlayer()) {
+                game.complete = true;
+                game.engine.lock();
+                return;
+            }
+            else {
+                game.player.hate = 0;
+                game.seeingRed = false;
+            }
+            game.log(lang.death);
+            if (!this.isPlayer()) {
+                game.killed++;
+            }
         };
         Mob.prototype.leaveScent = function () {
             var tile = game.at(this.at);
@@ -3413,7 +3492,7 @@ void main() {
                 .map(function (m) {
                 return {
                     mob: m,
-                    d: m.isPlayer || !m.alive || !m.at
+                    d: m.isPlayer() || !m.alive || !m.at
                         ? 1e6
                         : distance(m.at, game.player.at)
                 };
@@ -3425,10 +3504,10 @@ void main() {
             return nearestMob.mob;
         };
         Mob.prototype.pathFinderUsed = function () {
-            var finder = !this.isPlayer && this.fear >= WARY && this.tile().visible
-                ? game.escapefinder
-                : game.pathfinder;
-            return finder;
+            if (this.isPlayer() || this.isGuard() || this.fear < WARY || !this.tile().visible)
+                return game.pathfinder;
+            else
+                return game.escapefinder;
         };
         Mob.prototype.findPathTo = function (to) {
             var finder = this.pathFinderUsed();
@@ -3492,14 +3571,13 @@ void main() {
                     this.stay();
                 }
                 else {
-                    this.concentration = 0;
+                    var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
+                    var newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
+                    if (game.at(newAt).cost > 1000) {
+                        return false;
+                    }
+                    this.goTo(newAt);
                 }
-                var diff = kmc == -1 ? [0, 0] : DIRS[8][kmc];
-                var newAt = [this.at[0] + diff[0], this.at[1] + diff[1]];
-                if (game.at(newAt).cost > 1000) {
-                    return false;
-                }
-                this.goTo(newAt);
             }
             this.lookAround();
             /*for(let mob of game.mobs){
@@ -3514,17 +3592,25 @@ void main() {
             this.path = this.findPathTo(to);
         };
         Mob.prototype.mobAct = function () {
+            if (this.isGuard()) {
+                this.fear = 0;
+                if (this.at && game.player.seesEnemies) {
+                    this.setPath(game.player.at);
+                }
+            }
             if (this.path && this.path.length > 0) {
                 if (this.tile().visible) {
                     this.path = this.findPathTo(this.path.pop());
                 }
                 if (this.path && this.path.length > 0)
                     this.goTo(this.path.shift());
+                if (!this.alive)
+                    return;
                 var tile = this.tile();
                 if (tile.symbol == "*") {
                     this.fear += 5;
                 }
-                if (tile.symbol == "<" || (tile.symbol == "<" && !this.hasPath())) {
+                if (tile.symbol == "<" && !this.hasPath()) {
                     this.leave();
                 }
             }
@@ -3547,7 +3633,7 @@ void main() {
         };
         Mob.prototype.stay = function () {
             this.concentration++;
-            if (this.isPlayer && this.concentration > 5 && this.hate == 0)
+            if (this.isPlayer() && this.concentration > 5 && this.hate == 0)
                 game.alertOnce("calm");
             this.changeHateBy(-0.5);
         };
@@ -3564,13 +3650,13 @@ void main() {
             var seen = this.seesOthers();
             if (seen && !this.seesEnemies && this.hasPath()) {
                 this.stop();
-                game.alertOnce("mob_first");
+                game.alertOnce("mob_first_" + seen.type);
                 new Animation([seen.at[0], seen.at[1] - 1], 2, { duration: 500, interval: 100 });
             }
             this.seesEnemies = seen ? true : false;
         };
         Mob.prototype.tooltip = function () {
-            if (this.isPlayer) {
+            if (this.isPlayer()) {
                 return lang.me;
             }
             else {
@@ -3596,6 +3682,11 @@ void main() {
                 this.emote = "⚡";
             }
             this.fear += dFear;
+            if (this.type == Mob.ELDER && game.killed == 0) {
+                if (distance(this.at, game.player.at) <= 3) {
+                    game.end(lang.ending_true);
+                }
+            }
         };
         Mob.prototype.lookAround = function () {
             var _this = this;
@@ -3620,10 +3711,10 @@ void main() {
                 var tile = game.at([x, y]);
                 if (tile.symbol == "⚘" && r <= 10)
                     seesFlower = true;
-                if (tile.mob && !tile.mob.isPlayer) {
+                if (tile.mob && !tile.mob.isPlayer()) {
                     tile.mob.lookAtMe();
                     seesMobs = true;
-                    game.alertOnce("mob_first");
+                    game.alertOnce("mob_first_" + tile.mob.type);
                     dHate += 10 / (r + 3);
                 }
                 tile.visible = (vis * (20 - r)) / 20;
@@ -3665,7 +3756,33 @@ void main() {
         Mob.prototype.stop = function () {
             this.path = null;
         };
+        Mob.prototype.sym = function () {
+            return ['☺', '☻', 'g', 'G', 'e'][this.type];
+        };
+        Mob.prototype.fg = function () {
+            if (this.isPlayer()) {
+                if (game.seeingRed)
+                    return "red";
+                var redness = Math.min(200, game.killed * 20);
+                return Color.toRGB([255, 255 - redness, 255 - redness]);
+            }
+            else {
+                if (this.isGuard()) {
+                    if (this.type == Mob.BLUE_ONI)
+                        return "white";
+                    else
+                        return "red";
+                }
+                var brightness = Math.max(128, 255 - this.fear);
+                return Color.toRGB([255, brightness, brightness]);
+            }
+        };
         Mob.prototype.actFixedInterval = function () { };
+        Mob.MOB = 0;
+        Mob.PLAYER = 1;
+        Mob.BLUE_ONI = 2;
+        Mob.RED_ONI = 3;
+        Mob.ELDER = 4;
         return Mob;
     }());
     /*
@@ -4742,7 +4859,6 @@ void main() {
         Milestones.prototype.serialise = function () {
             var s = {};
             Object.assign(s, this);
-            delete s.isPlayer;
             return s;
         };
         Milestones.prototype.deserialise = function (s) {
@@ -4862,12 +4978,25 @@ void main() {
                 var mob = _a[_i];
                 mob.actFixedInterval();
             }
-            if (RNG$1.getUniform() < game.options.spawn / 10) {
+            if (RNG$1.getUniform() < game.options.spawn * 10 / (100 + game.panic)) {
                 var exit = RNG$1.getItem(game.exits);
-                if (!game.at(exit).mob) {
+                var tile = game.at(exit);
+                if (!tile.mob) {
                     var mob = new Mob();
                     mob.at = exit.slice();
+                    tile.mob = mob;
                 }
+            }
+            if (game.guardsSpawned + 1 <= Math.min(game.panic / 200, game.killed / 2)) {
+                game.guardsSpawned++;
+                var mob = new Mob(RNG$1.getUniform() < 0.5 ? Mob.RED_ONI : Mob.BLUE_ONI);
+                mob.freeze = 300;
+                game.scheduler.add(mob, true);
+            }
+            if (!game.elderSpawned && game.panic >= game.options.elderSpawnAt) {
+                game.elderSpawned = true;
+                var mob = new Mob(Mob.ELDER);
+                game.scheduler.add(mob, true);
             }
         };
         return Ticker;
@@ -4948,6 +5077,7 @@ void main() {
             this.emptiness = 0.3;
             this.spawn = 0.1;
             this.despawn = 0.01;
+            this.elderSpawnAt = 600;
             Object.assign(this, o);
             this.flowersNeeded = this.flowersNeeded || this.flowers - 1;
         }
@@ -4966,12 +5096,11 @@ void main() {
             this.displaySize = [45, 45];
             this.mobs = [];
             this.seeingRed = false;
-            this.won = false;
+            this.complete = false;
             this.time = 0;
             this._log = [];
             this.flowersCollected = 0;
             this.letterRead = 0;
-            this.panic = 0;
             game = this;
             window.gameState = this;
         }
@@ -4982,12 +5111,13 @@ void main() {
                 flowersCollected: this.flowersCollected,
                 letterRead: this.letterRead,
                 time: this.time,
-                won: this.won,
+                complete: this.complete,
                 landmarks: this.landmarks,
                 exits: this.exits,
                 killed: this.killed,
                 guardsSpawned: this.guardsSpawned,
                 panic: this.panic,
+                elderSpawned: this.elderSpawned,
                 _log: this._log,
                 milestones: this.milestones.serialise(),
                 grid: this.grid.map(function (line) { return line.map(function (t) { return t.serialise(); }); }),
@@ -4998,11 +5128,12 @@ void main() {
             this.options = new Options(s.options);
             this.seeingRed = s.seeingRed;
             this.time = s.time;
-            this.won = s.won;
+            this.complete = s.complete;
             this.panic = s.panic;
             this.landmarks = s.landmarks;
             this.exits = s.exits;
             this.killed = s.killed;
+            this.elderSpawned = s.elderSpawned;
             this.guardsSpawned = s.guardsSpawned;
             this.flowersCollected = s.flowersCollected;
             this.letterRead = s.letterRead;
@@ -5063,7 +5194,7 @@ void main() {
             this.engine = new Engine(this.scheduler);
             this.engine.start();
             setInterval(function () {
-                if (!_this.won && !_this.autoSaved) {
+                if (!_this.complete && !_this.autoSaved) {
                     _this.save("0");
                     _this.autoSaved = true;
                 }
@@ -5080,22 +5211,24 @@ void main() {
             RNG$1.setSeed(this.options.seed || Math.random());
             this._log = [];
             this.mobs = [];
-            this.won = false;
+            this.complete = false;
             this.killed = 0;
             this.flowersCollected = 0;
             this.panic = 0;
             this.letterRead = 0;
             this.time = 0;
+            this.guardsSpawned = 0;
             this.seeingRed = false;
             this.milestones = new Milestones();
+            this.elderSpawned = false;
             this.generateMap();
             this.initMobs();
             this.draw();
         };
         Game.prototype.addHut = function () {
-            var hut = "         \n ####### \n #   S # \n # bb  # \n # bbbb# \n # bbb # \n ###b### \n    B    \n   B     ".split("\n");
+            var hut = "         \n ####### \n #   s # \n # bb  # \n # bbbb# \n # bbb # \n ###b### \n    B    \n   B     ".split("\n");
             var h = hut.length;
-            var pat = this.player.at;
+            var pat = this.player.at.slice();
             for (var y = 0; y < h; y++) {
                 var line = hut[y];
                 var w = line.length;
@@ -5136,10 +5269,11 @@ void main() {
             this.scheduler.add(new Ticker(), true);
             for (var _i = 0, _a = this.mobs; _i < _a.length; _i++) {
                 var mob = _a[_i];
-                if (!mob.at)
+                if (!mob.alive || (!mob.at && !mob.isGuard()))
                     continue;
                 this.scheduler.add(mob, true);
-                this.at(mob.at).mob = mob;
+                if (mob.at)
+                    this.at(mob.at).mob = mob;
             }
         };
         Game.prototype.findFreeTiles = function () {
@@ -5193,7 +5327,7 @@ void main() {
             this.at(this.exits[1]).symbol = ">";
             this.at(roomsRandom[0].getCenter()).symbol = "☨";
             var freeLandmarks = this.landmarks.slice();
-            this.player = new Mob(1);
+            this.player = new Mob(Mob.PLAYER);
             for (var i = 0; i < freeLandmarks.length; i++) {
                 var lm = freeLandmarks[i];
                 if (lm[0] > 5 &&
@@ -5253,22 +5387,10 @@ void main() {
             }
             return Color.toRGB(bg);
         };
-        Game.prototype.mobFg = function (mob) {
-            if (mob.isPlayer) {
-                if (this.seeingRed)
-                    return "red";
-                var redness = Math.min(200, this.killed * 20);
-                return Color.toRGB([255, 255 - redness, 255 - redness]);
-            }
-            else {
-                var brightness = Math.max(128, 255 - mob.fear);
-                return Color.toRGB([255, brightness, brightness]);
-            }
-        };
         Game.prototype.tileFg = function (at) {
             var tile = this.safeAt(at);
             if (tile.mob && tile.visible) {
-                return this.mobFg(tile.mob);
+                return tile.mob.fg();
             }
             if (!tile.mob && tile.seen && tile.symbol == "♠") {
                 RNG$1.setSeed(at[0] * 1000 + at[1] * 3);
@@ -5284,7 +5406,7 @@ void main() {
         Game.prototype.tileSym = function (at) {
             var tile = this.safeAt(at);
             if (tile.mob && tile.visible) {
-                return tile.mob.isPlayer ? "☻" : "☺";
+                return tile.mob.sym();
             }
             if (tile.visible || tile.seen) {
                 if (tile.symbol == "♠") {
@@ -5293,11 +5415,11 @@ void main() {
                 }
                 if (tile.symbol == "b" || tile.symbol == "B")
                     return "*";
-                if (tile.symbol == "S") {
+                if (tile.symbol == "s") {
                     if (tile.visible &&
                         game.allFlowersCollected() &&
                         this.flowersCollected % 2 == 1) {
-                        return "S";
+                        return "s";
                     }
                     else {
                         return " ";
@@ -5329,7 +5451,6 @@ void main() {
                 this.d.draw(displayAt[0], displayAt[1], sym, fg, bg);
         };
         Game.prototype.draw = function () {
-            var _this = this;
             this.hateBg = this.seeingRed
                 ? [255, 0, 0]
                 : Color.add(screenBg, [0.64 * this.player.hate, 0, 0]);
@@ -5358,17 +5479,17 @@ void main() {
                     return [[".", "‥", "…"][new Date().getSeconds() % 3], "white", bg];
                 });
             }
-            if (this.milestones["mob_first"]) {
+            if (this.milestones["mob_first_0"]) {
                 statusLine +=
                     "%b{" +
                         hateRGB +
                         "}" +
                         "%c{gray} " +
                         this.mobs
-                            .filter(function (m) { return !m.isPlayer && m.at; })
+                            .filter(function (m) { return !m.isPlayer() && (m.at || m.isGuard); })
                             .map(function (m) {
                             return m.alive
-                                ? "%c{" + _this.mobFg(m) + "}☺"
+                                ? "%c{" + m.fg() + "}" + m.sym()
                                 : "%c{red}*";
                         })
                             .join("") +
@@ -5394,12 +5515,6 @@ void main() {
             if (this.paused)
                 return;
             e.preventDefault();
-            if (e instanceof MouseEvent) {
-                if (e.button == 2) {
-                    this.onKeyboard("Space");
-                    return;
-                }
-            }
             this.click();
         };
         Game.prototype.click = function () {
@@ -5445,6 +5560,8 @@ void main() {
             for (var _i = 1; _i < arguments.length; _i++) {
                 params[_i - 1] = arguments[_i];
             }
+            if (!text)
+                return;
             if (text in lang)
                 text = lang[text];
             if (params) {
@@ -5461,10 +5578,16 @@ void main() {
                 return;
             this.player.stop();
             this.milestones[id] = 1;
-            this.log(lang[id]);
+            if (id == "mob_first_4" && game.killed > 0)
+                this.log(lang.elder_angry);
+            else
+                this.log(lang[id]);
         };
         Game.prototype.playerAct = function () {
             var _this = this;
+            if (!this.player.alive) {
+                return;
+            }
             var moveMade = this.player.playerAct();
             this.draw();
             if (moveMade) {
@@ -5497,18 +5620,20 @@ void main() {
                 this.letterRead++;
             }
         };
-        Game.prototype.win = function () {
-            this.won = true;
+        Game.prototype.end = function (ending) {
+            this.complete = true;
             this.paused = true;
-            var pacifist = RNG$1.getUniformInt(1, this.killed + 1) <= 2;
-            var optimist = this.flowersCollected % 2 == 1;
-            var ending = pacifist
-                ? optimist
-                    ? lang.ending_bargain
-                    : lang.ending_depression
-                : optimist
-                    ? lang.ending_denial
-                    : lang.ending_anger;
+            if (!ending) {
+                var pacifist = RNG$1.getUniformInt(1, this.killed + 1) <= 2;
+                var optimist = this.flowersCollected % 2 == 1;
+                ending = pacifist
+                    ? optimist
+                        ? lang.ending_bargain
+                        : lang.ending_depression
+                    : optimist
+                        ? lang.ending_denial
+                        : lang.ending_anger;
+            }
             this.onEnd(ending);
         };
         return Game;
@@ -6161,7 +6286,7 @@ void main() {
       window.addEventListener("mousemove", async e => {
         if (menu) return;
 
-        if (Math.abs(e.movementY) + Math.abs(e.movementX) > 3) {
+        if (Math.abs(e.movementY) + Math.abs(e.movementX) > 2) {
           toggleTooltip(null);
           await timeout(30);
         }

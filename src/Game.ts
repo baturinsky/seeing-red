@@ -8,6 +8,7 @@ import lang from "./Lang";
 import Keyboard from "./Keyboard";
 
 let screenBg = Color.fromString("#180c24") as [number, number, number];
+
 export function distance(a: number[], b: number[]) {
   let x = a[0] - b[0];
   let y = a[1] - b[1];
@@ -18,7 +19,6 @@ class Milestones {
   serialise() {
     let s: any = {};    
     Object.assign(s, this);
-    delete s.isPlayer
     return s;
   }
 
@@ -146,12 +146,27 @@ class Ticker {
       mob.actFixedInterval();
     }
 
-    if (RNG.getUniform() < game.options.spawn / 10) {
+    if (RNG.getUniform() < game.options.spawn * 10 / (100 + game.panic)) {
       let exit = RNG.getItem(game.exits);
-      if (!game.at(exit).mob) {
+      let tile = game.at(exit)
+      if (!tile.mob) {
         let mob = new Mob();
         mob.at = exit.slice();
+        tile.mob = mob;
       }
+    }
+
+    if(game.guardsSpawned + 1 <= Math.min(game.panic / 200, game.killed / 2)){
+      game.guardsSpawned++;
+      let mob = new Mob(RNG.getUniform()<0.5?Mob.RED_ONI:Mob.BLUE_ONI)
+      mob.freeze = 300;
+      game.scheduler.add(mob, true);
+    }
+
+    if(!game.elderSpawned && game.panic >= game.options.elderSpawnAt){
+      game.elderSpawned = true;
+      let mob = new Mob(Mob.ELDER)
+      game.scheduler.add(mob, true);
     }
   }
 }
@@ -241,6 +256,7 @@ class Options {
   emptiness = 0.3;
   spawn = 0.1;
   despawn = 0.01;
+  elderSpawnAt = 600;
 
   constructor(o: any) {
     Object.assign(this, o);
@@ -274,11 +290,13 @@ export class Game {
   exits: number[][];
   killed: number;
   guardsSpawned: number;
+  panic: number;
+  elderSpawned: boolean;
   milestones: Milestones;
 
   mobs: Mob[] = [];
   seeingRed: boolean = false;
-  won = false;
+  complete = false;
   time = 0;
   _log: string[] = [];
   onLog: (string) => void;
@@ -286,7 +304,6 @@ export class Game {
 
   flowersCollected = 0;
   letterRead = 0;
-  panic = 0;
 
   serialise() {
     return {
@@ -295,12 +312,13 @@ export class Game {
       flowersCollected: this.flowersCollected,
       letterRead: this.letterRead,
       time: this.time,
-      won: this.won,
+      complete: this.complete,
       landmarks: this.landmarks,
       exits: this.exits,
       killed: this.killed,
       guardsSpawned: this.guardsSpawned,
       panic: this.panic,
+      elderSpawned: this.elderSpawned,
       _log: this._log,
       milestones: this.milestones.serialise(),
       grid: this.grid.map(line => line.map(t => t.serialise())),
@@ -312,11 +330,12 @@ export class Game {
     this.options = new Options(s.options);
     this.seeingRed = s.seeingRed;
     this.time = s.time;
-    this.won = s.won;
+    this.complete = s.complete;
     this.panic = s.panic;
     this.landmarks = s.landmarks;
     this.exits = s.exits;
     this.killed = s.killed;
+    this.elderSpawned = s.elderSpawned;
     this.guardsSpawned = s.guardsSpawned;
     this.flowersCollected = s.flowersCollected;
     this.letterRead = s.letterRead;
@@ -390,7 +409,7 @@ export class Game {
     this.engine.start();
 
     setInterval(() => {
-      if (!this.won && !this.autoSaved) {
+      if (!this.complete && !this.autoSaved) {
         this.save("0");
         this.autoSaved = true;
       }
@@ -411,14 +430,16 @@ export class Game {
     RNG.setSeed(this.options.seed || Math.random());
     this._log = [];
     this.mobs = [];
-    this.won = false;
+    this.complete = false;
     this.killed = 0;
     this.flowersCollected = 0;
     this.panic = 0;
     this.letterRead = 0;
     this.time = 0;
+    this.guardsSpawned = 0;
     this.seeingRed = false;
     this.milestones = new Milestones();
+    this.elderSpawned = false;
     this.generateMap();
     this.initMobs();
     this.draw();
@@ -427,7 +448,7 @@ export class Game {
   addHut() {
     let hut = `         
  ####### 
- #   S # 
+ #   s # 
  # bb  # 
  # bbbb# 
  # bbb # 
@@ -436,7 +457,7 @@ export class Game {
    B     `.split("\n");
 
     let h = hut.length;
-    let pat = this.player.at;
+    let pat = this.player.at.slice();
 
     for (let y = 0; y < h; y++) {
       let line = hut[y];
@@ -493,9 +514,11 @@ export class Game {
     this.scheduler.clear();
     this.scheduler.add(new Ticker(), true);
     for (let mob of this.mobs) {
-      if (!mob.at) continue;
+      if (!mob.alive || (!mob.at && !mob.isGuard()))
+        continue;
       this.scheduler.add(mob, true);
-      this.at(mob.at).mob = mob;
+      if(mob.at)
+        this.at(mob.at).mob = mob;
     }
   }
 
@@ -556,7 +579,7 @@ export class Game {
     this.at(roomsRandom[0].getCenter()).symbol = "☨";
 
     let freeLandmarks = this.landmarks.slice();
-    this.player = new Mob(1);
+    this.player = new Mob(Mob.PLAYER);
 
     for (let i = 0; i < freeLandmarks.length; i++) {
       let lm = freeLandmarks[i];
@@ -634,22 +657,12 @@ export class Game {
     return Color.toRGB(bg);
   }
 
-  mobFg(mob: Mob) {
-    if (mob.isPlayer) {
-      if (this.seeingRed) return "red";
-      let redness = Math.min(200, this.killed * 20);
-      return Color.toRGB([255, 255 - redness, 255 - redness]);
-    } else {
-      let brightness = Math.max(128, 255 - mob.fear);
-      return Color.toRGB([255, brightness, brightness]);
-    }
-  }
 
   tileFg(at: number[]) {
     let tile = this.safeAt(at);
 
     if (tile.mob && tile.visible) {
-      return this.mobFg(tile.mob);
+      return tile.mob.fg();
     }
 
     if (!tile.mob && tile.seen && tile.symbol == "♠") {
@@ -669,7 +682,7 @@ export class Game {
     let tile = this.safeAt(at);
 
     if (tile.mob && tile.visible) {
-      return tile.mob.isPlayer ? "☻" : "☺";
+      return tile.mob.sym();
     }
 
     if (tile.visible || tile.seen) {
@@ -678,13 +691,13 @@ export class Game {
         return RNG.getItem(["♠", "♣"]);
       }
       if (tile.symbol == "b" || tile.symbol == "B") return "*";
-      if (tile.symbol == "S") {
+      if (tile.symbol == "s") {
         if (
           tile.visible &&
           game.allFlowersCollected() &&
           this.flowersCollected % 2 == 1
         ) {
-          return "S";
+          return "s";
         } else {
           return " ";
         }
@@ -786,17 +799,17 @@ export class Game {
       );
     }
 
-    if (this.milestones["mob_first"]) {
+    if (this.milestones["mob_first_0"]) {
       statusLine +=
         "%b{" +
         hateRGB +
         "}" +
         "%c{gray} " +
         this.mobs
-          .filter(m => !m.isPlayer && m.at)
+          .filter(m => !m.isPlayer() && (m.at || m.isGuard))
           .map(m =>
               m.alive
-              ? "%c{" + this.mobFg(m) + "}☺"
+              ? "%c{" + m.fg() + "}" + m.sym()
               : "%c{red}*"
           )
           .join("") +
@@ -825,13 +838,6 @@ export class Game {
   onClick(e: MouseEvent | TouchEvent) {
     if (this.paused) return;
     e.preventDefault();
-
-    if (e instanceof MouseEvent) {
-      if (e.button == 2) {
-        this.onKeyboard("Space");
-        return;
-      }
-    }
 
     this.click();
   }
@@ -881,6 +887,8 @@ export class Game {
   }
 
   log(text: string, ...params: string[]) {
+    if(!text)
+      return;
     if (text in lang) text = lang[text];
     if (params) {
       for (let i in params) text = text.replace("{" + i + "}", params[i]);
@@ -891,14 +899,20 @@ export class Game {
     }
   }
 
-  alertOnce(id: string) {
+  alertOnce(id: string) {    
     if (this.milestones[id]) return;
     this.player.stop();
     this.milestones[id] = 1;
-    this.log(lang[id]);
+    if(id == "mob_first_4" && game.killed>0)
+      this.log(lang.elder_angry);
+    else
+      this.log(lang[id]);
   }
 
   playerAct() {
+    if(!this.player.alive){
+      return;
+    }
     let moveMade = this.player.playerAct();
     this.draw();
     if (moveMade) {
@@ -933,18 +947,20 @@ export class Game {
     }
   }
 
-  win() {
-    this.won = true;
+  end(ending?:string) {
+    this.complete = true;
     this.paused = true;
-    let pacifist = RNG.getUniformInt(1, this.killed + 1) <= 2;
-    let optimist = this.flowersCollected % 2 == 1;
-    let ending = pacifist
-      ? optimist
-        ? lang.ending_bargain
-        : lang.ending_depression
-      : optimist
-      ? lang.ending_denial
-      : lang.ending_anger;
+    if(!ending){
+      let pacifist = RNG.getUniformInt(1, this.killed + 1) <= 2;
+      let optimist = this.flowersCollected % 2 == 1;
+      ending = pacifist
+        ? optimist
+          ? lang.ending_bargain
+          : lang.ending_depression
+        : optimist
+        ? lang.ending_denial
+        : lang.ending_anger;
+    }
     this.onEnd(ending);
   }
 }

@@ -54,7 +54,7 @@ a:hover {
   visibility: visible;
   opacity: 1;
   transition: opacity 0.2s ease-in;
-  transition-delay: 0.5s;
+  transition-delay: 1s;
 }  
 
 .fadein:not(.visible) {

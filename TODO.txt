@@ -1,8 +1,8 @@
-Guards
 Graphics
 
 DONE
 
+Guards
 Exits, NPCs using them
 NPC fear
 Flee
@@ -14,3 +14,4 @@ Saving
 
 NOTES
 Fear: sees blood, sees kill, sees anger
+"Like all the bad things in my life, it started with a dead woman"
