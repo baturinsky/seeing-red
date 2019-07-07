@@ -119,6 +119,7 @@ export default class Mob {
       win = this.hate < RNG.getUniformInt(1,100) + 20      
       game.log(win?lang.blue_victory:lang.blue_lose)
     } else if(target.type == Mob.RED_ONI) {
+      console.log(this.hate, RNG.getUniformInt(1,100) - 20);
       win = this.hate > RNG.getUniformInt(1,100) - 20
       game.log(win?lang.red_victory:lang.red_lose)
     } else {
@@ -219,8 +220,10 @@ export default class Mob {
     console.log("dies");
 
     if(this.isPlayer()){
+      this.lookAround();
+      game.draw();
       game.complete = true;
-      game.engine.lock();
+      game.engine.lock();      
       return
     } else {
       game.player.hate = 0;
@@ -559,7 +562,7 @@ export default class Mob {
       return Color.toRGB([255, 255 - redness, 255 - redness]);
     } else {
       if(this.isGuard()){
-        if (this.type == Mob.BLUE_ONI)
+        if (this.type == Mob.BLUE_ONI || (this.type == Mob.ELDER && game.killed == 0))
           return "white";
         else
           return "red";

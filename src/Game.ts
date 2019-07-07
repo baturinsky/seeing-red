@@ -163,7 +163,7 @@ class Ticker {
       game.scheduler.add(mob, true);
     }
 
-    if(!game.elderSpawned && game.panic >= game.options.elderSpawnAt){
+    if(!game.elderSpawned && game.killed ==0 && game.panic >= game.options.elderSpawnAt){
       game.elderSpawned = true;
       let mob = new Mob(Mob.ELDER)
       game.scheduler.add(mob, true);
@@ -256,7 +256,7 @@ class Options {
   emptiness = 0.3;
   spawn = 0.1;
   despawn = 0.01;
-  elderSpawnAt = 600;
+  elderSpawnAt = 100;
 
   constructor(o: any) {
     Object.assign(this, o);
@@ -951,7 +951,9 @@ export class Game {
     this.complete = true;
     this.paused = true;
     if(!ending){
-      let pacifist = RNG.getUniformInt(1, this.killed + 1) <= 2;
+      let roll = RNG.getUniformInt(0, this.killed)
+      console.log(roll);
+      let pacifist = roll <= 1;
       let optimist = this.flowersCollected % 2 == 1;
       ending = pacifist
         ? optimist

@@ -269,6 +269,11 @@
     padding-top: 5px;
   }
 
+  :global(.elder){
+    color:peachpuff;
+    padding: 5px 0px;
+  }
+
   :global(.ending-type){
     margin-top: 30px;
     font-size: 24px;
@@ -301,7 +306,7 @@
     <div class="menu-table">
       <div style="text-align:center;">
         <div><button on:click={() => newGame()}>New Game</button></div>
-        {#if game && game.time > 0}
+        {#if game && game.time > 0 && !game.complete}
           <div><button on:click={() => toggleMenu(false)}>Continue</button></div>
         {/if}
       </div>

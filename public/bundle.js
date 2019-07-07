@@ -3275,7 +3275,7 @@ void main() {
         ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And because of that I was always in pain so big, I only could manage by throwing it at others.\n<br/><br/>\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
         ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say that memories of you will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not want it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
         ending_depression: "\nOf cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.\nLooks like her fears did materialise. \n<br/><br/>\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about their environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be difficult to weed them out around settlements. \nI'll show this to doctors in city. Maybe this time I will even find the one she has sent the letter to.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
-        ending_true: "\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n\nSuch a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.\nI came with the elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\nAh... God! I turned out to be such a damsel in distress.\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
+        ending_true: "\nA mons... person that I have recognized as the village's Elder approaches me.\n\n<div class=\"elder\">\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n</div>\n\nI don't trust him. But.. Maybe it's true? Would make sense. Such a simple explanation. Probably I should have not assume she is dead so soon.\nI came with the Elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\n<div class=\"she\">Ah... God! I turned out to be such a damsel in distress.</div>\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
     };
 
     var keyMap = {};
@@ -3373,6 +3373,7 @@ void main() {
                 game.log(win ? lang.blue_victory : lang.blue_lose);
             }
             else if (target.type == Mob.RED_ONI) {
+                console.log(this.hate, RNG$1.getUniformInt(1, 100) - 20);
                 win = this.hate > RNG$1.getUniformInt(1, 100) - 20;
                 game.log(win ? lang.red_victory : lang.red_lose);
             }
@@ -3466,6 +3467,8 @@ void main() {
             console.log(this);
             console.log("dies");
             if (this.isPlayer()) {
+                this.lookAround();
+                game.draw();
                 game.complete = true;
                 game.engine.lock();
                 return;
@@ -3768,7 +3771,7 @@ void main() {
             }
             else {
                 if (this.isGuard()) {
-                    if (this.type == Mob.BLUE_ONI)
+                    if (this.type == Mob.BLUE_ONI || (this.type == Mob.ELDER && game.killed == 0))
                         return "white";
                     else
                         return "red";
@@ -4993,7 +4996,7 @@ void main() {
                 mob.freeze = 300;
                 game.scheduler.add(mob, true);
             }
-            if (!game.elderSpawned && game.panic >= game.options.elderSpawnAt) {
+            if (!game.elderSpawned && game.killed == 0 && game.panic >= game.options.elderSpawnAt) {
                 game.elderSpawned = true;
                 var mob = new Mob(Mob.ELDER);
                 game.scheduler.add(mob, true);
@@ -5077,7 +5080,7 @@ void main() {
             this.emptiness = 0.3;
             this.spawn = 0.1;
             this.despawn = 0.01;
-            this.elderSpawnAt = 600;
+            this.elderSpawnAt = 100;
             Object.assign(this, o);
             this.flowersNeeded = this.flowersNeeded || this.flowers - 1;
         }
@@ -5624,7 +5627,9 @@ void main() {
             this.complete = true;
             this.paused = true;
             if (!ending) {
-                var pacifist = RNG$1.getUniformInt(1, this.killed + 1) <= 2;
+                var roll = RNG$1.getUniformInt(0, this.killed);
+                console.log(roll);
+                var pacifist = roll <= 1;
                 var optimist = this.flowersCollected % 2 == 1;
                 ending = pacifist
                     ? optimist
@@ -5699,11 +5704,11 @@ void main() {
     	return child_ctx;
     }
 
-    // (299:2) {:else}
+    // (304:2) {:else}
     function create_else_block(ctx) {
     	var h1, t1, div3, div1, div0, button, t3, t4, div2, dispose;
 
-    	var if_block = (ctx.game && ctx.game.time > 0) && create_if_block_2(ctx);
+    	var if_block = (ctx.game && ctx.game.time > 0 && !ctx.game.complete) && create_if_block_2(ctx);
 
     	var each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -5731,18 +5736,18 @@ void main() {
     			for (var i = 0; i < 9; i += 1) {
     				each_blocks[i].c();
     			}
-    			h1.className = "svelte-cee6wk";
-    			add_location(h1, file, 299, 4, 5978);
-    			button.className = "svelte-cee6wk";
-    			add_location(button, file, 302, 13, 6082);
-    			add_location(div0, file, 302, 8, 6077);
+    			h1.className = "svelte-i8ztum";
+    			add_location(h1, file, 304, 4, 6050);
+    			button.className = "svelte-i8ztum";
+    			add_location(button, file, 307, 13, 6154);
+    			add_location(div0, file, 307, 8, 6149);
     			set_style(div1, "text-align", "center");
-    			div1.className = "svelte-cee6wk";
-    			add_location(div1, file, 301, 6, 6035);
-    			div2.className = "saves svelte-cee6wk";
-    			add_location(div2, file, 307, 6, 6297);
-    			div3.className = "menu-table svelte-cee6wk";
-    			add_location(div3, file, 300, 4, 6003);
+    			div1.className = "svelte-i8ztum";
+    			add_location(div1, file, 306, 6, 6107);
+    			div2.className = "saves svelte-i8ztum";
+    			add_location(div2, file, 312, 6, 6387);
+    			div3.className = "menu-table svelte-i8ztum";
+    			add_location(div3, file, 305, 4, 6075);
     			dispose = listen(button, "click", ctx.click_handler_1);
     		},
 
@@ -5764,7 +5769,7 @@ void main() {
     		},
 
     		p: function update(changed, ctx) {
-    			if (ctx.game && ctx.game.time > 0) {
+    			if (ctx.game && ctx.game.time > 0 && !ctx.game.complete) {
     				if (!if_block) {
     					if_block = create_if_block_2(ctx);
     					if_block.c();
@@ -5812,7 +5817,7 @@ void main() {
     	};
     }
 
-    // (292:2) {#if winText}
+    // (297:2) {#if winText}
     function create_if_block_1(ctx) {
     	var div1, raw_after, t, div0, button, dispose;
 
@@ -5824,13 +5829,13 @@ void main() {
     			div0 = element("div");
     			button = element("button");
     			button.textContent = "Continue";
-    			button.className = "svelte-cee6wk";
-    			add_location(button, file, 295, 8, 5876);
+    			button.className = "svelte-i8ztum";
+    			add_location(button, file, 300, 8, 5948);
     			set_style(div0, "text-align", "center");
-    			add_location(div0, file, 294, 6, 5834);
-    			div1.className = "win svelte-cee6wk";
+    			add_location(div0, file, 299, 6, 5906);
+    			div1.className = "win svelte-i8ztum";
     			div1.id = "win";
-    			add_location(div1, file, 292, 4, 5758);
+    			add_location(div1, file, 297, 4, 5830);
     			dispose = listen(button, "click", ctx.click_handler);
     		},
 
@@ -5867,7 +5872,7 @@ void main() {
     	};
     }
 
-    // (304:8) {#if game && game.time > 0}
+    // (309:8) {#if game && game.time > 0 && !game.complete}
     function create_if_block_2(ctx) {
     	var div, button, dispose;
 
@@ -5876,9 +5881,9 @@ void main() {
     			div = element("div");
     			button = element("button");
     			button.textContent = "Continue";
-    			button.className = "svelte-cee6wk";
-    			add_location(button, file, 304, 15, 6194);
-    			add_location(div, file, 304, 10, 6189);
+    			button.className = "svelte-i8ztum";
+    			add_location(button, file, 309, 15, 6284);
+    			add_location(div, file, 309, 10, 6279);
     			dispose = listen(button, "click", ctx.click_handler_2);
     		},
 
@@ -5897,7 +5902,7 @@ void main() {
     	};
     }
 
-    // (309:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+    // (314:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
     function create_each_block_1(ctx) {
     	var div, t0, t1, button0, t2, button0_disabled_value, t3, button1, t4, button1_disabled_value, dispose;
 
@@ -5920,13 +5925,13 @@ void main() {
     			button1 = element("button");
     			t4 = text("Load");
     			button0.disabled = button0_disabled_value = !ctx.game || ctx.game.time==0;
-    			button0.className = "svelte-cee6wk";
-    			add_location(button0, file, 311, 12, 6435);
+    			button0.className = "svelte-i8ztum";
+    			add_location(button0, file, 316, 12, 6525);
     			button1.disabled = button1_disabled_value = !ctx.game || !ctx.game.hasSave(ctx.slot);
-    			button1.className = "svelte-cee6wk";
-    			add_location(button1, file, 312, 12, 6531);
-    			div.className = "save svelte-cee6wk";
-    			add_location(div, file, 309, 10, 6381);
+    			button1.className = "svelte-i8ztum";
+    			add_location(button1, file, 317, 12, 6621);
+    			div.className = "save svelte-i8ztum";
+    			add_location(div, file, 314, 10, 6471);
 
     			dispose = [
     				listen(button0, "click", click_handler_3),
@@ -5966,7 +5971,7 @@ void main() {
     	};
     }
 
-    // (330:6) {#if log.length}
+    // (335:6) {#if log.length}
     function create_if_block(ctx) {
     	var t, div, raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged);
 
@@ -5986,8 +5991,8 @@ void main() {
 
     			t = space();
     			div = element("div");
-    			div.className = "record svelte-cee6wk";
-    			add_location(div, file, 335, 8, 7111);
+    			div.className = "record svelte-i8ztum";
+    			add_location(div, file, 340, 8, 7201);
     		},
 
     		m: function mount(target, anchor) {
@@ -6038,15 +6043,15 @@ void main() {
     	};
     }
 
-    // (331:8) {#each log.slice(0, log.length - 1) as record}
+    // (336:8) {#each log.slice(0, log.length - 1) as record}
     function create_each_block(ctx) {
     	var div, raw_value = ctx.record;
 
     	return {
     		c: function create() {
     			div = element("div");
-    			div.className = "record svelte-cee6wk";
-    			add_location(div, file, 331, 10, 7018);
+    			div.className = "record svelte-i8ztum";
+    			add_location(div, file, 336, 10, 7108);
     		},
 
     		m: function mount(target, anchor) {
@@ -6096,21 +6101,21 @@ void main() {
     			t3 = space();
     			div3 = element("div");
     			if (if_block1) if_block1.c();
-    			div0.className = "tooltip fadein svelte-cee6wk";
-    			add_location(div0, file, 285, 0, 5609);
-    			div1.className = "menu svelte-cee6wk";
-    			add_location(div1, file, 289, 0, 5695);
-    			div2.className = "game svelte-cee6wk";
+    			div0.className = "tooltip fadein svelte-i8ztum";
+    			add_location(div0, file, 290, 0, 5681);
+    			div1.className = "menu svelte-i8ztum";
+    			add_location(div1, file, 294, 0, 5767);
+    			div2.className = "game svelte-i8ztum";
     			div2.id = "game";
-    			add_location(div2, file, 322, 4, 6762);
-    			div3.className = "log svelte-cee6wk";
-    			add_location(div3, file, 328, 4, 6889);
-    			div4.className = "main-table svelte-cee6wk";
-    			add_location(div4, file, 321, 2, 6732);
-    			div5.className = "mainer-table svelte-cee6wk";
-    			add_location(div5, file, 320, 0, 6702);
-    			div6.className = "all svelte-cee6wk";
-    			add_location(div6, file, 287, 0, 5674);
+    			add_location(div2, file, 327, 4, 6852);
+    			div3.className = "log svelte-i8ztum";
+    			add_location(div3, file, 333, 4, 6979);
+    			div4.className = "main-table svelte-i8ztum";
+    			add_location(div4, file, 326, 2, 6822);
+    			div5.className = "mainer-table svelte-i8ztum";
+    			add_location(div5, file, 325, 0, 6792);
+    			div6.className = "all svelte-i8ztum";
+    			add_location(div6, file, 292, 0, 5746);
     			dispose = listen(div2, "contextmenu", contextmenu_handler);
     		},
 

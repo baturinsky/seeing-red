@@ -160,17 +160,21 @@ I'll show this to doctors in city. Maybe this time I will even find the one she 
 <div class="ending-type">Ending 4/5: Depression/Acceptance.</div>
 `,
 ending_true:`
+A mons... person that I have recognized as the village's Elder approaches me.
+
+<div class="elder">
 So, you are that kid with crazy eyes lurking in the forest I keep hearing about.
 Are you looking for the healer woman? She is not living there anymore. 
 Some brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.
 My wife is looking after her at our house until she gets better.  I can take you to her.
+</div>
 
-Such a simple explanation. It may be a lie, but maybe it's true? Probably I should not assume she is dead so soon.
-I came with the elder and then...
+I don't trust him. But.. Maybe it's true? Would make sense. Such a simple explanation. Probably I should have not assume she is dead so soon.
+I came with the Elder and then...
 
 It's her! Very pale, but alive. She smiles at me weakly. 
 
-Ah... God! I turned out to be such a damsel in distress.
+<div class="she">Ah... God! I turned out to be such a damsel in distress.</div>
 <div class="ending-type">Ending 5/5: Sometimes You Get Lucky.</div>
 `
 }
