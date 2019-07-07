@@ -2,7 +2,7 @@
 
 ![screenshot](https://raw.githubusercontent.com/baturinsky/seeing-red/master/schreenshot-rc1.png)
 
-https://baturinsky.github.io/seeing-red/index.html?seed=12&mobs=12&flowers=4&size=[70,70]&empty=0.35
+https://baturinsky.github.io/seeing-red/index.html
 
 Anti-anti-horror roguelike
 
