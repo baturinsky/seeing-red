@@ -812,9 +812,7 @@ export class Game {
               ? "%c{" + m.fg() + "}" + m.sym()
               : "%c{red}*"
           )
-          .join("") +
-        " !" +
-        this.panic.toFixed();
+          .join("")
     }
 
     this.d.drawText(0, this.displaySize[1] - 1, statusLine);

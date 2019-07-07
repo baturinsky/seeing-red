@@ -8,7 +8,8 @@ NUMPAD keys - move around<br/>
 Num5, space - wait<br/>
 Shift + 1-9: save<br/>
 1-9: load<br/>
-Shift + R: restart
+Shift + R: restart<br/>
+ESC: toggle menu<br/>
 </span>
 `,
 me: "It's me. A regular everyday normal person.",
@@ -27,6 +28,9 @@ blood_old: "Looks like a dried blood. Weird.",
 blood_trail: "A trail of blood. Quite old.",
 wall: "An old, but sturdy hut wall. She lives here.",
 mob: "Monster",
+mob_2: "Crafty monster. Fight it calmly.",
+mob_3: "Strong monster. Fight it furiously.",
+mob_4: "Elder",
 mob_first_0: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
 mob_first_2: "This monster is crafty. I should be very careful and <span class='important'>keep my calm</span> while fighting with it.",
 mob_first_3: "This monster is strong. But I'll overcome it if I <span class='important'>put all my hatred into the attack</span>.",

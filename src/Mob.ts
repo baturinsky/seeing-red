@@ -188,9 +188,6 @@ export default class Mob {
           game.log(lang.collected_even);
         }
       }
-      /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
-        game.won = true;
-      }*/
       if (tile.symbol == "b" && game.allFlowersCollected()) {
         game.end()
       }
@@ -402,6 +399,7 @@ export default class Mob {
     this.at = null;
     this.path = null;
     game.panic += this.fear;
+    game.log("Monster has escaped. Panic level: " + game.panic.toFixed(2))
   }
 
   stay() {
@@ -435,6 +433,8 @@ export default class Mob {
   tooltip() {
     if (this.isPlayer()) {
       return lang.me;
+    } else if(this.type>1){
+      return lang["mob_" + this.type];
     } else {
       let afraid =
         this.fear < WARY
@@ -595,3 +595,7 @@ export default class Mob {
   }
 
 */
+
+      /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
+        game.won = true;
+      }*/

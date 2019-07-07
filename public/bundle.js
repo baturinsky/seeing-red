@@ -3213,7 +3213,7 @@ void main() {
     const Color = color;
 
     var lang = {
-        guide: "\n<span style=\"color:lightgrey\">\nclick - move to cursor or stop<br/>\nclick self - wait<br/>\nNUMPAD keys - move around<br/>\nNum5, space - wait<br/>\nShift + 1-9: save<br/>\n1-9: load<br/>\nShift + R: restart\n</span>\n",
+        guide: "\n<span style=\"color:lightgrey\">\nclick - move to cursor or stop<br/>\nclick self - wait<br/>\nNUMPAD keys - move around<br/>\nNum5, space - wait<br/>\nShift + 1-9: save<br/>\n1-9: load<br/>\nShift + R: restart<br/>\nESC: toggle menu<br/>\n</span>\n",
         me: "It's me. A regular everyday normal person.",
         flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
         flower_first: "One of those weird red flowers <em>\u2698</em> she is fond of. <span class='important'>I'll pick some for her.</span> \nShe said she wants them with roots.",
@@ -3229,6 +3229,9 @@ void main() {
         blood_trail: "A trail of blood. Quite old.",
         wall: "An old, but sturdy hut wall. She lives here.",
         mob: "Monster",
+        mob_2: "Crafty monster. Fight it calmly.",
+        mob_3: "Strong monster. Fight it furiously.",
+        mob_4: "Elder",
         mob_first_0: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
         mob_first_2: "This monster is crafty. I should be very careful and <span class='important'>keep my calm</span> while fighting with it.",
         mob_first_3: "This monster is strong. But I'll overcome it if I <span class='important'>put all my hatred into the attack</span>.",
@@ -3441,9 +3444,6 @@ void main() {
                         game.log(lang.collected_even);
                     }
                 }
-                /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
-                  game.won = true;
-                }*/
                 if (tile.symbol == "b" && game.allFlowersCollected()) {
                     game.end();
                 }
@@ -3633,6 +3633,7 @@ void main() {
             this.at = null;
             this.path = null;
             game.panic += this.fear;
+            game.log("Monster has escaped. Panic level: " + game.panic.toFixed(2));
         };
         Mob.prototype.stay = function () {
             this.concentration++;
@@ -3661,6 +3662,9 @@ void main() {
         Mob.prototype.tooltip = function () {
             if (this.isPlayer()) {
                 return lang.me;
+            }
+            else if (this.type > 1) {
+                return lang["mob_" + this.type];
             }
             else {
                 var afraid = this.fear < WARY
@@ -3807,6 +3811,9 @@ void main() {
       }
 
     */
+    /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
+      game.won = true;
+    }*/
 
     /**
      * Represents a single instance of EasyStar.
@@ -5495,9 +5502,7 @@ void main() {
                                 ? "%c{" + m.fg() + "}" + m.sym()
                                 : "%c{red}*";
                         })
-                            .join("") +
-                        " !" +
-                        this.panic.toFixed();
+                            .join("");
             }
             this.d.drawText(0, this.displaySize[1] - 1, statusLine);
         };
