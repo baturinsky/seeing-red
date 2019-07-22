@@ -59,6 +59,11 @@ var app = (function (exports) {
     function children(element) {
         return Array.from(element.childNodes);
     }
+    function set_data(text, data) {
+        data = '' + data;
+        if (text.data !== data)
+            text.data = data;
+    }
     function set_style(node, key, value) {
         node.style.setProperty(key, value);
     }
@@ -259,6 +264,32 @@ var app = (function (exports) {
             };
         }
     }
+
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
 
     /**
      * This code is an implementation of Alea algorithm; (C) 2010 Johannes Baagøe.
@@ -3212,75 +3243,6 @@ void main() {
 
     const Color = color;
 
-    var lang = {
-        guide: "\n<span style=\"color:lightgrey\">\nclick - move to cursor or stop<br/>\nclick self - wait<br/>\nNUMPAD keys - move around<br/>\nNum5, space - wait<br/>\nShift + 1-9: save<br/>\n1-9: load<br/>\nShift + R: restart<br/>\nESC: toggle menu<br/>\n</span>\n",
-        me: "It's me. A regular everyday normal person.",
-        flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
-        flower_first: "One of those weird red flowers <em>\u2698</em> she is fond of. <span class='important'>I'll pick some for her.</span> \nShe said she wants them with roots.",
-        flower_mob_first: "<em>How dares it ☺ to be near the flower ⚘ !</em>",
-        collected: "I carefully dig out the flower <em>⚘</em> {0}",
-        collected_all: "I have collected enough flowers. But she is nowhere to seen. <span class='important'>Maybe she is home already? I'll go check.</span>",
-        collected_even: "Even number of flowers is believed to be connected with death. I hope she is not superstitious.",
-        tree: "Thick forest.",
-        exit: "The path to the village.",
-        entrance: "The path back to the road.",
-        blood: "A pool of blood. Why is it here?",
-        blood_old: "Looks like a dried blood. Weird.",
-        blood_trail: "A trail of blood. Quite old.",
-        wall: "An old, but sturdy hut wall. She lives here.",
-        mob: "Monster",
-        mob_2: "Crafty monster. Fight it calmly.",
-        mob_3: "Strong monster. Fight it furiously.",
-        mob_4: "Elder",
-        mob_first_0: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
-        mob_first_2: "This monster is crafty. I should be very careful and <span class='important'>keep my calm</span> while fighting with it.",
-        mob_first_3: "This monster is strong. But I'll overcome it if I <span class='important'>put all my hatred into the attack</span>.",
-        mob_first_4: "It's... another monster. Right? I think I have seen it... him.. before. They call him Elder. \nLooks like it... he wants to tell me something. Can I trust him?",
-        smell: "A trail of smell.",
-        smell_first: "Those things smell \n<span style='background:#a00'>&nbsp;</span><span style='background:#800'>&nbsp;</span><span style='background:#600'>&nbsp;</span><span style='background:#400'>&nbsp;</span>\nquite bad. I can feel the trail of their stench from quite a far away.",
-        calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
-        rage: "<span style='color:darkred'>Look and smell of those monsters raise a wave of rage in my heart.</span>",
-        rage_more: "<em>I'm furious. I feel like I can snap at any moment.</em>",
-        seeing_red: "<em>Waaargh!</em>",
-        seeing_red_end: "What has just happened?",
-        death: "<em>Splort.</em>",
-        elder_angry: "So, here it is <em>e</em>. The one that I hate the most. And the one I have no chance to defeat. My only option is to run.",
-        elder_lose: "The fight with the elder monster ends at the instant. I am as helpless against it as ordinary monsters are against me.",
-        blue_victory: "I carefully dodged it's lunge and then made a precise killing strike.",
-        blue_lose: "I charged monster only to be skewered with a fast stab.",
-        red_victory: "I overwhelm it's defences with a stream of furious attacks.",
-        red_lose: "The monster blocks most of my attacks and shrug off the others. And then deals one, but powerful attack.",
-        lose: "<span class='important'>I collapse to never stand up again.<br/><br/>GAME OVER</span><br/><br/>Press Escape to continue.",
-        not_here: "She is not here. Probably somewhere in the forest picking up herbs again. <span class='important'>I'll  go look for her.</span>",
-        mob_wary: "It stares at me warily.",
-        mob_afraid: "It covers in fear.",
-        mob_fleeing: "It flees to it's lair screaming.",
-        mob_startled: "☺ avoids you.",
-        mob_flees: "☺ runs away.",
-        game_complete: "GAME COMPLETE",
-        grave: "I grave. Seems to be recent.",
-        read_letter: [
-            "Still no signs of her. Oh, right, I still have her letter. Maybe reading it will give some clues? I started reading:",
-            "I have decided to continue reading the letter:",
-            "Still can't find her. Maybe she is in the village? I'll continue with the letter:",
-            "I'll read the remaining letter part:"
-        ],
-        close_letter: [
-            "My sight has suddenly blurred, making seeing writing difficult. I will continue reading next time.",
-            "Is she trying to be a philosopher here? Not my cup of tea. I'll better continue looking for her.",
-            "It was painful to reading it. And impossible not to. I'll read the rest, just not now.",
-            "It was all. I stand for a while looking at the letter blankly.  If she'd only know... "
-        ],
-        letter: [
-            "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease: Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI perform surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarely ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep looking for it, but nothing of note so far.\nBut I have found something else - this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
-        ],
-        ending_denial: "\nIt's her! She smiles at me.\n<div class=\"she\">\nOh, you have picked the flowers! How nice of you. I have a good news. \nDo you remember me dreaming of finding a way to cure evil in people? I have found it!\nIt's these very flowers fragrance. It works slow, but inhaling it for a long time will destroy the evil in people completely!\nWould you please plant them around the village for me? \n</div>\n<div class=\"ending-type\">Ending 1/5: Denial.</div>\n",
-        ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And because of that I was always in pain so big, I only could manage by throwing it at others.\n<br/><br/>\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
-        ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say that memories of you will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not want it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
-        ending_depression: "\nOf cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.\nLooks like her fears did materialise. \n<br/><br/>\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about their environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be difficult to weed them out around settlements. \nI'll show this to doctors in city. Maybe this time I will even find the one she has sent the letter to.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
-        ending_true: "\nA mons... person that I have recognized as the village's Elder approaches me.\n\n<div class=\"elder\">\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n</div>\n\nI don't trust him. But.. Maybe it's true? Would make sense. Such a simple explanation. Probably I should have not assume she is dead so soon.\nI came with the Elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\n<div class=\"she\">Ah... God! I turned out to be such a damsel in distress.</div>\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
-    };
-
     var keyMap = {};
     keyMap["Numpad8"] = 0;
     keyMap["Numpad9"] = 1;
@@ -3310,7 +3272,9 @@ void main() {
             return game.player == this;
         };
         Mob.prototype.isGuard = function () {
-            return this.type == Mob.RED_ONI || this.type == Mob.BLUE_ONI || this.type == Mob.ELDER;
+            return (this.type == Mob.RED_ONI ||
+                this.type == Mob.BLUE_ONI ||
+                this.type == Mob.ELDER);
         };
         Mob.prototype.serialise = function () {
             var s = {};
@@ -3373,23 +3337,23 @@ void main() {
             var win;
             if (target.type == Mob.BLUE_ONI) {
                 win = this.hate < RNG$1.getUniformInt(1, 100) + 20;
-                game.log(win ? lang.blue_victory : lang.blue_lose);
+                game.log(win ? str.blue_victory : str.blue_lose);
             }
             else if (target.type == Mob.RED_ONI) {
                 console.log(this.hate, RNG$1.getUniformInt(1, 100) - 20);
                 win = this.hate > RNG$1.getUniformInt(1, 100) - 20;
-                game.log(win ? lang.red_victory : lang.red_lose);
+                game.log(win ? str.red_victory : str.red_lose);
             }
             else {
                 if (game.killed > 0) {
                     win = false;
-                    game.log(lang.elder_lose);
+                    game.log(str.elder_lose);
                 }
                 else {
                     return;
                 }
             }
-            game.log(win ? lang.death : lang.lose);
+            game.log(win ? str.death : str.lose);
             if (win) {
                 target.die();
             }
@@ -3435,13 +3399,13 @@ void main() {
                 if (tile.symbol == "⚘") {
                     tile.symbol = " ";
                     game.flowersCollected++;
-                    game.log(lang.collected, game.flowersCollected + "/" + game.options.flowersNeeded);
+                    game.log(str.collected, game.flowersCollected + "/" + game.options.flowersNeeded);
                     if (game.flowersCollected == game.options.flowersNeeded) {
-                        game.log(lang.collected_all);
+                        game.log(str.collected_all);
                     }
                     if (game.flowersCollected >= game.options.flowersNeeded &&
                         game.flowersCollected % 2 == 0) {
-                        game.log(lang.collected_even);
+                        game.log(str.collected_even);
                     }
                 }
                 if (tile.symbol == "b" && game.allFlowersCollected()) {
@@ -3477,7 +3441,7 @@ void main() {
                 game.player.hate = 0;
                 game.seeingRed = false;
             }
-            game.log(lang.death);
+            game.log(str.death);
             if (!this.isPlayer()) {
                 game.killed++;
             }
@@ -3507,7 +3471,10 @@ void main() {
             return nearestMob.mob;
         };
         Mob.prototype.pathFinderUsed = function () {
-            if (this.isPlayer() || this.isGuard() || this.fear < WARY || !this.tile().visible)
+            if (this.isPlayer() ||
+                this.isGuard() ||
+                this.fear < WARY ||
+                !this.tile().visible)
                 return game.pathfinder;
             else
                 return game.escapefinder;
@@ -3535,7 +3502,10 @@ void main() {
             return null;
         };
         Mob.prototype.waiting = function () {
-            return this.path && this.path[0] && this.path[0][0] == this.at[0] && this.path[0][1] == this.at[1];
+            return (this.path &&
+                this.path[0] &&
+                this.path[0][0] == this.at[0] &&
+                this.path[0][1] == this.at[1]);
         };
         Mob.prototype.playerAct = function () {
             if (game.seeingRed) {
@@ -3620,7 +3590,8 @@ void main() {
             else {
                 this.path = [];
                 var goal = void 0;
-                var leaving = RNG$1.getUniform() < game.options.despawn + Math.max(0, this.fear - AFRAID) / 100;
+                var leaving = RNG$1.getUniform() <
+                    game.options.despawn + Math.max(0, this.fear - AFRAID) / 100;
                 if (leaving)
                     goal = RNG$1.getItem(game.exits);
                 else
@@ -3633,7 +3604,7 @@ void main() {
             this.at = null;
             this.path = null;
             game.panic += this.fear;
-            game.log("Monster has escaped. Panic level: " + game.panic.toFixed(2));
+            game.log("escaped", game.panic.toFixed(2));
         };
         Mob.prototype.stay = function () {
             this.concentration++;
@@ -3655,43 +3626,46 @@ void main() {
             if (seen && !this.seesEnemies && this.hasPath()) {
                 this.stop();
                 game.alertOnce("mob_first_" + seen.type);
-                new Animation([seen.at[0], seen.at[1] - 1], 2, { duration: 500, interval: 100 });
+                new Animation([seen.at[0], seen.at[1] - 1], 2, {
+                    duration: 500,
+                    interval: 100
+                });
             }
             this.seesEnemies = seen ? true : false;
         };
         Mob.prototype.tooltip = function () {
             if (this.isPlayer()) {
-                return lang.me;
+                return [str.me];
             }
             else if (this.type > 1) {
-                return lang["mob_" + this.type];
+                return [str["mob_" + this.type]];
             }
             else {
                 var afraid = this.fear < WARY
                     ? null
                     : this.fear < AFRAID
-                        ? lang.mob_wary
+                        ? str.mob_wary
                         : this.fear < PANIC
-                            ? lang.mob_afraid
-                            : lang.mob_fleeing;
-                return lang.mob + (afraid ? "<br/>" + afraid : "");
+                            ? str.mob_afraid
+                            : str.mob_fleeing;
+                return afraid ? [str.mob, afraid] : [str.mob];
             }
         };
         Mob.prototype.lookAtMe = function () {
             var dFear = game.player.hate / 10 + (game.seeingRed ? 10 : 0);
             dFear *= 1 + game.killed;
             if (this.fear < AFRAID && this.fear + dFear >= AFRAID) {
-                game.log(lang.mob_startled);
+                game.log(str.mob_startled);
                 this.emote = "!";
             }
             if (this.fear < PANIC && this.fear + dFear >= PANIC) {
-                game.log(lang.mob_flees);
+                game.log(str.mob_flees);
                 this.emote = "⚡";
             }
             this.fear += dFear;
             if (this.type == Mob.ELDER && game.killed == 0) {
                 if (distance(this.at, game.player.at) <= 3) {
-                    game.end(lang.ending_true);
+                    game.end(str.ending_true);
                 }
             }
         };
@@ -3753,7 +3727,7 @@ void main() {
                 game.player.hate == 0) {
                 game.seeingRed = (this.hate - 50) / 50 > RNG$1.getUniform();
                 if (wasSeeingRed != game.seeingRed)
-                    game.log(game.seeingRed ? lang.seeing_red : lang.seeing_red_end);
+                    game.log(game.seeingRed ? str.seeing_red : str.seeing_red_end);
             }
             game.escapefinder.setGridFear();
         };
@@ -3764,7 +3738,7 @@ void main() {
             this.path = null;
         };
         Mob.prototype.sym = function () {
-            return ['☺', '☻', 'g', 'G', 'e'][this.type];
+            return ["☺", "☻", "g", "G", "e"][this.type];
         };
         Mob.prototype.fg = function () {
             if (this.isPlayer()) {
@@ -3775,7 +3749,8 @@ void main() {
             }
             else {
                 if (this.isGuard()) {
-                    if (this.type == Mob.BLUE_ONI || (this.type == Mob.ELDER && game.killed == 0))
+                    if (this.type == Mob.BLUE_ONI ||
+                        (this.type == Mob.ELDER && game.killed == 0))
                         return "white";
                     else
                         return "red";
@@ -3812,8 +3787,8 @@ void main() {
 
     */
     /*if (tile.symbol == "☨" && game.allFlowersCollected()) {
-      game.won = true;
-    }*/
+            game.won = true;
+          }*/
 
     /**
      * Represents a single instance of EasyStar.
@@ -4792,6 +4767,162 @@ void main() {
     EasyStar.LEFT = 'LEFT';
     EasyStar.TOP_LEFT = 'TOP_LEFT';
 
+    var lang = {
+        lang: "English",
+        guide: "\n<span style=\"color:lightgrey\">\nclick - move to cursor or stop<br/>\nclick self - wait<br/>\nNUMPAD keys - move around<br/>\nNum5, space - wait<br/>\nShift + 1-9: save<br/>\n1-9: load<br/>\nShift + R: restart<br/>\nShift + L: toggle language<br/>\nESC: toggle menu<br/>\n</span>\n",
+        save: "Save",
+        load: "Load",
+        new_game: "New Game",
+        continue: "Continue",
+        saved_to: "Saved to {0}",
+        loaded_from: "Loaded from {0}",
+        no_save_in: "No save in {0}",
+        me: "It's me. A regular everyday normal person.",
+        flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
+        flower_first: "One of those weird red flowers <em>\u2698</em> she is fond of. <span class='important'>I'll pick some for her.</span> \nShe said she wants them with roots.",
+        flower_mob_first: "<em>How dares it ☺ to be near the flower ⚘ !</em>",
+        collected: "I carefully dig out the flower <em>⚘</em> {0}",
+        collected_all: "I have collected enough flowers. But she is nowhere to seen. <span class='important'>Maybe she is home already? I'll go check.</span>",
+        collected_even: "Even number of flowers is believed to be connected with death. I hope she is not superstitious.",
+        tree: "Thick forest.",
+        exit: "The path to the village.",
+        entrance: "The path back to the road.",
+        blood: "A pool of blood. Why is it here?",
+        blood_old: "Looks like a dried blood. Weird.",
+        blood_trail: "A trail of blood. Quite old.",
+        wall: "An old, but sturdy hut wall. She lives here.",
+        mob: "Monster",
+        mob_2: "Crafty monster. Fight it calmly.",
+        mob_3: "Strong monster. Fight it furiously.",
+        mob_4: "Elder",
+        mob_first_0: "I see one of the monsters <span style='background:darkred;font-weight:bold;'>☺</span> that infest this forest. Alone they can't harm me, but they are dangerous in groups.",
+        mob_first_2: "This monster is crafty. I should be very careful and <span class='important'>keep my calm</span> while fighting with it.",
+        mob_first_3: "This monster is strong. But I'll overcome it if I <span class='important'>put all my hatred into the attack</span>.",
+        mob_first_4: "It's... another monster. Right? I think I have seen it... him.. before. They call him Elder. \nLooks like it... he wants to tell me something. Can I trust him?",
+        smell: "A trail of smell.",
+        smell_first: "Those things smell \n<span style='background:#a00'>&nbsp;</span><span style='background:#800'>&nbsp;</span><span style='background:#600'>&nbsp;</span><span style='background:#400'>&nbsp;</span>\nquite bad. I can feel the trail of their stench from quite a far away.",
+        calm: "After a moment of rest I feel my emotions calming a little and I get a better awareness of surroundings.",
+        rage: "<span style='color:darkred'>Look and smell of those monsters raise a wave of rage in my heart.</span>",
+        rage_more: "<em>I'm furious. I feel like I can snap at any moment.</em>",
+        seeing_red: "<em>Waaargh!</em>",
+        seeing_red_end: "What has just happened?",
+        death: "<em>Splort.</em>",
+        elder_angry: "So, here it is <em>e</em>. The one that I hate the most. And the one I have no chance to defeat. My only option is to run.",
+        elder_lose: "The fight with the elder monster ends at the instant. I am as helpless against it as ordinary monsters are against me.",
+        blue_victory: "I carefully dodged it's lunge and then made a precise killing strike.",
+        blue_lose: "I charged monster only to be skewered with a fast stab.",
+        red_victory: "I overwhelm it's defences with a stream of furious attacks.",
+        red_lose: "The monster blocks most of my attacks and shrug off the others. And then deals one, but powerful attack.",
+        lose: "<span class='important'>I collapse to never stand up again.<br/><br/>GAME OVER</span><br/><br/>Press Escape to continue.",
+        not_here: "She is not here. Probably somewhere in the forest picking up herbs again. <span class='important'>I'll  go look for her.</span>",
+        mob_wary: "It stares at me warily.",
+        mob_afraid: "It covers in fear.",
+        mob_fleeing: "It flees to it's lair screaming.",
+        mob_startled: "☺ avoids me.",
+        mob_flees: "☺ runs away.",
+        game_complete: "GAME COMPLETE",
+        grave: "A grave. Seems to be recent.",
+        escaped: "Monster has escaped. Panic level: {0}",
+        read_letter: [
+            "Still no signs of her. Oh, right, I still have her letter. Maybe reading it will give some clues? I started reading:",
+            "I have decided to continue reading the letter:",
+            "Still can't find her. Maybe she is in the village? I'll continue with the letter:",
+            "I'll read the remaining letter part:"
+        ],
+        close_letter: [
+            "My sight has suddenly blurred, making seeing writing difficult. I will continue reading next time.",
+            "Is she trying to be a philosopher here? Not my cup of tea. I'll better continue looking for her.",
+            "It was painful to reading it. And impossible not to. I'll read the rest, just not now.",
+            "It was all. I stand for a while looking at the letter blankly.  If she'd only know... "
+        ],
+        letter: [
+            "\nI had an opportunity to pass you this letter, I hope it will reach you. I will explain this 'opportunity' later.\n\nI'm well, more or less, hope you are too. I have made some progress with my research, but not much. \nI have not yet found the cure, or even the cause of Strangling disease yet, but got some leads.\nLocals have a different name for this disease: Forest Cough. And indeed, symptoms are much more prominent \nwith those that are going to forest often. Which is the most of the village. They had very poor harvest last year, \nand a big chunk of it was looted. So, villagers have to look for food everywhere.\nYou would not find a living animal or unpicked edible berry or mushroom for a mile around the village by now.\n", "\nI try to help them with what I can, but it's not much.\nI perform surgery on occasion, used the medicine I brought from the city, some local herbs.\nBut villagers rarely ask me for help. They don't trust the \"outsider\" and I can't blame them. \nThese days outsider is too often a brigand, a thief or a rapist. People kill each other for a loaf of bread.\nFear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.\nAnd, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. \nLet's hope I am at least qualified to cure the bodies.\n", "\nI have even heard a rumors about cannibalism. Only rumors yet. \nAt least I know for sure that locals bury their dead properly. I know it, because I wanted to do some autopsy.\nBut the Elder forbid me to even rise the question. \nAnd he is right, some people see me as a \"witch\" already, I don't want to add any more to my \"spookiness\".\nI'm really afraid, you know. Life values so little here, mine included. Villagers tolerate me so far, but fear or desperation \ncan push them over the edge any moment. And instead of as \"weird woman in the forest hut\" they'll see me as a witch that that spoils their crops. \nOr a food. I'd leave already, but travelling to capital is even more dangerous now than staying. And I still hope to find something about the disease.\n", "\nWell, yes, about the \"Forest Cough\". Giving the leads I have, I naturally suspect that something in the forest causes the disease.\nThough it's hard to find which \"something\". It can be animal, insect, maybe even plant? Or some microscopic organism. \nI keep looking for it, but nothing of note so far.\nBut I have found something else - this kid that I send this letter with. \nHe was lying on the outskirts of village, beaten half to death. \nGiven that I have never seen him there before, he is probably some refugee or deserter that was either a victim of robbery, \nor a robber beaten by his would-be victims. Given that he would not want to talk about this, probably latter.\nAs you can guess, I patched him up and was hiding him for couple of weeks until he recovered. \nThen I figured it's a chance to pass you a letter. Hopefully he will not ditch it the moment he leaves my sight.\nI said him you can give him some work, so please consider it. He seems to be bright enough. I have caught him once reading my medical notes, \nso he can read. I considered leaving with him, but I do not trust him enough yet.\n"
+        ],
+        ending_denial: "\nIt's her! She smiles at me.\n<div class=\"she\">\nOh, you have picked the flowers! How nice of you. I have a good news. \nDo you remember me dreaming of finding a way to cure evil in people? I have found it!\nIt's these very flowers fragrance. It works slow, but inhaling it for a long time will destroy the evil in people completely!\nWould you please plant them around the village for me? \n</div>\n<div class=\"ending-type\">Ending 1/5: Denial.</div>\n",
+        ending_anger: "\nOf cause, she is not here. Who would survive after losing so much blood. Who killed her? Villagers? Looters? Does it matter?\nShe is not in this world anymore. All that remained of her is a huge, painful hole in my soul.\nWhy is it there? Why do I miss her so much? I have lived for many years without knowing of her existance, why do I need her so much now?\nOr maybe, I always missed her, just did not know it. And because of that I was always in pain so big, I only could manage by throwing it at others.\n<br/><br/>\nWould explain a lot, wouldn't it?\n<div class=\"ending-type\">Ending 2/5: Anger.</div>\n",
+        ending_bargain: "\n<div class=\"you\">You are dead, aren't you?</div>\n\n<div class=\"she\">My body is, looks like.</div>\n\n<div class=\"you\">Your body? Is there anything else? I'm not religious. And even if I were, your soul is not here anymore. God has stolen it from me.</div>\n\n<div class=\"she\">But there are still things I have done. People I have healed. Memories of me. \nMemories of us are what makes us us, aren't they? Even if my body can't hold memories of me anymore, yours can.</div>\n\n<div class=\"you\">You want to say that memories of you will make me you?</div>\n\n<div class=\"she\">Ha ha, yes, to an extent. Do you not want it?</div>\n\n<div class=\"you\">Beats being me, I guess. Do you think I can manage? Be as smart, caring and selfless like you? \nKeep helping people, even though they can kill me for that? I'll never fill the hole you left in the world. Or the hole you have left in my heart.</div>\n\n<div class=\"she\">Not all the way. But maybe a bit. Will you do it?</div>\n\n<div class=\"ending-type\">Ending 3/5: Bargain.</div>\n",
+        ending_depression: "\nOf cause, she is not here. This blood must be hers. The stash with her books and research is all here. She would not leave without it.\nLooks like her fears did materialise. \n<br/><br/>\nLooking through her notes, I have found a theory about Strangling's cause. She thinks it's all these flowers I have collected. \nThey cause an allergy that slowly, by steadily makes people's lungs unusable. \nGood thing is these flowers are quite picky about their environment. They grow only in dark dump places, and do not spread too much.\nSo it would not be difficult to weed them out around settlements. \nI'll show this to doctors in city. Maybe this time I will even find the one she has sent the letter to.\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
+        ending_true: "\nA mons... person that I have recognized as the village's Elder approaches me.\n\n<div class=\"elder\">\nSo, you are that kid with crazy eyes lurking in the forest I keep hearing about.\nAre you looking for the healer woman? She is not living there anymore. \nSome brigand tried to rob her and slashed her with a knife when she cried out. We came to help, but she has lost a lot of blood.\nMy wife is looking after her at our house until she gets better.  I can take you to her.\n</div>\n\nI don't trust him. But.. Maybe it's true? Would make sense. Such a simple explanation. Probably I should have not assume she is dead so soon.\nI came with the Elder and then...\n\nIt's her! Very pale, but alive. She smiles at me weakly. \n\n<div class=\"she\">Ah... God! I turned out to be such a damsel in distress.</div>\n<div class=\"ending-type\">Ending 5/5: Sometimes You Get Lucky.</div>\n"
+    };
+
+    var lang$1 = {
+        lang: "Русский",
+        guide: "\n<span style=\"color:lightgrey\">\n\u041B\u041A\u041C - \u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0438\u043B\u0438 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043A\u0430<br/>\n\u041B\u041A\u041C \u043D\u0430 \u0441\u0435\u0431\u044F - \u0436\u0434\u0430\u0442\u044C<br/>\nNUMPAD - \u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435<br/>\nNum5, \u043F\u0440\u043E\u0431\u0435\u043B - \u0436\u0434\u0430\u0442\u044C<br/>\nShift + 1-9: \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435<br/>\n1-9: \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430<br/>\nShift + R: \u043D\u0430\u0447\u0430\u0442\u044C \u0437\u0430\u043D\u043E\u0432\u043E<br/>\nShift + L: \u043F\u0435\u0440\u0435\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u044F\u0437\u044B\u043A<br/>\nESC: \u043C\u0435\u043D\u044E<br/>\n</span>\n",
+        save: "Сохранить",
+        load: "Загрузить",
+        new_game: "Новая Игра",
+        continue: "Продолжить",
+        saved_to: "Сохранено в {0}",
+        loaded_from: "Загружено из {0}",
+        no_save_in: "Нет сохранения в {0}",
+        me: "Это я. Обыкновенный ничем не примечательный человек.",
+        flower: "Цветок. Его вид меня успокаивает.<br/> <span class='important'>Я выкопаю его для неё.</span>",
+        flower_first: "\u041E\u0434\u0438\u043D \u0438\u0437 \u044D\u0442\u0438\u0445 \u0441\u0442\u0440\u0430\u043D\u043D\u044B\u0445 \u043A\u0440\u0430\u0441\u043D\u044B\u0445 \u0446\u0432\u0435\u0442\u043A\u043E\u0432 <em>\u2698</em>, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0435\u0439 \u043D\u0440\u0430\u0432\u044F\u0442\u0441\u044F. <span class='important'>\u042F \u0441\u043E\u0431\u0435\u0440\u0443 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0448\u0442\u0443\u043A \u0434\u043B\u044F \u043D\u0435\u0451.</span> \n\u041E\u043D\u0430 \u043F\u0440\u043E\u0441\u0438\u043B\u0430 \u043D\u0435 \u043F\u043E\u0432\u0440\u0435\u0434\u0438\u0442\u044C \u043A\u043E\u0440\u043D\u0438.",
+        flower_mob_first: "<em>Как он ☺ смеет приближаться к цветку ⚘ !</em>",
+        collected: "Я аккуратно выкопал цветок <em>⚘</em> {0}",
+        collected_all: "Я собрал достатончо цветов. но её нет и следа. <span class='important'>может, она уже дома? Пойду проверю.</span>",
+        collected_even: "Четное число цыетов не принято дарить живым людям. Надеюсь, она не суеверная.",
+        tree: "Дремучий лес.",
+        exit: "Тропинка к деревне.",
+        entrance: "Путь обратно на тракт.",
+        blood: "Лужа крови. Откуда она тут?",
+        blood_old: "Похоже на засохнувшую кровь. Странно",
+        blood_trail: "Кровавый след. Довольно старый",
+        wall: "Старая, но крепкая избушка. Она живет тут.",
+        mob: "Чудовище",
+        mob_2: "Ловкое чудовище. Требуется спокойствие и расчет.",
+        mob_3: "Сильный монстр. Надо бить его изо всех сил.",
+        mob_4: "Старейшина.",
+        mob_first_0: "Одно из чудовищ <span style='background:darkred;font-weight:bold;'>☺</span>, наводнивших эти леса. В одиночку не особо опасно.",
+        mob_first_2: "Ловкая тварь. Я должен быть очень осторожным и <span class='important'>сдерживать мою ярость</span>, когда дерусь с ним.",
+        mob_first_3: "Огромный монстр. У него тослстая шкура, но я смогу пробить ее, если <span class='important'>вложу в атаку всю мою ярость.</span>.",
+        mob_first_4: "\u042D\u0442\u043E... \u0432\u0435\u0434\u044C \u0447\u0443\u0434\u043E\u0432\u0438\u0449\u0435, \u0434\u0430? \u041C\u043D\u0435 \u043A\u0430\u0436\u0435\u0442\u0441\u044F, \u044F \u0432\u0438\u0434\u0435\u043B \u044D\u0442\u043E... \u0435\u0433\u043E... \u0440\u0430\u043D\u044C\u0448\u0435. \u041A\u0430\u0436\u0435\u0442\u0441\u044F, \u0435\u0433\u043E \u043D\u0430\u0437\u044B\u0432\u0430\u043B\u0438 \u0421\u0442\u0430\u0440\u0435\u0439\u0448\u0438\u043D\u043E\u0439. \n\u041F\u043E\u0445\u043E\u0436\u0435, \u043E\u043D\u043E... \u043E\u043D \u043F\u044B\u0442\u0430\u0435\u0442\u0441\u044F \u043C\u043D\u0435 \u0447\u0442\u043E-\u0442\u043E \u0441\u043A\u0430\u0437\u0430\u0442\u044C. \u041C\u043E\u0433\u0443 \u043B\u0438 \u044F \u0435\u043C\u0443 \u0434\u043E\u0432\u0435\u0440\u044F\u0442\u044C?",
+        smell: "Пахучий шлейф.",
+        smell_first: "\u042D\u0442\u0438 \u0442\u0432\u0430\u0440\u0438 \u043F\u0430\u0445\u043D\u0443\u0442\n<span style='background:#a00'>&nbsp;</span><span style='background:#800'>&nbsp;</span><span style='background:#600'>&nbsp;</span><span style='background:#400'>&nbsp;</span>\n\u043E\u0442\u0432\u0440\u0430\u0442\u0438\u0442\u0435\u043B\u044C\u043D\u043E. \u042F \u043C\u043E\u0433\u0443 \u0443\u043D\u044E\u0445\u0430\u0442\u044C \u0432\u043E\u043D\u044E\u0447\u0438\u0439 \u0448\u043B\u0435\u0439\u0444 \u0438\u0437\u0434\u0430\u043B\u0435\u043A\u0430.",
+        calm: "Немного отдохнув, я успокоился и огляделся.",
+        rage: "<span style='color:darkred'>Вид и даже запах этих тварей вызывают во мне ярость.</span>",
+        rage_more: "<em>Я взбешен. В любой моент могу сорваться.</em>",
+        seeing_red: "<em>ААААААА!</em>",
+        seeing_red_end: "Что этоб было?",
+        death: "<em>Чпок.</em>",
+        elder_angry: "Вот он <em>e</em>. Тот, кого я больше всех ненавижу. И кого мне не победить. Остается только бежать.",
+        elder_lose: "Бой с древним монстром окончился не успев начаться. Он несравнимо лучший боец, чем я.",
+        blue_victory: "Я аккуратно увернулся от его атаки и нанес точный удар.",
+        blue_lose: "Я бросился на него, но напоролся на молниеносный укол.",
+        red_victory: "Чудовище ошеломлено моими яростными атаками.",
+        red_lose: "Мои удары слишком слабы против него. А его собственный мощный удар вминает меня в землю.",
+        lose: "<span class='important'>Я падаю и у же не подымаюсь.<br/><br/>ИГРА ОКОНЧЕНА</span><br/><br/>Нажмите Escape для продолжения.",
+        not_here: "Её тут нет. Наверное, опять где-то в лесу собирает цветы. <span class='important'>Пойду поищу её.</span>",
+        mob_wary: "Оно смотрит на меня с подозрением.",
+        mob_afraid: "Оно дрожит от страха.",
+        mob_fleeing: "Оно удирает, визжа от ужаса.",
+        mob_startled: "☺ избегает меня.",
+        mob_flees: "☺ убегает.",
+        game_complete: "ИГРА ОКОНЧЕНА",
+        grave: "Свежая могила.",
+        escaped: "Чудовище сбежало. Уровень паники: {0}",
+        read_letter: [
+            "Её все не видно. О, уменя ведь осталось её письмо. Может быть, из него я что-то пойму? Я начинаю чтение:",
+            "Я продолжил читать письмо:",
+            "Я её все еще не нашёл. Может, она в деревне? Продолжу читать письмо:",
+            "Дочитываю письмо:"
+        ],
+        close_letter: [
+            "Перед глазами плывет. Продолжу читьать потом.",
+            "Опять она вилософствует? Никогда этого не понимал. Лучше вернусь к поискам.",
+            "Мне больно  это читать. Закончу потом.",
+            "Это всё. Я смотрю на письмо в задумчивости. если бы она только знала... "
+        ],
+        letter: [
+            "\n\u041F\u043E\u0441\u044B\u043B\u0430\u044E \u0442\u0435\u0431\u0435 \u044D\u0442\u043E \u043F\u0438\u0441\u044C\u043C\u043E \u0441 \u043E\u043A\u0430\u0437\u0438\u0435\u0439. \u041E\u0431 \"\u043E\u043A\u0430\u0437\u0438\u0438\" \u0440\u0430\u0441\u043A\u0430\u0436\u0443 \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u0435\u0435 \u043F\u043E\u0442\u043E\u043C.\n\n\u042F \u0432 \u043F\u043E\u0440\u044F\u0434\u043A\u0435, \u0431\u043E\u043B\u0435\u0435 \u0438\u043B\u0438 \u043C\u0435\u043D\u0435\u0435, \u043D\u0430\u0434\u0435\u044E\u0441\u044C, \u0442\u044B \u0442\u043E\u0436\u0435. \u0411\u044B\u043B\u0438 \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043F\u043E\u0434\u0432\u0438\u0436\u043A\u0438 \u0432 \u043C\u043E\u0435\u043C \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u0438.\n\u042F \u043F\u043E\u043A\u0430 \u0442\u0430\u043A \u0438 \u043D\u0435 \u043D\u0430\u0448\u043B\u0430 \u043C\u0435\u0442\u043E\u0434 \u043B\u0435\u0447\u0435\u043D\u0438\u044F, \u0438\u043B\u0438 \u0434\u0430\u0436\u0435 \u043F\u0440\u0438\u0447\u0438\u043D\u0443 \u0431\u043E\u043B\u0435\u0437\u043D\u0438. \u041D\u043E \u043F\u043E\u044F\u0432\u0438\u043B\u0438\u0441\u044C \u043A\u043E\u0435-\u043A\u0430\u043A\u0438\u0435 \u0437\u0430\u0446\u0435\u043F\u043A\u0438.\n\u0423 \u043C\u0435\u0441\u0442\u043D\u044B\u0445 \u0435\u0441\u0442\u044C \u043E\u0441\u043E\u0431\u043E\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0434\u043B\u044F \u044D\u0442\u043E\u0439 \u0431\u043E\u043B\u0435\u0437\u043D\u0438 - \u041B\u0435\u0441\u043D\u043E\u0439 \u041A\u0430\u0448\u0435\u043B\u044C. \u0418, \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E, \u0447\u0430\u0449\u0435 \u0432\u0441\u0435\u0433\u043E \n\u043E\u043D\u043E \u0432\u0441\u0442\u0440\u0435\u0447\u0430\u0435\u0442\u0441\u044F \u0443 \u0442\u0435\u0445, \u043A\u0442\u043E \u0447\u0430\u0441\u0442\u043E \u0431\u044B\u0432\u0430\u0435\u0442 \u0432 \u043B\u0435\u0441\u0443. \u0422.\u0435. \u0443 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u0430 \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u0434\u0435\u0440\u0435\u0432\u043D\u0438. \n\u0423 \u043D\u0438\u0445 \u0431\u044B\u043B \u043F\u043B\u043E\u0445\u043E\u0439 \u0443\u0440\u043E\u0436\u0430\u0439, \u043A \u0442\u043E\u043C\u0443 \u0436\u0435 \u0447\u0430\u0441\u0442\u044C \u0438\u0437 \u043D\u0438\u0433\u043E \u0431\u044B\u043B\u043E \u0440\u0430\u0441\u0442\u0430\u0449\u0435\u043D\u043E. \u0422\u0430\u043A \u0447\u0442\u043E \u043E\u043D\u0438 \u0438\u0449\u0443\u0442 \u0435\u0434\u0443 \u0433\u0434\u0435 \u043C\u043E\u0433\u0443\u0442.\n\u041D\u0430 \u0440\u0430\u0441\u0441\u0442\u043E\u044F\u043D\u0438\u0438 \u043C\u0438\u043B\u0438 \u0432\u043E\u043A\u0440\u0443\u0433 \u0434\u0435\u0440\u0435\u0432\u043D\u0438 \u0443\u0436\u0435 \u043D\u0435 \u043D\u0430\u0439\u0442\u0438 \u043D\u0438 \u0436\u0438\u0432\u043E\u0442\u043D\u043E\u0433\u043E, \u043D\u0438 \u043D\u0435\u0441\u043E\u0431\u0440\u0430\u043D\u043D\u043E\u0433\u043E \u0433\u0440\u0438\u0431\u0430 \u0438\u043B\u0438 \u044F\u0433\u043E\u0434\u044B.\n", "\n\u042F \u043F\u043E\u043C\u043E\u0433\u0443\u044E \u0438\u043C \u0447\u0435\u043C \u043C\u043E\u0433\u0443, \u043D\u043E \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442\u0441\u044F \u043D\u0435 \u0442\u0430\u043A \u043C\u043D\u043E\u0433\u043E. \u041C\u043D\u0435 \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u043B\u043E\u0441\u044C \u0442\u0443\u0442 \u043E\u043F\u0435\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C, \u043F\u0440\u0438\u043C\u0435\u043D\u044F\u0442\u044C \u043B\u0435\u043A\u0430\u0440\u0441\u0442\u0432\u0430,\n\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u044F \u043F\u0440\u0438\u0432\u0435\u0437\u043B\u0430 \u0441 \u0441\u043E\u0431\u043E\u0439 \u0438\u0437 \u0433\u043E\u0440\u043E\u0434\u0430, \u043A\u043E\u0435-\u0447\u0442\u043E \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C \u0438\u0437 \u043C\u0435\u0441\u0442\u043D\u044B\u0445 \u0442\u0440\u0430\u0432.\n\u041D\u043E \u043E \u043F\u043E\u043C\u043E\u0449\u0438 \u043F\u0440\u043E\u0441\u044F\u0442 \u0440\u0435\u0434\u043A\u043E. \u041E\u043D\u0438 \u043D\u0435 \u0434\u043E\u0432\u0435\u0440\u044F\u044E \"\u0447\u0443\u0436\u0430\u043A\u0430\u043C\" \u0438 \u044F \u0438\u0445 \u043D\u0435 \u0432\u0438\u043D\u044E.\n\u0412 \u043D\u0430\u0448\u0435 \u0432\u0440\u0435\u043C\u044F \u0447\u0443\u0436\u0430\u043A - \u044D\u0442\u043E \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0447\u0430\u0441\u0442\u043E \u0432\u043E\u0440, \u0433\u0440\u0430\u0431\u0438\u0442\u0435\u043B\u044C \u0438\u043B\u0438 \u043D\u0430\u0441\u0438\u043B\u044C\u043D\u0438\u043A. \u041B\u044E\u0434\u0438 \u0443\u0431\u0438\u0432\u0430\u044E\u0442 \u0434\u0440\u0443\u0433 \u0434\u0440\u0443\u0433\u0430 \u0437\u0430 \u0431\u0443\u0445\u0430\u043D\u043A\u0443 \u0445\u043B\u0435\u0431\u0430.\n\u041B\u044E\u0434\u0438 \u0437\u0430\u0440\u0430\u0436\u0435\u043D\u044B \u0441\u0442\u0440\u0430\u0445\u043E\u043C, \u043E\u0442\u0447\u0430\u044F\u043D\u0438\u0435\u043C \u0438 \u0437\u043B\u043E\u0431\u043E\u0439. \u0411\u043E\u043B\u0435\u0437\u043D\u044F\u043C\u0438 \u0431\u043E\u043B\u0435\u0435 \u0441\u043C\u0435\u0440\u0442\u0435\u043B\u044C\u043D\u044B\u043C\u0438 \u0438 \u0437\u0430\u0440\u0430\u0437\u043D\u044B\u043C\u0438 \u0447\u0435\u043C \u043B\u044E\u0431\u0430\u044F \u0438\u0437 \u0442\u0435\u0445, \u0447\u0442\u043E \u043C\u044B \u043B\u0435\u0447\u0438\u043C.\n\u0416\u0430\u043B\u044C, \u0447\u0442\u043E \u0431\u043E\u043B\u0435\u0437\u043D\u0438 \u0434\u0443\u0445\u0430 \u044F \u043D\u0435 \u043F\u0440\u043E\u0445\u043E\u0434\u0438\u043B\u0430. \u0422\u0430\u043A \u0447\u0442\u043E \u043E\u0441\u0442\u0430\u0435\u0442\u0441\u044F \u0441\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0438\u0442\u0441\u044F \u043D\u0430 \u043B\u0435\u0447\u0435\u043D\u0438\u0438 \u0442\u0435\u043B.\n", "\n\u0414\u043E \u043C\u0435\u043D\u044F \u0434\u0430\u0436\u0435 \u0434\u043E\u0445\u043E\u0434\u0438\u043B\u0438 \u0441\u043B\u0443\u0445\u0438 \u043E \u043A\u0430\u043D\u043D\u0438\u0431\u0430\u043B\u0438\u0437\u043C\u0435. \u041F\u043E\u043A\u0430 \u0442\u043E\u043B\u044C\u043A\u043E \u0441\u043B\u0443\u0445\u0438.\n\u041F\u043E \u043A\u0440\u0430\u0439\u043D\u0435\u0439 \u043C\u0435\u0440\u0435, \u044F \u0437\u043D\u0430\u044E, \u0447\u0442\u043E \u043C\u0435\u0441\u0442\u044B\u0435 \u0441\u0432\u043E\u0438\u0445 \u043C\u0435\u0440\u0442\u0432\u044B\u0445 \u0445\u043E\u0440\u043E\u043D\u044F\u0442 \u043A\u0430\u043A \u0441\u043B\u0435\u0434\u0443\u0435\u0442. \u041C\u043D\u0435 \u0434\u0430\u0436\u0435 \u043D\u0435 \u0440\u0430\u0437\u0440\u0435\u0448\u0438\u043B\u0438 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0430\u0443\u0442\u043E\u043F\u0441\u0438\u044E.\n\u0421\u0442\u0430\u0440\u043E\u0441\u0442\u0430 \u0437\u0430\u043F\u0440\u0435\u0442\u0438\u043B \u0434\u0430\u0436\u0435 \u0434\u0443\u043C\u0430\u0442\u044C \u043E\u0431 \u044D\u0442\u043E\u043C. \u0418 \u043E \u043D \u043F\u0440\u0430\u0432, \u043C\u0435\u043D\u044F \u0438 \u0442\u0430\u043A \u043A\u043E\u0435-\u043A\u0442\u043E \u0442\u0443\u0442 \u043D\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \"\u0432\u0435\u0434\u044C\u043C\u043E\u0439\".\n\u0417\u041D\u0430\u0435\u0448\u044C, \u043C\u043D\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u0441\u0442\u0440\u0430\u0448\u043D\u043E. \u0416\u0438\u0437\u043D\u044C \u0437\u0434\u0435\u0441\u044C \u0446\u0435\u043D\u0438\u0442\u044C\u0441\u044F \u0442\u0430\u043A \u043C\u0430\u043B\u043E. \u0418 \u043C\u043E\u044F \u0432 \u0442\u043E\u043C \u0447\u0438\u0441\u043B\u0435.\n\u041A\u0440\u0435\u0441\u0442\u044C\u044F\u043D\u0435 \u043C\u0435\u043D\u044F \u0442\u0435\u0440\u043F\u044F\u0442, \u043D\u043E \u043A\u0442\u043E \u0437\u043D\u0430\u0435\u0442, \u043A \u0447\u0435\u043C\u0443 \u0438\u0445 \u043C\u043E\u0436\u0435\u0442 \u043F\u0440\u0438\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u0440\u0430\u0445 \u0438\u043B\u0438 \u043E\u0442\u0447\u0430\u044F\u043D\u0438\u0435.\n\u0418 \u0432\u043C\u0435\u0441\u0442\u043E \"\u0441\u0442\u0440\u0430\u043D\u043D\u043E\u0439 \u0442\u0435\u0442\u043A\u0438 \u0432 \u043B\u0435\u0441\u0443\" \u043E\u043D\u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u043C\u043E\u0433\u0443\u0442 \u043F\u043E\u0441\u0447\u0438\u0442\u0430\u0442\u044C \u043C\u0435\u043D\u044F \u0432\u0435\u0434\u0431\u043C\u043E\u0439, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043F\u043E\u0440\u0442\u0438\u0442 \u043F\u043E\u0441\u0435\u0432\u044B. \u0438\u043B\u0438 \u0435\u0434\u043E\u0439.\n\u042F \u0431\u044B \u0443\u0436\u0435 \u0443\u0435\u0445\u0430\u043B\u0430, \u043D\u043E \u043D\u0430 \u0434\u043E\u0440\u043E\u0433\u0430\u0445 \u0441\u0435\u0439\u0447\u0430\u0441 \u0435\u0449\u0435 \u043E\u043F\u0430\u0441\u043D\u0435\u0435, \u0447\u0435\u043C \u0437\u0434\u0435\u0441\u044C. \u041A \u0442\u043E\u043C\u0443 \u0436\u0435, \u044F \u0432\u0441\u0435 \u0435\u0449\u0435 \u043D\u0430\u0434\u0435\u044E\u0441\u044C \u043D\u0430\u0439\u0442\u0438, \u043A\u0430\u043A \u043B\u0435\u0447\u0438\u0442\u044C \u044D\u0442\u043E \u0431\u043E\u043B\u0435\u0437\u043D\u044C.\n", "\n\u0414\u0430, \u043D\u0430\u0441\u0447\u0435\u0442 \u043D\u0435\u0439. \u0418\u043C\u0445\u043E\u0434\u044F \u0438\u0437 \u0442\u043E\u0433\u043E, \u0447\u0442\u043E \u044F \u0441\u043A\u0430\u0437\u0430\u043B\u0430 \u0432 \u043D\u0430\u0447\u0430\u043B\u0435 \u043F\u0438\u0441\u044C\u043C\u0430, \u043F\u0440\u0438\u0447\u0438\u043D\u0443 \u0431\u043E\u043B\u0435\u0437\u043D\u0438 \u0441\u0442\u043E\u0438\u0442 \u0438\u0441\u043A\u0430\u0442\u044C \u0432 \u043B\u0435\u0441\u0443.\n\u041D\u043E \u0447\u0442\u043E \u0438\u043C\u0435\u043D\u043D\u043E? \u042D\u0442\u043E \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0436\u0438\u0432\u043E\u0442\u043D\u043E\u0435, \u043D\u0430\u0441\u0435\u043A\u043E\u043C\u043E\u0435, \u043C\u043E\u0436\u0435\u0442 \u0434\u043B\u0430\u0436\u0435 \u0440\u0430\u0441\u0442\u0435\u043D\u0438\u0435. \u0438\u043B\u0438 \u043A\u0430\u043A\u043E\u0439-\u043D\u0438\u0431\u0443\u0434\u044C \u043C\u0438\u043A\u0440\u043E\u0431. \u0425\u043E\u0440\u043E\u0448\u043E, \u0447\u0442\u043E \u044F \u043F\u0440\u0438\u0445\u0432\u0430\u0442\u0438\u043B\u0430 \u043C\u0438\u043A\u0440\u043E\u0441\u043A\u043E\u043F....\n\u041F\u043E\u043A\u0430 \u0447\u0442\u043E \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0448\u043B\u0430. \u041D\u0443, \u043A\u0440\u043E\u043C\u0435 \u044D\u0442\u043E\u0433\u043E \u043F\u0430\u0440\u0435\u043D\u044C\u043A\u0430, \u0441 \u043A\u043E\u0442\u043E\u0440\u044B\u043C \u044F \u043F\u043E\u0441\u043B\u0430\u043B\u0430 \u0442\u0435\u0431\u0435 \u043F\u0438\u0441\u044C\u043C\u043E.\n\u041E\u043D \u0432\u0430\u043B\u044F\u043B\u0441\u044F \u043D\u0430 \u043A\u0440\u0430\u044E \u0434\u0435\u0440\u0435\u0432\u043D\u0438, \u0438\u0437\u0431\u0438\u0442\u044B\u0439 \u0434\u043E \u043F\u043E\u043B\u0443\u0441\u043C\u0435\u0440\u0442\u0438.\n\u042F \u0435\u0433\u043E \u0442\u0443\u0442 \u0440\u0430\u043D\u044C\u0448\u0435 \u043D\u0435 \u0432\u0438\u0434\u0435\u043B, \u0442\u0430\u043A \u0447\u0442\u043E \u043E\u043D, \u0432\u0438\u0434\u0438\u043C\u043E, \u043E\u0434\u0438\u043D \u0438\u0437 \u0431\u0440\u043E\u0434\u044F\u0449\u0438\u0445 \u043F\u043E \u043E\u043A\u0440\u0443\u0433\u0435 \u0434\u0435\u0437\u0435\u0440\u0442\u043E\u0432 \u0438\u043B\u0438 \u0431\u0435\u0436\u0435\u043D\u0446\u043E\u0432. \n\u041C\u043E\u0436\u0435\u0442, \u0435\u0433\u043E \u0438\u0437\u0431\u0438\u043B \u0433\u0440\u0430\u0431\u0438\u0442\u0435\u043B\u044C, \u0430 \u043C\u043E\u0436\u0435\u0442, \u043E\u043D \u0441\u0430\u043C \u043F\u043E\u043F\u044B\u0442\u0430\u043B\u0441\u044F \u0447\u0442\u043E-\u0442\u043E \u0443\u043A\u0440\u0430\u0441\u0442\u044C \u0438 \u043F\u043E\u043F\u0430\u043B\u0441\u044F.\n\u0421\u0430\u043C \u043E\u043D \u043D\u0430 \u044D\u0442\u0443 \u0442\u0435\u043C\u0443 \u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C \u043D\u0435 \u0445\u043E\u0447\u0435\u0442 \u0438 \u0434\u0435\u0440\u0435\u0432\u0435\u043D\u0441\u043A\u0438\u0445 \u0438\u0437\u0431\u0435\u0433\u0430\u0435\u0442, \u0442\u0430\u043A \u0447\u0442\u043E \u0432\u0442\u043E\u0440\u043E\u0435 \u0432\u043F\u043E\u043B\u043D\u0435 \u0432\u0435\u0440\u043E\u044F\u0442\u043D\u043E.\n\u041A\u0430\u043A \u0442\u044B \u0434\u043E\u0433\u0430\u0434\u044B\u0432\u0430\u0435\u0448\u044C\u0441\u044F, \u044F \u0435\u0433\u043E \u0437\u0430\u043B\u0430\u0442\u0430\u043B\u0430 \u0438 \u043F\u0440\u044F\u0442\u0430\u043B\u0430 \u043F\u0430\u0440\u0443 \u043D\u0435\u0434\u0435\u043B\u044C, \u043F\u043E\u043A\u0430 \u043D\u0435 \u043E\u043A\u043B\u0435\u043C\u0430\u043B\u0441\u044F.\n\u0410 \u043F\u043E\u0442\u043E\u043C \u0440\u0435\u0448\u0438\u043B\u0430 \u043F\u043E\u0441\u043B\u0430\u0442\u044C \u0435\u0433\u043E \u043A \u0442\u0435\u0431\u0435 \u0441 \u043F\u0438\u0441\u044C\u043C\u043E\u043C. \u041D\u0430\u0434\u0435\u044E\u0441\u044C, \u043E \u043D \u043D\u0435 \u0432\u044B\u0431\u0440\u043E\u0441\u0438\u0442 \u0435\u0433\u043E \u0437\u0430 \u043F\u0435\u0440\u0432\u044B\u043C \u043F\u043E\u0432\u043E\u0440\u043E\u0442\u043E\u043C.\n\u042F \u0441\u043A\u0430\u0437\u0430\u043B\u0430 \u0435\u043C\u0443, \u0447\u0442\u043E \u0443 \u0442\u0435\u0431\u044F \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0434\u043B\u044F \u043D\u0435\u0433\u043E \u0440\u0430\u0431\u043E\u0442\u0430, \u0442\u0430\u043A \u0447\u0442\u043E \u043F\u043E\u0434\u0443\u043C\u0430\u0439 \u043E\u0431 \u044D\u0442\u043E\u043C. \u0412\u0440\u043E\u0434\u0435, \u043D\u0435\u0433\u043B\u043B\u0443\u043F\u044B\u0439 \u043F\u0430\u0440\u0435\u043D\u044C. \n\u042F \u0434\u0430\u0436\u0435 \u043A\u0430\u043A-\u0442\u043E \u043F\u043E\u0439\u043C\u0430\u043B\u0430 \u0435\u0433\u043E \u0437\u0430 \u0447\u0442\u0435\u043D\u0438\u0435\u043C \u043C\u043E\u0438\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439, \u0442\u0430\u043A \u0447\u0442\u043E \u0447\u0438\u0442\u0430\u0442\u044C \u043E\u043D \u0443\u043C\u0435\u0435\u0442.\n\u041C\u043E\u0436\u0435\u0442, \u044F \u0431\u044B \u0438 \u0441\u0430\u043C\u0430 \u0441 \u043D\u0438\u043C \u043E\u0442\u043F\u0440\u0430\u0432\u0438\u043B\u043E\u0441\u044C, \u043D\u043E \u044F \u0432\u0441\u0435-\u0442\u0430\u043A\u0438 \u043D\u0435 \u043D\u0430\u0441\u0442\u043E\u043B\u044C\u043A\u043E \u0435\u043C\u0443 \u0434\u043E\u0432\u0435\u0440\u044F\u044E.\n"
+        ],
+        ending_denial: "\n\u042D\u0442\u043E \u043E\u043D\u0430! \u0421\u043C\u043E\u0442\u0440\u0438\u0442 \u043D\u0430 \u043C\u0435\u043D\u044F \u0441 \u0443\u043B\u044B\u0431\u043A\u043E\u0439.\n<div class=\"she\">\n\u041E, \u0442\u044B \u0441\u043E\u0431\u0440\u0430\u043B \u0446\u0432\u0435\u0442\u044B! \u041A\u0430\u043A \u043C\u0438\u043B\u043E. \u0410 \u0443 \u043C\u0435\u043D\u044F \u0445\u043E\u0440\u043E\u0448\u0438\u0435 \u043D\u043E\u0432\u043E\u0441\u0442\u0438.\n\u041F\u043E\u043C\u043D\u0438\u0448\u044C, \u044F \u043C\u0435\u0447\u0442\u0430\u043B\u0430 \u043E \u0442\u043E\u043C, \u0447\u0442\u043E\u0431\u044B \u043D\u0430\u0439\u0442\u0438 \u043B\u0435\u043A\u0430\u0440\u0441\u0442\u0432\u043E \u043E\u0442 \u0437\u043B\u0430? \u042F \u0435\u0433\u043E \u043D\u0430\u0448\u043B\u0430!\n\u042D\u0442\u043E \u0437\u0430\u043F\u0430\u0445 \u044D\u0442\u0438\u0445 \u0446\u0432\u0435\u0442\u043E\u0432! \u041E\u043D \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E, \u043D\u043E \u0435\u0441\u043B\u0438 \u0434\u043E\u043B\u0433\u043E \u0435\u0433\u043E \u0432\u0434\u044B\u0445\u0430\u0442\u044C, \u0442\u043E \u043E\u043D \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u0443\u043D\u0438\u0447\u0442\u043E\u0436\u0438\u0442 \u0437\u043B\u043E \u0432 \u043B\u044E\u0431\u043E\u043C \u0447\u0435\u043B\u043E\u0432\u0435\u043A\u0435!\n\u041D\u0435 \u043C\u043E\u0433 \u0431\u044B \u0442\u044B \u043F\u043E\u0441\u0430\u0434\u0438\u0442\u044C \u044D\u0442\u0438 \u0446\u0432\u0435\u0442\u044B \u0432\u043E\u043A\u0440\u0443\u0433 \u0434\u0435\u0440\u0435\u0432\u043D\u0438?\n</div>\n<div class=\"ending-type\">\u041E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u0435 1/5: \u041E\u0442\u0440\u0438\u0446\u0430\u043D\u0438\u0435.</div>\n",
+        ending_anger: "\n\u0420\u0430\u0437\u0443\u043C\u0435\u0435\u0442\u0441\u044F, \u0435\u0451 \u0442\u0443\u0442 \u043D\u0435\u0442. \u041A\u0442\u043E \u0432\u044B\u0436\u0438\u0432\u0435\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0442\u0435\u0440\u0438 \u0442\u0430\u043A\u043E\u0433\u043E \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u0430 \u043A\u0440\u043E\u0432\u0438?\n\u041A\u0442\u043E \u0443\u0431\u0438\u043B \u0435\u0435? \u0414\u0435\u0440\u0435\u0432\u0435\u043D\u0441\u043A\u0438\u0435? \u0413\u0440\u0432\u0431\u0438\u0442\u0435\u043B\u0438? \u041A\u0430\u043A\u0430\u044F \u0440\u0430\u0437\u043D\u0438\u0446\u0430...\n\u0435\u0451 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435\u0442. \u0432\u0441\u0435, \u0447\u0442\u043E \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C, \u0437\u0438\u044F\u044E\u0449\u0430\u044F \u043F\u0443\u0441\u0442\u043E\u0442\u0430 \u0432 \u043C\u043E\u0435\u0439 \u0434\u0443\u0448\u0435.\n\u041E\u0442\u043A\u0443\u0434\u0430 \u043E\u043D\u0430. \u041F\u043E\u0447\u0435\u043C\u0443 \u043C\u043D\u0435 \u0435\u0451 \u0442\u0430\u043A \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442? \u042F \u043F\u0440\u043E\u0436\u0438\u043B \u0442\u0430\u043A \u0434\u043E\u043B\u0433\u043E \u043D\u0435 \u0437\u043D\u0430\u044F \u043E \u0435\u0451 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u043E\u0432\u0430\u043D\u0438\u0438, \u043F\u043E\u0447\u0435\u043C\u0443 \u043E\u043D\u0430 \u0442\u0430\u043A \u043D\u0443\u0436\u043D\u0430 \u043C\u043D\u0435 \u0441\u0435\u0439\u0447\u0430\u0441?\n\u0411\u044B\u0442\u044C \u043C\u043E\u0436\u0435\u0442, \u043E\u043D\u0430 \u0432\u0441\u0435\u0433\u0434\u0430 \u0431\u044B\u043B\u0430 \u043D\u0443\u0436\u043D\u0430 \u043C\u043D\u0435, \u044F \u043F\u0440\u043E\u0441\u0442\u043E \u043D\u0435 \u0437\u043D\u0430\u043B \u044D\u0442\u043E\u0433\u043E. \u0418 \u043E\u0442 \u0442\u043E\u0433\u043E, \u0447\u0442\u043E \u0435\u0451 \u043D\u0435 \u0431\u044B\u043B\u043E \u0441\u043E \u043C\u043D\u043E\u0439,\n\u0431\u043E\u043B\u044C \u0431\u044B\u043B\u0430 \u0442\u0430\u043A\u043E\u0439 \u0441\u0438\u043B\u044C\u043D\u043E\u0439, \u0447\u0442\u043E \u044F \u043C\u043E\u0433 \u0432\u044B\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u0439, \u0442\u043E\u043B\u044C\u043A\u043E \u0432\u044B\u043F\u043B\u0435\u0441\u043A\u0438\u0432\u0430\u044F \u043D\u0430\u0440\u0443\u0436\u0443.\n<br/><br/>\n\u042D\u0442\u043E \u043C\u043D\u043E\u0433\u043E\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u0435\u0442...\n<div class=\"ending-type\">\u041E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u0435 2/5: \u0413\u043D\u0435\u0432.</div>\n",
+        ending_bargain: "\n<div class=\"you\">\u0422\u044B \u043C\u0435\u0440\u0442\u0432\u0430, \u0442\u0430\u043A?</div>\n\n<div class=\"she\">\u041C\u043E\u0451 \u0442\u0435\u043B\u043E, \u043F\u043E\u0445\u043E\u0436\u0435, \u0434\u0430.</div>\n\n<div class=\"you\">\u0410 \u0440\u0430\u0437\u0432\u0435 \u0435\u0441\u0442\u044C \u0447\u0442\u043E-\u0442\u043E \u0435\u0449\u0451? \u042F \u043D\u0435 \u0440\u0435\u043B\u0438\u0433\u0438\u043E\u0437\u0435\u043D. \u0418 \u0434\u0430\u0436\u0435 \u0435\u0441\u043B\u0438 \u0431\u044B \u044F \u0432\u0435\u0440\u0438\u043B \u0432 \u0432\u0435\u0447\u043D\u0443\u044E \u0436\u0438\u0445\u043D\u044C, \u0442\u0432\u043E\u0435\u0439 \u0434\u0443\u0448\u0438 \u0442\u043E\u044D\u0435 \u0443\u0436\u0435 \u043D\u0435\u0442 \u0441\u043E \u043C\u043D\u043E\u0439.\n\u0411\u043E\u0433 \u0443\u043A\u0440\u0430\u043B \u0435\u0451.</div>\n\n<div class=\"she\">\u041D\u043E \u0435\u0449\u0435 \u043E\u0441\u0442\u0430\u043B\u0438\u0441\u044C \u0434\u0435\u043B\u0430, \u0447\u0442\u043E \u044F \u0441\u0434\u0435\u043B\u0430\u043B\u0430. \u041B\u044E\u0434\u0438, \u043A\u043E\u0442\u043E\u0440\u044B\u043C \u044F \u043F\u043E\u043C\u043E\u0433\u043B\u0430. \u0412\u043E\u0441\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043E\u0431\u043E \u043C\u043D\u0435.\n\u0412\u043E\u0441\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F - \u044D\u0442\u043E \u0442\u043E, \u0447\u0442\u043E \u0434\u0435\u043B\u0430\u0435\u0442 \u043D\u0430\u0441 \u0442\u0430\u043A\u0438\u043C\u0438, \u043A\u0430\u043A\u0438\u043C\u0438 \u043C\u044B \u0435\u0441\u0442\u044C, \u0442\u0430\u043A \u0432\u0435\u0434\u044C? \u041C\u043E\u0439 \u0442\u0435\u043B\u043E \u043D\u0435 \u043C\u043E\u0436\u0443\u0442 \u0443\u0436\u0435 \u0432\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0432\u043E\u0441\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043E\u0431\u043E \u043C\u043D\u0435,\n\u043D\u043E \u0442\u0432\u043E\u0451 \u043C\u043E\u0436\u0435\u0442.</div>\n\n<div class=\"you\">\u0422\u044B \u0445\u043E\u0447\u0435\u0448\u044C \u0441\u043A\u0430\u0437\u0430\u0442\u044C, \u0447\u0442\u043E \u0432\u043E\u0441\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043E \u0442\u0435\u0431\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u043D\u044F \u0442\u043E\u0431\u043E\u0439?</div>\n\n<div class=\"she\">\u0425\u0430 \u0445\u0430, \u0432 \u043A\u0430\u043A\u043E\u0439-\u0442\u043E \u043C\u0435\u0440\u0435. \u0422\u044B \u0445\u043E\u0447\u0435\u0448\u044C \u044D\u0442\u043E\u0433\u043E?</div>\n\n<div class=\"you\">\u041B\u0443\u0447\u0448\u0435, \u0447\u0435\u043C \u0431\u044B\u0442\u044C \u043C\u043D\u043E\u0439, \u043D\u0430\u0432\u0435\u0440\u043D\u043E\u0435. \u0422\u044B \u0434\u0443\u043C\u0430\u0435\u0448\u044C, \u0443 \u043C\u0435\u043D\u044F \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u0441\u044F? \u0411\u044B\u0442\u044C \u0442\u0430\u043A\u0438\u043C \u0436\u0435 \u0443\u043C\u043D\u044B\u043C \u0438 \u0434\u043E\u0431\u0440\u044B\u044B\u043C, \u043A\u0430\u043A \u0442\u044B? \n\u041F\u043E\u043C\u043E\u0433\u0430\u0442\u044C \u043B\u044E\u0434\u044F\u043C, \u0437\u043D\u0430\u044F, \u0447\u0442\u043E \u043E\u043D\u0438 \u043E\u0434\u043D\u0430\u0436\u0434\u044B \u043C\u043E\u0433\u0443\u0442 \u043C\u0435\u043D\u044F \u0437\u0430 \u044D\u0442\u043E \u0443\u0431\u0438\u0442\u044C? \u042F \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u043D\u0435 \u043C\u0438\u043E\u0433\u0443 \u0437\u0430\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0434\u044B\u0440\u0443, \u043A\u043E\u0442\u043E\u0440\u0443\u044E \u0442\u044B \u043E\u0441\u0442\u0430\u0432\u0438\u043B\u0430.\n</div>\n\n<div class=\"she\">\u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E, \u043D\u0430\u0432\u0435\u0440\u043D\u043E\u0435, \u043D\u0435\u0442. \u041D\u043E \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C, \u0445\u043E\u0442\u044F \u0431\u044B \u0447\u0430\u0441\u0442\u0438\u0447\u043D\u043E. \u0422\u044B \u0441\u0434\u0435\u043B\u0430\u0435\u0448\u044C \u044D\u0442\u043E?</div>\n\n<div class=\"ending-type\">\u041E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u0435 3/5: \u0422\u043E\u0440\u0433.</div>\n",
+        ending_depression: "\n\u0420\u0430\u0437\u0443\u043C\u0435\u0435\u0442\u0441\u044F, \u0435\u0451 \u0442\u0443\u0442 \u043D\u0435\u0442. \u042D\u0442\u043E \u0435\u0451 \u043A\u0440\u043E\u0432\u044C. \u0418 \u0442\u0430\u0439\u043D\u0438\u043A \u0441 \u043A\u043D\u0438\u0433\u0430\u043C\u0438 \u0438 \u0437\u0430\u043F\u0438\u0441\u044F\u043C\u0438 \u043D\u0435 \u0442\u0440\u043E\u043D\u0443\u0442. \u041E\u043D\u0430 \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u0431\u044B \u0438\u0445 \u043D\u0435 \u043E\u0441\u0442\u0430\u0432\u0438\u043B\u0430.\n\u041F\u043E\u0445\u043E\u0436\u0435, \u043E\u0434\u0438\u043D \u0438\u0437 \u0435  \u0441\u0442\u0440\u0430\u0445\u043E\u0432 \u0441\u0442\u0430\u043B \u0440\u0435\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C\u044E.\n<br/><br/>\n\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0432 \u0435\u0451 \u0437\u0430\u043F\u0438\u0441\u0438, \u044F \u043D\u0430\u0448\u0451\u043B \u0442\u0435\u043E\u0440\u0438\u044E \u043E \u043F\u0440\u0438\u0447\u0438\u043D\u0430\u0445 \u0431\u043E\u043B\u0435\u0437\u043D\u0438. \u041E\u043D\u0430 \u0434\u0443\u043C\u0430\u0435\u0442, \u0447\u0442\u043E \u043E\u043D\u0430 \u0432\u044B\u0437\u0432\u0430\u043D\u0438\u0430 \u043A\u0430\u043A \u0440\u0430\u0437 \u0442\u0435\u043C\u0438 \u0446\u0432\u0435\u0442\u0430\u043C\u0438,\n\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u044F \u0441\u0435\u0439\u0447\u0430\u0441 \u0441\u043E\u0431\u0438\u0440\u0430\u043B. \u041E\u043D\u0438 \u0432\u044B\u0437\u044B\u0432\u0430\u044E\u0442 \u0430\u043B\u043B\u0435\u0440\u0433\u0438\u044E, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E, \u043D\u043E \u0432\u0435\u0440\u043D\u043E \u0433\u0443\u0431\u0438\u0442 \u043B\u0451\u0433\u043A\u0438\u0435.\n\u041A \u0441\u0447\u0430\u0441\u0442\u044C\u044E, \u044D\u0442\u0438 \u0446\u0432\u0435\u0442\u044B \u0440\u0430\u0441\u0442\u0443\u0442 \u0434\u0430\u043B\u0435\u043A\u043E \u043D\u0435 \u0432\u0435\u0437\u0434\u0435. \u0438\u043C \u043D\u0443\u0436\u043D\u043E \u0442\u0435\u043C\u043D\u043E\u0435 \u0441\u044B\u0440\u043E\u0435 \u043C\u0435\u0441\u0442\u043E, \u0438 \u043E\u043D\u0438 \u0440\u0430\u0441\u043F\u0440\u043E\u0441\u0442\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0434\u043E\u0432\u043E\u043B\u044C\u043D\u043E \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E.\n\u0422\u0430\u043A \u0447\u0442\u043E, \u0431\u0443\u0434\u0435\u0442 \u043D\u0435\u0442\u0440\u0443\u0434\u043D\u043E \u0438\u0445 \u0432\u044B\u043F\u043E\u043B\u043E\u0442\u044C. \u041F\u043E\u043A\u0430\u0436\u0443 \u044D\u0442\u043E \u0432\u0440\u0430\u0447\u0430\u043C \u0432 \u0433\u043E\u0440\u043E\u0434\u0435. \u041C\u043E\u0436\u0435\u0442, \u0435\u0449\u0451 \u0440\u0430\u0437 \u043F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C \u043D\u0430\u0439\u0442\u0438 \u0442\u043E\u0433\u043E, \u043A\u043E\u0442\u043E\u0440\u043E\u043C\u0443 \u043E\u043D\u0430 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u043B\u0430 \u043F\u0438\u0441\u044C\u043C\u043E?\n<div class=\"ending-type\">Ending 4/5: Depression/Acceptance.</div>\n",
+        ending_true: "\n\u0427\u0442\u043E-\u0442\u043E... \u043A\u0442\u043E-\u0442\u043E, \u0432 \u043A\u043E\u043C \u044F \u0443\u0437\u043D\u0430\u044E \u0441\u0442\u0430\u0440\u043E\u0441\u0442\u0443 \u0434\u0435\u0440\u0435\u0432\u043D\u0438 \u043F\u043E\u0434\u0445\u043E\u0434\u0438\u0442 \u043A\u043E \u043C\u043D\u0435.\n\n<div class=\"elder\">\n\u041C\u043D\u0435 \u0441\u043A\u0430\u0437\u0430\u043B\u0438 \u0447\u0442\u043E \u043F\u043E \u043B\u0435\u0441\u0443 \u0431\u043F\u0440\u043E\u0434\u0438\u0442 \u043A\u043A\u043E\u0439-\u0442\u043E \u043F\u0430\u0440\u0435\u043D\u0435\u043A \u0441 \u0434\u0438\u043A\u0438\u043C \u0432\u0437\u0433\u043B\u044F\u0434\u043E\u043E\u043C. \u0422\u0430\u043A \u044D\u0442\u043E \u0442\u044B?\n\u0422\u044B, \u043D\u0430\u0432\u0435\u0440\u043D\u043E\u0435, \u0438\u0449\u0435\u0448 \u0442\u0440\u0430\u0432\u043D\u0438\u0446\u0443? \u041E\u043D\u0430 \u0442\u0443\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0436\u0438\u0432\u0435\u0442.\n\u041A\u0430\u043A\u0438\u0439-\u0442\u043E \u0431\u0430\u043D\u0434\u0438\u0442 \u043F\u044B\u0442\u0430\u043B\u0441\u044F \u0435\u0451 \u043E\u0433\u0440\u0430\u0431\u0438\u0442\u044C \u0438 \u0443\u0434\u0430\u0440\u0438\u043B \u0435\u0451 \u043D\u043E\u0436\u043E\u043C, \u043A\u043E\u0433\u0434\u0430 \u043E\u043D\u0430 \u0437\u0430\u043A\u0440\u0438\u0447\u0430\u043B\u0430. \u041C\u044B \u043F\u0440\u0438\u0431\u0435\u0436\u0430\u043B\u0438 \u043D\u0430 \u043F\u043E\u043C\u043E\u0449\u044C, \u043D\u043E \u043E\u043D\u0430 \u0443\u0436\u0435 \u043F\u043E\u0442\u0435\u0440\u044F\u043B\u0430 \u043C\u043D\u043E\u0433\u043E \u043A\u0440\u043E\u0432\u0438.\n\u041E\u043D\u0430 \u0441\u0435\u0439\u0447\u0430\u0441 \u043E\u0442\u043B\u0435\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0443 \u043C\u0435\u043D\u044F \u0434\u043E\u043C\u0430. \u042F \u043C\u043E\u0433\u0443 \u043F\u0440\u043E\u0432\u043E\u0434\u0438\u0442\u044C \u0442\u0435\u0431\u044F \u043A \u043D\u0435\u0439.\n</div>\n\n\u042F \u043D\u0435 \u0434\u043E\u0432\u0435\u0440\u044E \u0435\u043C\u0443. \u041D\u043E... \u041C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C, \u044D\u0442\u043E \u043F\u0440\u0430\u0432\u0434\u0430? \u0417\u0432\u0443\u0447\u0438\u0442 \u043B\u043E\u0433\u0438\u0447\u043D\u043E. \u0422\u0430\u043A\u043E\u0435 \u043F\u0440\u043E\u0441\u0442\u043E\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435. \u041D\u0430\u0432\u0435\u0440\u043D\u043E\u0435, \u044F \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0447\u0430\u0441\u0442\u043E \u0440\u0435\u0448\u0438\u043B, \u0447\u0442\u043E \u0441\u043B\u0443\u0447\u0438\u043B\u043E\u0441\u044C \u0445\u0443\u0434\u0448\u0435\u0435.\n\u042F \u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043B \u0437\u0430 \u0441\u0442\u0430\u0440\u043E\u0441\u0442\u043E\u0439, \u0438 \u043F\u043E\u0442\u043E\u043C...\n\n\u042D\u0442\u043E \u043E\u043D\u0430! \u041E\u0447\u0435\u043D\u044C \u0431\u043B\u0435\u0434\u043D\u0430\u044F, \u043D\u043E \u0436\u0438\u0432\u0430\u044F. \u041E\u043D\u0430 \u0441\u043B\u0430\u0431\u043E \u0443\u043B\u044B\u0431\u0430\u0435\u0442\u0441\u044F \u043C\u043D\u0435.\n\n<div class=\"she\">\u0410\u0445. \u042F, \u043D\u0430\u0432\u0435\u0440\u043D\u043E\u0435, \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u0430 \u0442\u0435\u0431\u044F \u043F\u043E\u0432\u043E\u043B\u043D\u043E\u0432\u0430\u0442\u044C\u0441\u044F.</div>\n<div class=\"ending-type\">\u041E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u0435 5/5: \u0418\u043D\u043E\u0433\u0434\u0430 \u0447\u0443\u0434\u0435\u0441\u0430 \u0441\u043B\u0443\u0447\u0430\u044E\u0442\u0441\u044F.</div>\n"
+    };
+
     var Keyboard = /** @class */ (function () {
         function Keyboard(element) {
             this.interval = 100;
@@ -4856,8 +4987,76 @@ void main() {
         return Keyboard;
     }());
 
+    /**
+     * Create a `Writable` store that allows both updating and reading by subscription.
+     * @param {*=}value initial value
+     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+     */
+    function writable(value, start = noop) {
+        let stop;
+        const subscribers = [];
+        function set(new_value) {
+            if (safe_not_equal(value, new_value)) {
+                value = new_value;
+                if (!stop) {
+                    return; // not ready
+                }
+                subscribers.forEach((s) => s[1]());
+                subscribers.forEach((s) => s[0](value));
+            }
+        }
+        function update(fn) {
+            set(fn(value));
+        }
+        function subscribe(run, invalidate = noop) {
+            const subscriber = [run, invalidate];
+            subscribers.push(subscriber);
+            if (subscribers.length === 1) {
+                stop = start(set) || noop;
+            }
+            run(value);
+            return () => {
+                const index = subscribers.indexOf(subscriber);
+                if (index !== -1) {
+                    subscribers.splice(index, 1);
+                }
+                if (subscribers.length === 0) {
+                    stop();
+                }
+            };
+        }
+        return { set, update, subscribe };
+    }
+
+    const log = writable(0);
+
+    const lang$2 = writable({});
+
     var game;
     var screenBg = Color.fromString("#180c24");
+    var russian = localStorage.russian;
+    var lang$3 = updateLanguage();
+    var str = __assign({}, lang$3);
+    for (var k in str)
+        str[k] = k;
+    function toggleLanguage() {
+        russian = !russian;
+        updateLanguage();
+    }
+    function updateLanguage() {
+        localStorage.russian = lang$3;
+        lang$3 = russian ? lang$1 : lang;
+        for (var i in lang$3.letter) {
+            lang$3["complete_letter_" + i] =
+                lang$3.read_letter[i] +
+                    "<br/>***<br/>" +
+                    lang$3.letter[i] +
+                    "<br/>***<br/>" +
+                    lang$3.close_letter[i];
+        }
+        lang$2.update(function (_) { return lang$3; });
+        return lang$3;
+    }
     function distance(a, b) {
         var x = a[0] - b[0];
         var y = a[1] - b[1];
@@ -4988,7 +5187,7 @@ void main() {
                 var mob = _a[_i];
                 mob.actFixedInterval();
             }
-            if (RNG$1.getUniform() < game.options.spawn * 10 / (100 + game.panic)) {
+            if (RNG$1.getUniform() < (game.options.spawn * 10) / (100 + game.panic)) {
                 var exit = RNG$1.getItem(game.exits);
                 var tile = game.at(exit);
                 if (!tile.mob) {
@@ -5003,7 +5202,9 @@ void main() {
                 mob.freeze = 300;
                 game.scheduler.add(mob, true);
             }
-            if (!game.elderSpawned && game.killed == 0 && game.panic >= game.options.elderSpawnAt) {
+            if (!game.elderSpawned &&
+                game.killed == 0 &&
+                game.panic >= game.options.elderSpawnAt) {
                 game.elderSpawned = true;
                 var mob = new Mob(Mob.ELDER);
                 game.scheduler.add(mob, true);
@@ -5039,30 +5240,30 @@ void main() {
             if (!this.seen && !this.scent)
                 return null;
             if (this.mob) {
-                return this.mob.tooltip();
+                return this.mob.tooltip().map(function (s) { return lang$3[s]; }).join("<br/>");
             }
             switch (this.symbol) {
                 case "⚘":
-                    return lang.flower;
+                    return lang$3.flower;
                 case "♠":
-                    return lang.tree;
+                    return lang$3.tree;
                 case "<":
-                    return lang.exit;
+                    return lang$3.exit;
                 case ">":
-                    return lang.entrance;
+                    return lang$3.entrance;
                 case "*":
-                    return lang.blood;
+                    return lang$3.blood;
                 case "b":
-                    return lang.blood_old;
+                    return lang$3.blood_old;
                 case "B":
-                    return lang.blood_trail;
+                    return lang$3.blood_trail;
                 case "☨":
-                    return lang.grave;
+                    return lang$3.grave;
                 case "#":
-                    return lang.wall;
+                    return lang$3.wall;
                 case " ":
                     if (this.scent > 0.1)
-                        return lang.smell;
+                        return lang$3.smell;
                     break;
             }
         };
@@ -5176,14 +5377,14 @@ void main() {
             localStorage.setItem(slot, JSON.stringify(game.serialise()));
             localStorage.setItem("!" + slot, "yes");
             if (slot != "0")
-                game.log("Saved to " + slot);
+                game.log(str.saved_to, slot);
         };
         Game.prototype.load = function (slot) {
             if (!this.hasSave(slot))
                 return;
             var save = localStorage.getItem(slot);
             game.deserialise(JSON.parse(save));
-            game.log("Loaded from " + (slot == "0" ? "autosave" : slot));
+            game.log(str.loaded_from, slot == "0" ? "autosave" : slot);
         };
         Game.prototype.hasSave = function (slot) {
             return localStorage.getItem("!" + slot) ? true : false;
@@ -5374,8 +5575,8 @@ void main() {
                     game.mobs.pop();
             }
             this.pathfinder.setGrid();
-            game.log(lang.guide);
-            game.log(lang.not_here);
+            game.log(str.guide);
+            game.log(str.not_here);
         };
         Game.prototype.tileBg = function (at) {
             var tile = this.safeAt(at);
@@ -5486,7 +5687,11 @@ void main() {
             if (this.player.waiting()) {
                 this.drawAt([this.player.at[0], this.player.at[1] - 1], delta, function (_a) {
                     var sym = _a[0], fg = _a[1], bg = _a[2];
-                    return [[".", "‥", "…"][new Date().getSeconds() % 3], "white", bg];
+                    return [
+                        [".", "‥", "…"][new Date().getSeconds() % 3],
+                        "white",
+                        bg
+                    ];
                 });
             }
             if (this.milestones["mob_first_0"]) {
@@ -5497,11 +5702,7 @@ void main() {
                         "%c{gray} " +
                         this.mobs
                             .filter(function (m) { return !m.isPlayer() && (m.at || m.isGuard); })
-                            .map(function (m) {
-                            return m.alive
-                                ? "%c{" + m.fg() + "}" + m.sym()
-                                : "%c{red}*";
-                        })
+                            .map(function (m) { return (m.alive ? "%c{" + m.fg() + "}" + m.sym() : "%c{red}*"); })
                             .join("");
             }
             this.d.drawText(0, this.displaySize[1] - 1, statusLine);
@@ -5564,22 +5765,17 @@ void main() {
                         return;
         };
         Game.prototype.log = function (text) {
+            var _this = this;
             var params = [];
             for (var _i = 1; _i < arguments.length; _i++) {
                 params[_i - 1] = arguments[_i];
             }
             if (!text)
                 return;
-            if (text in lang)
-                text = lang[text];
-            if (params) {
-                for (var i in params)
-                    text = text.replace("{" + i + "}", params[i]);
-            }
-            this._log.push(text.trim() /*.replace(/(?:\r\n|\r|\n)/g, "<br/>"*/);
-            if (this.onLog) {
-                this.onLog(text);
-            }
+            this._log.push([text].concat(params));
+            console.log(text);
+            console.log(this._log);
+            log.update(function (s) { return _this._log; });
         };
         Game.prototype.alertOnce = function (id) {
             if (this.milestones[id])
@@ -5587,9 +5783,9 @@ void main() {
             this.player.stop();
             this.milestones[id] = 1;
             if (id == "mob_first_4" && game.killed > 0)
-                this.log(lang.elder_angry);
+                this.log(str.elder_angry);
             else
-                this.log(lang[id]);
+                this.log(id);
         };
         Game.prototype.playerAct = function () {
             var _this = this;
@@ -5615,14 +5811,10 @@ void main() {
         };
         Game.prototype.readNextLetter = function () {
             this.player.stop();
-            if (lang.letter.length >= this.letterRead) {
+            if (lang$3.letter.length >= this.letterRead) {
                 var i = this.letterRead;
-                if (lang.read_letter[i])
-                    this.log(lang.read_letter[i] +
-                        "<br/>***<br/>" +
-                        lang.letter[i] +
-                        "<br/>***<br/>" +
-                        lang.close_letter[i]);
+                if (lang$3.read_letter[i])
+                    this.log("complete_letter_" + i);
                 /*this.log(lang.letter[i])
                 this.log(lang.close_letter[i])*/
                 this.letterRead++;
@@ -5638,11 +5830,11 @@ void main() {
                 var optimist = this.flowersCollected % 2 == 1;
                 ending = pacifist
                     ? optimist
-                        ? lang.ending_bargain
-                        : lang.ending_depression
+                        ? lang$3.ending_bargain
+                        : lang$3.ending_depression
                     : optimist
-                        ? lang.ending_denial
-                        : lang.ending_anger;
+                        ? lang$3.ending_denial
+                        : lang$3.ending_anger;
             }
             this.onEnd(ending);
         };
@@ -5709,9 +5901,9 @@ void main() {
     	return child_ctx;
     }
 
-    // (304:2) {:else}
+    // (198:4) {:else}
     function create_else_block(ctx) {
-    	var h1, t1, div3, div1, div0, button, t3, t4, div2, dispose;
+    	var h1, t1, div4, div3, div1, button0, t2_value = ctx.lang.new_game, t2, t3, t4, div0, t5, button1, t6_value = ctx.lang.lang, t6, t7, div2, dispose;
 
     	var if_block = (ctx.game && ctx.game.time > 0 && !ctx.game.complete) && create_if_block_2(ctx);
 
@@ -5728,44 +5920,59 @@ void main() {
     			h1 = element("h1");
     			h1.textContent = "Seeing Red";
     			t1 = space();
+    			div4 = element("div");
     			div3 = element("div");
     			div1 = element("div");
-    			div0 = element("div");
-    			button = element("button");
-    			button.textContent = "New Game";
+    			button0 = element("button");
+    			t2 = text(t2_value);
     			t3 = space();
     			if (if_block) if_block.c();
     			t4 = space();
+    			div0 = element("div");
+    			t5 = space();
+    			button1 = element("button");
+    			t6 = text(t6_value);
+    			t7 = space();
     			div2 = element("div");
 
     			for (var i = 0; i < 9; i += 1) {
     				each_blocks[i].c();
     			}
-    			h1.className = "svelte-i8ztum";
-    			add_location(h1, file, 304, 4, 6050);
-    			button.className = "svelte-i8ztum";
-    			add_location(button, file, 307, 13, 6154);
-    			add_location(div0, file, 307, 8, 6149);
-    			set_style(div1, "text-align", "center");
-    			div1.className = "svelte-i8ztum";
-    			add_location(div1, file, 306, 6, 6107);
-    			div2.className = "saves svelte-i8ztum";
-    			add_location(div2, file, 312, 6, 6387);
-    			div3.className = "menu-table svelte-i8ztum";
-    			add_location(div3, file, 305, 4, 6075);
-    			dispose = listen(button, "click", ctx.click_handler_1);
+    			add_location(h1, file, 198, 6, 4459);
+    			add_location(button0, file, 202, 12, 4577);
+    			set_style(div0, "flex-grow", "1");
+    			add_location(div0, file, 208, 12, 4845);
+    			add_location(button1, file, 209, 12, 4886);
+    			div1.className = "menu-buttons";
+    			add_location(div1, file, 201, 10, 4537);
+    			div2.className = "saves";
+    			add_location(div2, file, 211, 10, 4970);
+    			div3.className = "menu-table";
+    			add_location(div3, file, 200, 8, 4501);
+    			add_location(div4, file, 199, 6, 4486);
+
+    			dispose = [
+    				listen(button0, "click", ctx.click_handler_1),
+    				listen(button1, "click", toggleLanguage)
+    			];
     		},
 
     		m: function mount(target, anchor) {
     			insert(target, h1, anchor);
     			insert(target, t1, anchor);
-    			insert(target, div3, anchor);
+    			insert(target, div4, anchor);
+    			append(div4, div3);
     			append(div3, div1);
-    			append(div1, div0);
-    			append(div0, button);
+    			append(div1, button0);
+    			append(button0, t2);
     			append(div1, t3);
     			if (if_block) if_block.m(div1, null);
-    			append(div3, t4);
+    			append(div1, t4);
+    			append(div1, div0);
+    			append(div1, t5);
+    			append(div1, button1);
+    			append(button1, t6);
+    			append(div3, t7);
     			append(div3, div2);
 
     			for (var i = 0; i < 9; i += 1) {
@@ -5774,18 +5981,28 @@ void main() {
     		},
 
     		p: function update(changed, ctx) {
+    			if ((changed.lang) && t2_value !== (t2_value = ctx.lang.new_game)) {
+    				set_data(t2, t2_value);
+    			}
+
     			if (ctx.game && ctx.game.time > 0 && !ctx.game.complete) {
-    				if (!if_block) {
+    				if (if_block) {
+    					if_block.p(changed, ctx);
+    				} else {
     					if_block = create_if_block_2(ctx);
     					if_block.c();
-    					if_block.m(div1, null);
+    					if_block.m(div1, t4);
     				}
     			} else if (if_block) {
     				if_block.d(1);
     				if_block = null;
     			}
 
-    			if (changed.game) {
+    			if ((changed.lang) && t6_value !== (t6_value = ctx.lang.lang)) {
+    				set_data(t6, t6_value);
+    			}
+
+    			if (changed.game || changed.lang) {
     				each_value_1 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     				for (var i = 0; i < each_value_1.length; i += 1) {
@@ -5810,37 +6027,36 @@ void main() {
     			if (detaching) {
     				detach(h1);
     				detach(t1);
-    				detach(div3);
+    				detach(div4);
     			}
 
     			if (if_block) if_block.d();
 
     			destroy_each(each_blocks, detaching);
 
-    			dispose();
+    			run_all(dispose);
     		}
     	};
     }
 
-    // (297:2) {#if winText}
+    // (191:4) {#if winText}
     function create_if_block_1(ctx) {
-    	var div1, raw_after, t, div0, button, dispose;
+    	var div1, raw_after, t0, div0, button, t1_value = ctx.lang.continue, t1, dispose;
 
     	return {
     		c: function create() {
     			div1 = element("div");
     			raw_after = element('noscript');
-    			t = space();
+    			t0 = space();
     			div0 = element("div");
     			button = element("button");
-    			button.textContent = "Continue";
-    			button.className = "svelte-i8ztum";
-    			add_location(button, file, 300, 8, 5948);
+    			t1 = text(t1_value);
+    			add_location(button, file, 194, 10, 4342);
     			set_style(div0, "text-align", "center");
-    			add_location(div0, file, 299, 6, 5906);
-    			div1.className = "win svelte-i8ztum";
+    			add_location(div0, file, 193, 8, 4298);
+    			div1.className = "win";
     			div1.id = "win";
-    			add_location(div1, file, 297, 4, 5830);
+    			add_location(div1, file, 191, 6, 4218);
     			dispose = listen(button, "click", ctx.click_handler);
     		},
 
@@ -5848,9 +6064,10 @@ void main() {
     			insert(target, div1, anchor);
     			append(div1, raw_after);
     			raw_after.insertAdjacentHTML("beforebegin", ctx.winText);
-    			append(div1, t);
+    			append(div1, t0);
     			append(div1, div0);
     			append(div0, button);
+    			append(button, t1);
     			add_binding_callback(() => ctx.div1_binding(div1, null));
     		},
 
@@ -5858,6 +6075,10 @@ void main() {
     			if (changed.winText) {
     				detach_before(raw_after);
     				raw_after.insertAdjacentHTML("beforebegin", ctx.winText);
+    			}
+
+    			if ((changed.lang) && t1_value !== (t1_value = ctx.lang.continue)) {
+    				set_data(t1, t1_value);
     			}
 
     			if (changed.items) {
@@ -5877,29 +6098,32 @@ void main() {
     	};
     }
 
-    // (309:8) {#if game && game.time > 0 && !game.complete}
+    // (204:12) {#if game && game.time > 0 && !game.complete}
     function create_if_block_2(ctx) {
-    	var div, button, dispose;
+    	var button, t_value = ctx.lang.continue, t, dispose;
 
     	return {
     		c: function create() {
-    			div = element("div");
     			button = element("button");
-    			button.textContent = "Continue";
-    			button.className = "svelte-i8ztum";
-    			add_location(button, file, 309, 15, 6284);
-    			add_location(div, file, 309, 10, 6279);
+    			t = text(t_value);
+    			add_location(button, file, 204, 14, 4711);
     			dispose = listen(button, "click", ctx.click_handler_2);
     		},
 
     		m: function mount(target, anchor) {
-    			insert(target, div, anchor);
-    			append(div, button);
+    			insert(target, button, anchor);
+    			append(button, t);
+    		},
+
+    		p: function update(changed, ctx) {
+    			if ((changed.lang) && t_value !== (t_value = ctx.lang.continue)) {
+    				set_data(t, t_value);
+    			}
     		},
 
     		d: function destroy(detaching) {
     			if (detaching) {
-    				detach(div);
+    				detach(button);
     			}
 
     			dispose();
@@ -5907,9 +6131,9 @@ void main() {
     	};
     }
 
-    // (314:8) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+    // (213:12) {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
     function create_each_block_1(ctx) {
-    	var div, t0, t1, button0, t2, button0_disabled_value, t3, button1, t4, button1_disabled_value, dispose;
+    	var div, t0, t1, button0, t2_value = ctx.lang.save, t2, button0_disabled_value, t3, button1, t4_value = ctx.lang.load, t4, button1_disabled_value, dispose;
 
     	function click_handler_3() {
     		return ctx.click_handler_3(ctx);
@@ -5923,20 +6147,18 @@ void main() {
     		c: function create() {
     			div = element("div");
     			t0 = text(ctx.slot);
-    			t1 = text(".\r\n            ");
+    			t1 = text(".\r\n                ");
     			button0 = element("button");
-    			t2 = text("Save");
+    			t2 = text(t2_value);
     			t3 = space();
     			button1 = element("button");
-    			t4 = text("Load");
-    			button0.disabled = button0_disabled_value = !ctx.game || ctx.game.time==0;
-    			button0.className = "svelte-i8ztum";
-    			add_location(button0, file, 316, 12, 6525);
+    			t4 = text(t4_value);
+    			button0.disabled = button0_disabled_value = !ctx.game || ctx.game.time == 0;
+    			add_location(button0, file, 215, 16, 5123);
     			button1.disabled = button1_disabled_value = !ctx.game || !ctx.game.hasSave(ctx.slot);
-    			button1.className = "svelte-i8ztum";
-    			add_location(button1, file, 317, 12, 6621);
-    			div.className = "save svelte-i8ztum";
-    			add_location(div, file, 314, 10, 6471);
+    			add_location(button1, file, 220, 16, 5308);
+    			div.className = "save";
+    			add_location(div, file, 213, 14, 5062);
 
     			dispose = [
     				listen(button0, "click", click_handler_3),
@@ -5957,8 +6179,16 @@ void main() {
 
     		p: function update(changed, new_ctx) {
     			ctx = new_ctx;
-    			if ((changed.game) && button0_disabled_value !== (button0_disabled_value = !ctx.game || ctx.game.time==0)) {
+    			if ((changed.lang) && t2_value !== (t2_value = ctx.lang.save)) {
+    				set_data(t2, t2_value);
+    			}
+
+    			if ((changed.game) && button0_disabled_value !== (button0_disabled_value = !ctx.game || ctx.game.time == 0)) {
     				button0.disabled = button0_disabled_value;
+    			}
+
+    			if ((changed.lang) && t4_value !== (t4_value = ctx.lang.load)) {
+    				set_data(t4, t4_value);
     			}
 
     			if ((changed.game) && button1_disabled_value !== (button1_disabled_value = !ctx.game || !ctx.game.hasSave(ctx.slot))) {
@@ -5976,9 +6206,9 @@ void main() {
     	};
     }
 
-    // (335:6) {#if log.length}
+    // (243:8) {#if log.length > 0}
     function create_if_block(ctx) {
-    	var t, div, raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged);
+    	var t, div, raw_value = ctx.translated(ctx.log[ctx.log.length - 1]).substr(0, ctx.lettersLogged);
 
     	var each_value = ctx.log.slice(0, ctx.log.length - 1);
 
@@ -5996,8 +6226,8 @@ void main() {
 
     			t = space();
     			div = element("div");
-    			div.className = "record svelte-i8ztum";
-    			add_location(div, file, 340, 8, 7201);
+    			div.className = "record";
+    			add_location(div, file, 248, 10, 6051);
     		},
 
     		m: function mount(target, anchor) {
@@ -6011,7 +6241,7 @@ void main() {
     		},
 
     		p: function update(changed, ctx) {
-    			if (changed.log) {
+    			if (changed.translated || changed.log) {
     				each_value = ctx.log.slice(0, ctx.log.length - 1);
 
     				for (var i = 0; i < each_value.length; i += 1) {
@@ -6032,7 +6262,7 @@ void main() {
     				each_blocks.length = each_value.length;
     			}
 
-    			if ((changed.log || changed.lettersLogged) && raw_value !== (raw_value = ctx.log[ctx.log.length - 1].substr(0, ctx.lettersLogged))) {
+    			if ((changed.log || changed.lettersLogged) && raw_value !== (raw_value = ctx.translated(ctx.log[ctx.log.length - 1]).substr(0, ctx.lettersLogged))) {
     				div.innerHTML = raw_value;
     			}
     		},
@@ -6048,15 +6278,15 @@ void main() {
     	};
     }
 
-    // (336:8) {#each log.slice(0, log.length - 1) as record}
+    // (244:10) {#each log.slice(0, log.length - 1) as record}
     function create_each_block(ctx) {
-    	var div, raw_value = ctx.record;
+    	var div, raw_value = ctx.translated(ctx.record);
 
     	return {
     		c: function create() {
     			div = element("div");
-    			div.className = "record svelte-i8ztum";
-    			add_location(div, file, 336, 10, 7108);
+    			div.className = "record";
+    			add_location(div, file, 244, 12, 5938);
     		},
 
     		m: function mount(target, anchor) {
@@ -6065,7 +6295,7 @@ void main() {
     		},
 
     		p: function update(changed, ctx) {
-    			if ((changed.log) && raw_value !== (raw_value = ctx.record)) {
+    			if ((changed.log) && raw_value !== (raw_value = ctx.translated(ctx.record))) {
     				div.innerHTML = raw_value;
     			}
     		},
@@ -6089,7 +6319,7 @@ void main() {
     	var current_block_type = select_block_type(ctx);
     	var if_block0 = current_block_type(ctx);
 
-    	var if_block1 = (ctx.log.length) && create_if_block(ctx);
+    	var if_block1 = (ctx.log.length > 0) && create_if_block(ctx);
 
     	return {
     		c: function create() {
@@ -6106,21 +6336,21 @@ void main() {
     			t3 = space();
     			div3 = element("div");
     			if (if_block1) if_block1.c();
-    			div0.className = "tooltip fadein svelte-i8ztum";
-    			add_location(div0, file, 290, 0, 5681);
-    			div1.className = "menu svelte-i8ztum";
-    			add_location(div1, file, 294, 0, 5767);
-    			div2.className = "game svelte-i8ztum";
+    			div0.className = "tooltip fadein";
+    			add_location(div0, file, 184, 0, 4063);
+    			div1.className = "menu";
+    			add_location(div1, file, 188, 2, 4151);
+    			div2.className = "game";
     			div2.id = "game";
-    			add_location(div2, file, 327, 4, 6852);
-    			div3.className = "log svelte-i8ztum";
-    			add_location(div3, file, 333, 4, 6979);
-    			div4.className = "main-table svelte-i8ztum";
-    			add_location(div4, file, 326, 2, 6822);
-    			div5.className = "mainer-table svelte-i8ztum";
-    			add_location(div5, file, 325, 0, 6792);
-    			div6.className = "all svelte-i8ztum";
-    			add_location(div6, file, 292, 0, 5746);
+    			add_location(div2, file, 235, 6, 5662);
+    			div3.className = "log";
+    			add_location(div3, file, 241, 6, 5799);
+    			div4.className = "main-table";
+    			add_location(div4, file, 234, 4, 5630);
+    			div5.className = "mainer-table";
+    			add_location(div5, file, 233, 2, 5598);
+    			div6.className = "all";
+    			add_location(div6, file, 186, 0, 4128);
     			dispose = listen(div2, "contextmenu", contextmenu_handler);
     		},
 
@@ -6173,7 +6403,7 @@ void main() {
     				ctx.div2_binding(div2, null);
     			}
 
-    			if (ctx.log.length) {
+    			if (ctx.log.length > 0) {
     				if (if_block1) {
     					if_block1.p(changed, ctx);
     				} else {
@@ -6231,7 +6461,6 @@ void main() {
     	
 
       let icons = new fontfaceobserver_standalone("Icons");
-      let { log = [] } = $$props;
 
       let conf = {};
       let hash = location.hash;
@@ -6246,22 +6475,42 @@ void main() {
       let lettersLogged = 0;
       let menu = false;
       let winText;
+      let log$1;
+      let lang;
+
+      log.subscribe(value => {
+        $$invalidate('log', log$1 = value);
+        $$invalidate('lettersLogged', lettersLogged = 0);
+        if (gameLog) { gameLog.scrollTop = 1e6; $$invalidate('gameLog', gameLog); }
+      });
+
+      lang$2.subscribe(value => {
+        $$invalidate('lang', lang = value);
+        $$invalidate('log', log$1);
+      });
+
+      function translated(s) {
+        let text = lang[s[0]];
+        if (!text) return "-";
+        if (s.length > 0) {
+          for (let i in s) text = text.replace("{" + (i - 1) + "}", s[i]);
+        }
+        return text;
+      }
 
       while ((match = regex.exec(url))) {
-        conf[match[1]] = JSON.parse(match[2]);  }
-
-      function updateLog(text) {
-        $$invalidate('log', log = game._log);
-        $$invalidate('lettersLogged', lettersLogged = 0);
-        gameLog.scrollTop = 1e6; $$invalidate('gameLog', gameLog);
+        try {
+          conf[match[1]] = JSON.parse(match[2]); match; conf;
+        } catch (e) {
+          console.log("what is " + match[1] + "?");
+        }
       }
 
       icons.load().then(() => {
         $$invalidate('game', game = new Game());
-        game.onLog = updateLog; $$invalidate('game', game);
         game.onEnd = gameOver; $$invalidate('game', game);
         game.init([45, 45]);
-        if(game.hasSave("0")){
+        if (game.hasSave("0")) {
           game.load("0");
         } else {
           game.start(conf);
@@ -6272,9 +6521,9 @@ void main() {
 
       onMount(async () => {
         setInterval(() => {
-          if (log && log.length > 0) {
-            let last = log[log.length - 1];
-            if (lettersLogged < last.length) {
+          if (log$1 && log$1.length > 0) {
+            let last = translated(log$1[log$1.length - 1]);
+            if (last && lettersLogged < last.length) {
               $$invalidate('lettersLogged', lettersLogged =
                 Math.ceil((last.length - lettersLogged) / 40) + lettersLogged);
               gameLog.scrollTop = gameLog.scrollHeight; $$invalidate('gameLog', gameLog);
@@ -6312,17 +6561,22 @@ void main() {
 
       window.addEventListener("keydown", e => {
         if (e.code == "Escape") {
-          if(winText){
+          if (winText) {
             $$invalidate('winText', winText = null);
           } else {
             toggleMenu(!menu);
           }
         }
 
-        if(e.shiftKey && e.code == "KeyR"){
+        if (e.shiftKey && e.code == "KeyR") {
           game.start();
           toggleMenu(false);
         }
+
+        if (e.shiftKey && e.code == "KeyL") {
+          toggleLanguage();
+        }
+
         if (e.code.substr(0, 5) == "Digit") {
           let slot = e.code.substr(5);
           if (e.shiftKey) {
@@ -6333,11 +6587,10 @@ void main() {
               game.load(slot);
               toggleMenu(false);
             } else {
-              game.log("No save in " + slot);
+              game.log("no_save_in", slot);
             }
           }
         }
-
       });
 
       function toggleMenu(on) {
@@ -6349,7 +6602,7 @@ void main() {
           toggleTooltip(null);
         }
 
-        if(!on){
+        if (!on) {
           $$invalidate('winText', winText = null);
         }
       }
@@ -6372,16 +6625,11 @@ void main() {
       async function gameOver(text) {
         toggleMenu(true);
         $$invalidate('winText', winText = text);
-        await tick();    
+        await tick();
         winDiv.style.opacity = 0; $$invalidate('winDiv', winDiv);
-        window.setTimeout((() => { const $$result = winDiv.style.opacity = 1; $$invalidate('winDiv', winDiv); return $$result; }), 100);
+        window.setTimeout(() => { const $$result = (winDiv.style.opacity = 1); $$invalidate('winDiv', winDiv); return $$result; }, 100);
         game.start(conf);
       }
-
-    	const writable_props = ['log'];
-    	Object.keys($$props).forEach(key => {
-    		if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(`<App> was created with unknown prop '${key}'`);
-    	});
 
     	function div0_binding($$node, check) {
     		tooltip = $$node;
@@ -6430,12 +6678,7 @@ void main() {
     		$$invalidate('gameLog', gameLog);
     	}
 
-    	$$self.$set = $$props => {
-    		if ('log' in $$props) $$invalidate('log', log = $$props.log);
-    	};
-
     	return {
-    		log,
     		game,
     		gameDiv,
     		gameLog,
@@ -6444,6 +6687,9 @@ void main() {
     		tooltip,
     		lettersLogged,
     		winText,
+    		log: log$1,
+    		lang,
+    		translated,
     		toggleMenu,
     		save,
     		load,
@@ -6464,15 +6710,7 @@ void main() {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment, safe_not_equal, ["log"]);
-    	}
-
-    	get log() {
-    		throw new Error("<App>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set log(value) {
-    		throw new Error("<App>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		init(this, options, instance$1, create_fragment, safe_not_equal, []);
     	}
     }
 

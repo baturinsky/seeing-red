@@ -1,10 +1,10 @@
 <script>
   import { onMount, afterUpdate, tick } from "svelte";
-  import { Game } from "./Game";
+  import { Game, toggleLanguage } from "./Game";
   import FontFaceObserver from "fontfaceobserver";
+  import { log as logStorage, lang as langStorage } from "./store.js";
 
   let icons = new FontFaceObserver("Icons");
-  export let log = [];
 
   let conf = {};
   let hash = location.hash;
@@ -21,26 +21,45 @@
   let lettersLogged = 0;
   let menu = false;
   let winText;
+  let log;
+  let lang;
 
-  while ((match = regex.exec(url))) {
-    conf[match[1]] = JSON.parse(match[2]);
+  logStorage.subscribe(value => {
+    log = value;
+    lettersLogged = 0;
+    if (gameLog) gameLog.scrollTop = 1e6;
+  });
+
+  langStorage.subscribe(value => {
+    lang = value;
+    log = log;
+  });
+
+  function translated(s) {
+    let text = lang[s[0]];
+    if (!text) return "-";
+    if (s.length > 0) {
+      for (let i in s) text = text.replace("{" + (i - 1) + "}", s[i]);
+    }
+    return text;
   }
 
-  function updateLog(text) {
-    log = game._log;
-    lettersLogged = 0;
-    gameLog.scrollTop = 1e6;
+  while ((match = regex.exec(url))) {
+    try {
+      conf[match[1]] = JSON.parse(match[2]);
+    } catch (e) {
+      console.log("what is " + match[1] + "?");
+    }
   }
 
   icons.load().then(() => {
     game = new Game();
-    game.onLog = updateLog;
     game.onEnd = gameOver;
     game.init([45, 45]);
-    if(game.hasSave("0")){
-      game.load("0")
+    if (game.hasSave("0")) {
+      game.load("0");
     } else {
-      game.start(conf)
+      game.start(conf);
     }
     gameLog.style.height = gameDiv.clientHeight + "px";
     toggleMenu(true);
@@ -49,8 +68,8 @@
   onMount(async () => {
     setInterval(() => {
       if (log && log.length > 0) {
-        let last = log[log.length - 1];
-        if (lettersLogged < last.length) {
+        let last = translated(log[log.length - 1]);
+        if (last && lettersLogged < last.length) {
           lettersLogged =
             Math.ceil((last.length - lettersLogged) / 40) + lettersLogged;
           gameLog.scrollTop = gameLog.scrollHeight;
@@ -92,32 +111,36 @@
 
   window.addEventListener("keydown", e => {
     if (e.code == "Escape") {
-      if(winText){
+      if (winText) {
         winText = null;
       } else {
         toggleMenu(!menu);
       }
     }
 
-    if(e.shiftKey && e.code == "KeyR"){
-      game.start()
-      toggleMenu(false)
+    if (e.shiftKey && e.code == "KeyR") {
+      game.start();
+      toggleMenu(false);
     }
+
+    if (e.shiftKey && e.code == "KeyL") {
+      toggleLanguage();
+    }
+
     if (e.code.substr(0, 5) == "Digit") {
       let slot = e.code.substr(5);
       if (e.shiftKey) {
-        game.save(slot)
-        toggleMenu(false)
+        game.save(slot);
+        toggleMenu(false);
       } else {
         if (game.hasSave(slot)) {
-          game.load(slot)
-          toggleMenu(false)
+          game.load(slot);
+          toggleMenu(false);
         } else {
-          game.log("No save in " + slot);
+          game.log("no_save_in", slot);
         }
       }
     }
-
   });
 
   function toggleMenu(on) {
@@ -129,7 +152,7 @@
       toggleTooltip(null);
     }
 
-    if(!on){
+    if (!on) {
       winText = null;
     }
   }
@@ -152,197 +175,82 @@
   async function gameOver(text) {
     toggleMenu(true);
     winText = text;
-    await tick();    
+    await tick();
     winDiv.style.opacity = 0;
-    window.setTimeout((() => winDiv.style.opacity = 1), 100)
-    game.start(conf)
+    window.setTimeout(() => (winDiv.style.opacity = 1), 100);
+    game.start(conf);
   }
 </script>
-
-<style>
-  .log {
-    vertical-align: bottom;
-    font-family: Icons;
-    overflow-y: auto;
-    height: 100px;
-    margin-left: 1px;
-    width: 400px;
-  }
-  .main-table {
-    border: 2px solid white;
-    display: flex;
-    padding: 1px;
-    justify-content: center;
-  }
-  .main-table > div {
-    border: 2px solid white;
-  }
-  .mainer-table {
-    display: flex;
-    justify-content:center;
-  }
-
-  .menu-table {
-    display: flex;
-    padding: 1px;
-    justify-content: center;
-  }
-  .menu-table > div {
-    border: 2px solid white;
-  }
-
-  .tooltip {
-    position: fixed;
-    z-index: 10;
-    background: black;
-    padding: -2px;
-    transform: translate(20px, -50%);
-    box-shadow: 0px 0px 10px 10px black;
-    font-family: Icons;
-  }
-  .record {
-    border-top: solid 0.5px grey;
-    padding: 3px;
-  }
-  .menu {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 1);
-    opacity: 1;
-    z-index: 3;
-    font-size: 24pt;
-    padding: 10px;
-    text-align: center;
-    font-weight: bold;
-    transition: opacity 0.2s ease-in-out;
-    cursor: default;
-  }
-  .save {
-    margin: 5px;
-  }
-  .save button {
-    width: 100px;
-    padding: 3px;
-  }
-  .saves {
-    text-align: left;
-    margin-left: 1px;
-  }
-  h1 {
-    color: red;
-    font-weight: bold;
-  }
-  button {
-    font-size: 18pt;
-    font-weight: bold;
-  }
-  
-  .win {
-    text-align: left;
-    font-size: 18pt;
-    width:600px;
-    margin: auto;
-    opacity: 0;
-    transition: opacity 10s ease-in-out;
-  }
-
-  .win button{
-    margin-top: 50px;
-    border: 1px solid white;
-  }
-
-  .all{
-    overflow:hidden;
-    height:100%;      
-  }
-
-  :global(.she){
-    color:#ff4000;
-    padding-top: 5px;
-  }
-
-  :global(.you){
-    color:white;
-    padding-top: 5px;
-  }
-
-  :global(.elder){
-    color:peachpuff;
-    padding: 5px 0px;
-  }
-
-  :global(.ending-type){
-    margin-top: 30px;
-    font-size: 24px;
-    text-align: center;    
-  }
-
-  button:disabled,
-  button[disabled]{
-    cursor: default;
-    opacity: 0.2;
-    background: black;
-  }
-</style>
 
 <div class="tooltip fadein" bind:this={tooltip}>Tooltip</div>
 
 <div class="all">
 
-<div class="menu" bind:this={menuDiv}>
+  <div class="menu" bind:this={menuDiv}>
 
-  {#if winText}
-    <div class="win" id="win" bind:this={winDiv}>
-      {@html winText}
-      <div style="text-align:center;">
-        <button on:click={() => (winText = null)}>Continue</button>
+    {#if winText}
+      <div class="win" id="win" bind:this={winDiv}>
+        {@html winText}
+        <div style="text-align:center;">
+          <button on:click={() => (winText = null)}>{lang.continue}</button>
+        </div>
       </div>
-    </div>
-  {:else}
-    <h1>Seeing Red</h1>
-    <div class="menu-table">
-      <div style="text-align:center;">
-        <div><button on:click={() => newGame()}>New Game</button></div>
-        {#if game && game.time > 0 && !game.complete}
-          <div><button on:click={() => toggleMenu(false)}>Continue</button></div>
+    {:else}
+      <h1>Seeing Red</h1>
+      <div>
+        <div class="menu-table">
+          <div class="menu-buttons">
+            <button on:click={() => newGame()}>{lang.new_game}</button>
+            {#if game && game.time > 0 && !game.complete}
+              <button on:click={() => toggleMenu(false)}>
+                {lang.continue}
+              </button>
+            {/if}
+            <div style="flex-grow:1" />
+            <button on:click={toggleLanguage}>{lang.lang}</button>
+          </div>
+          <div class="saves">
+            {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
+              <div class="save">
+                {slot}.
+                <button
+                  disabled={!game || game.time == 0}
+                  on:click={() => save(slot)}>
+                  {lang.save}
+                </button>
+                <button
+                  disabled={!game || !game.hasSave(slot)}
+                  on:click={() => load(slot)}>
+                  {lang.load}
+                </button>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <div class="mainer-table">
+    <div class="main-table">
+      <div
+        class="game"
+        id="game"
+        on:contextmenu={e => e.preventDefault()}
+        bind:this={gameDiv} />
+
+      <div class="log" bind:this={gameLog}>
+        {#if log.length > 0}
+          {#each log.slice(0, log.length - 1) as record}
+            <div class="record">
+              {@html translated(record)}
+            </div>
+          {/each}
+          <div class="record">
+            {@html translated(log[log.length - 1]).substr(0, lettersLogged)}
+          </div>
         {/if}
       </div>
-      <div class="saves">
-        {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as slot}
-          <div class="save">
-             {slot}.
-            <button disabled={!game || game.time==0} on:click={() => save(slot)}>Save</button>
-            <button disabled={!game || !game.hasSave(slot)} on:click={() => load(slot)}>Load</button>
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
-</div>
-
-<div class="mainer-table">
-  <div class="main-table">
-    <div
-      class="game"
-      id="game"
-      on:contextmenu={e => e.preventDefault()}
-      bind:this={gameDiv} />
-
-    <div class="log" bind:this={gameLog}>
-      {#if log.length}
-        {#each log.slice(0, log.length - 1) as record}
-          <div class="record">
-            {@html record}
-          </div>
-        {/each}
-        <div class="record">
-          {@html log[log.length - 1].substr(0, lettersLogged)}
-        </div>
-      {/if}
     </div>
   </div>
-</div>
 </div>

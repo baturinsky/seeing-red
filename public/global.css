@@ -135,3 +135,138 @@ a:hover {
   transform: translateX(-50%) scaleY(1);
 }
 
+
+.log {
+  vertical-align: bottom;
+  font-family: Icons;
+  overflow-y: auto;
+  height: 100px;
+  margin-left: 1px;
+  width: 400px;
+}
+.main-table {
+  border: 2px solid white;
+  display: flex;
+  padding: 1px;
+  justify-content: center;
+}
+.main-table > div {
+  border: 2px solid white;
+}
+.mainer-table {
+  display: flex;
+  justify-content: center;
+}
+
+.menu-table {
+  display: flex;
+  padding: 1px;
+  justify-content: center;
+  margin: auto;
+}
+.menu-table > div {
+  border: 2px solid white;
+}
+
+.menu-buttons{
+  text-align:center;
+  display:flex;
+  flex-direction: column;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 10;
+  background: black;
+  padding: -2px;
+  transform: translate(20px, -50%);
+  box-shadow: 0px 0px 10px 10px black;
+  font-family: Icons;
+}
+.record {
+  border-top: solid 0.5px grey;
+  padding: 3px;
+}
+.menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 1);
+  opacity: 1;
+  z-index: 3;
+  font-size: 24pt;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  transition: opacity 0.2s ease-in-out;
+  cursor: default;
+}
+.save {
+  margin: 5px;
+}
+.save button {
+  min-width: 100px;
+  padding: 3px;
+}
+.saves {
+  text-align: left;
+  margin-left: 1px;
+}
+h1 {
+  color: red;
+  font-weight: bold;
+}
+button {
+  font-size: 18pt;
+  font-weight: bold;
+  width: 200px;
+}
+
+.win {
+  text-align: left;
+  font-size: 18pt;
+  width: 800px;
+  margin: auto;
+  opacity: 0;
+  transition: opacity 10s ease-in-out;
+}
+
+.win button {
+  margin-top: 50px;
+  border: 1px solid white;
+}
+
+.all {
+  overflow: hidden;
+  height: 100%;
+}
+
+:global(.she) {
+  color: #ff4000;
+  padding-top: 5px;
+}
+
+:global(.you) {
+  color: white;
+  padding-top: 5px;
+}
+
+:global(.elder) {
+  color: peachpuff;
+  padding: 5px 0px;
+}
+
+:global(.ending-type) {
+  margin-top: 30px;
+  font-size: 24px;
+  text-align: center;
+}
+
+button:disabled,
+button[disabled] {
+  cursor: default;
+  opacity: 0.2;
+  background: black;
+}

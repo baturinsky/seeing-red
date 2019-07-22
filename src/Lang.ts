@@ -1,4 +1,5 @@
 let lang = {
+lang:"English",
 guide:
 `
 <span style="color:lightgrey">
@@ -9,9 +10,17 @@ Num5, space - wait<br/>
 Shift + 1-9: save<br/>
 1-9: load<br/>
 Shift + R: restart<br/>
+Shift + L: toggle language<br/>
 ESC: toggle menu<br/>
 </span>
 `,
+save: "Save",
+load: "Load",
+new_game: "New Game",
+continue: "Continue",
+saved_to: "Saved to {0}",
+loaded_from: "Loaded from {0}",
+no_save_in: "No save in {0}",
 me: "It's me. A regular everyday normal person.",
 flower: "A flower. Seeing it grow makes me calm. <br/> <span class='important'>I'll pick it for her.</span>",
 flower_first: `One of those weird red flowers <em>⚘</em> she is fond of. <span class='important'>I'll pick some for her.</span> 
@@ -57,10 +66,11 @@ not_here: "She is not here. Probably somewhere in the forest picking up herbs ag
 mob_wary: "It stares at me warily.",
 mob_afraid: "It covers in fear.",
 mob_fleeing: "It flees to it's lair screaming.",
-mob_startled: "☺ avoids you.",
+mob_startled: "☺ avoids me.",
 mob_flees: "☺ runs away.",
 game_complete: "GAME COMPLETE",
-grave: "I grave. Seems to be recent.",
+grave: "A grave. Seems to be recent.",
+escaped: "Monster has escaped. Panic level: {0}",
 read_letter:[
 "Still no signs of her. Oh, right, I still have her letter. Maybe reading it will give some clues? I started reading:",
 "I have decided to continue reading the letter:",
@@ -87,7 +97,7 @@ You would not find a living animal or unpicked edible berry or mushroom for a mi
 I try to help them with what I can, but it's not much.
 I perform surgery on occasion, used the medicine I brought from the city, some local herbs.
 But villagers rarely ask me for help. They don't trust the "outsider" and I can't blame them. 
-These days outsider is usually a thief or a rapist. People kill each other for a loaf of bread.
+These days outsider is too often a brigand, a thief or a rapist. People kill each other for a loaf of bread.
 Fear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.
 And, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. 
 Let's hope I am at least qualified to cure the bodies.
