@@ -61,7 +61,12 @@ blue_victory: "I carefully dodged it's lunge and then made a precise killing str
 blue_lose: "I charged monster only to be skewered with a fast stab.",
 red_victory: "I overwhelm it's defences with a stream of furious attacks.",
 red_lose: "The monster blocks most of my attacks and shrug off the others. And then deals one, but powerful attack.",
-lose: "<span class='important'>I collapse to never stand up again.<br/><br/>GAME OVER</span><br/><br/>Press Escape to continue.",
+lose: `<span class='important'>I collapse to never stand up again.<br/><br/>GAME OVER</span><br/><br/>
+Tip: Guards (marked with G and g) are attracted by kills. Your chances to defeat them in fight depends on your fury level (red bar at the top). 
+You need as much as possible of it for G, and opposite for g.<br/><br/>
+Press Escape to continue.`,
+win_tip: `Ending you get depends on how many flowers you collect (odd or even) and how many kills committed. 
+There is also a secret ending, but getting it would require restraint and patience.`,
 not_here: "She is not here. Probably somewhere in the forest picking up herbs again. <span class='important'>I'll  go look for her.</span>",
 mob_wary: "It stares at me warily.",
 mob_afraid: "It covers in fear.",
@@ -99,7 +104,7 @@ I perform surgery on occasion, used the medicine I brought from the city, some l
 But villagers rarely ask me for help. They don't trust the "outsider" and I can't blame them. 
 These days outsider is too often a brigand, a thief or a rapist. People kill each other for a loaf of bread.
 Fear, despair and hate are diseases that flood the land. Diseases that are way more fatal than Strangling.
-And, unlike Strangling, they are definitely contagious. Sadly, ailness of spirirt are not my major. 
+And, unlike Strangling, they are definitely contagious. Sadly, ailness of spirit are not my major. 
 Let's hope I am at least qualified to cure the bodies.
 `,`
 I have even heard a rumors about cannibalism. Only rumors yet. 

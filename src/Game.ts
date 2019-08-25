@@ -815,7 +815,7 @@ export class Game {
     if (this.milestones["flower_first"]) {
       for (
         let i = 0;
-        i < Math.max(this.options.flowersNeeded, this.flowersCollected);
+        i < this.options.flowers;
         i++
       ) {
         statusLine += i < this.flowersCollected ? "%c{red}⚘" : "%c{gray}⚘";

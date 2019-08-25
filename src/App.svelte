@@ -194,6 +194,9 @@
         <div style="text-align:center;">
           <button on:click={() => (winText = null)}>{lang.continue}</button>
         </div>
+        <div class="win-tip">
+          {@html lang.win_tip}
+        </div>
       </div>
     {:else}
       <h1>Seeing Red</h1>
