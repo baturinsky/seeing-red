@@ -244,22 +244,22 @@ button {
   height: 100%;
 }
 
-:global(.she) {
+.she {
   color: #ff4000;
   padding-top: 5px;
 }
 
-:global(.you) {
+.you {
   color: white;
   padding-top: 5px;
 }
 
-:global(.elder) {
+.elder {
   color: peachpuff;
   padding: 5px 0px;
 }
 
-:global(.ending-type) {
+.ending-type {
   margin-top: 30px;
   font-size: 24px;
   text-align: center;
